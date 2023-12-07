@@ -1,0 +1,129 @@
+{
+  "id": "mgr-test-1.0.0",
+  "name": "Test Manager Component",
+  "provides": [
+    {
+      "id": "foo",
+      "version": "1.0",
+      "handlers": [
+        {
+          "type": "internal",
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/foo",
+          "permissionsRequired": [
+            "mgr-test.foo.item.post"
+          ]
+        },
+        {
+          "type": "internal",
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/foo",
+          "permissionsRequired": [
+            "mgr-test.foo.collection.get"
+          ]
+        },
+        {
+          "type": "internal",
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/foo/{id}",
+          "permissionsRequired": [
+            "mgr-test.foo.item.get"
+          ]
+        },
+        {
+          "type": "internal",
+          "methods": [
+            "DELETE"
+          ],
+          "pathPattern": "/foo/{id}",
+          "permissionsRequired": [
+            "mgr-test.foo.item.delete"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bar",
+      "version": "1.0",
+      "handlers": [
+        {
+          "type": "internal",
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/bar/{id}",
+          "permissionsRequired": [
+            "mgr-test.bar.item.get"
+          ]
+        }
+      ]
+    }
+  ],
+  "requires": [ ],
+  "permissionSets": [
+    {
+      "description": "Register a new foo",
+      "displayName": "Manager Test - create foo",
+      "permissionName": "mgr-test.foo.item.post"
+    },
+    {
+      "description": "Delete foo",
+      "displayName": "Manager Test - delete foo",
+      "permissionName": "mgr-test.foo.item.delete"
+    },
+    {
+      "description": "Retrieve foo",
+      "displayName": "Manager Test - get foo",
+      "permissionName": "mgr-test.foo.item.get"
+    },
+    {
+      "description": "Retrieve foo entries",
+      "displayName": "Manager Test - get foo entries",
+      "permissionName": "mgr-test.foo.collection.get"
+    },
+    {
+      "description": "Get bar",
+      "displayName": "Manager Test - get bar",
+      "permissionName": "mgr-test.bar.item.get"
+    },
+    {
+      "description": "Manage foo",
+      "displayName": "Manager Test - Manage foo",
+      "permissionName": "mgr-test.foo.all",
+      "visible": true,
+      "subPermissions": [
+        "mgr-test.foo.item.post",
+        "mgr-test.foo.item.get",
+        "mgr-test.foo.item.delete",
+        "mgr-test.foo.collection.get"
+      ]
+    },
+    {
+      "description": "Manager Test - Permissions with no side effects",
+      "displayName": "Manager Test - Read only permissions",
+      "permissionName": "mgr-test.readonly",
+      "visible": true,
+      "subPermissions": [
+        "mgr-test.foo.item.get",
+        "mgr-test.foo.collection.get",
+        "mgr-test.bar.item.get"
+      ]
+    },
+    {
+      "description": "Manager Test - Anything goes",
+      "displayName": "Manager Test - All permissions",
+      "permissionName": "mgr-test.all",
+      "visible": true,
+      "subPermissions": [
+        "mgr-test.foo.all",
+        "mgr-test.bar.item.get"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "name": "Manager Test - Manage foo",
+    "description": "Manage foo",
+    "composite": false,
+    "clientRole": false,
+    "attributes": {
+      "client_id": [
+        "mgr-test"
+      ]
+    }
+  },
+  {
+    "name": "Manager Test - All permissions",
+    "description": "Manager Test - Anything goes",
+    "composite": false,
+    "clientRole": false,
+    "attributes": {
+      "client_id": [
+        "mgr-test"
+      ]
+    }
+  },
+  {
+    "name": "Manager Test - Read only permissions",
+    "description": "Manager Test - Permissions with no side effects",
+    "composite": false,
+    "clientRole": false,
+    "attributes": {
+      "client_id": [
+        "mgr-test"
+      ]
+    }
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "id": "mod-foo-1.0.0",
+  "name": "mod-foo",
+  "provides": [
+    {
+      "id": "foo",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": [ "POST" ],
+          "pathPattern": "/foo",
+          "permissionsRequired": [ "foo.item.post" ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/foo/{id}",
+          "permissionsRequired": [ "foo.item.get" ]
+        },
+        {
+          "methods": [ "PUT" ],
+          "pathPattern": "/foo/{id}",
+          "permissionsRequired": [ "foo.item.put" ]
+        },
+        {
+          "methods": [ "DELETE" ],
+          "pathPattern": "/foo/{id}",
+          "permissionsRequired": [ "foo.item.delete" ]
+        }
+      ]
+    }
+  ],
+  "requires": [
+    {
+      "id": "bar",
+      "version": "1.0"
+    }
+  ],
+  "permissionSets": [
+    {
+      "description": "Create a new Foo item",
+      "displayName": "Foo - create new item",
+      "permissionName": "foo.item.post"
+    },
+    {
+      "description": "Get a Foo item",
+      "displayName": "Foo - get an item",
+      "permissionName": "foo.item.get"
+    },
+    {
+      "description": "Update a Foo item",
+      "displayName": "Foo - update an item",
+      "permissionName": "foo.item.put"
+    },
+    {
+      "description": "Delete a Foo item",
+      "displayName": "Foo - delete an item",
+      "permissionName": "foo.item.delete"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "username": "service-account-folio-backend-admin-client",
+  "enabled": true,
+  "serviceAccountClientId": "folio-backend-admin-client",
+  "realmRoles": [
+    "create-realm",
+    "Manager Test - All permissions",
+    "Manager Test - Manage foo",
+    "Manager Test - Read only permissions",
+    "admin",
+    "default-roles-master"
+  ]
+}

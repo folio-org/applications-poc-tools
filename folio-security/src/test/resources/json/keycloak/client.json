@@ -1,0 +1,254 @@
+{
+  "clientId": "mgr-test",
+  "enabled": true,
+  "clientAuthenticatorType": "client-secret",
+  "standardFlowEnabled": false,
+  "directAccessGrantsEnabled": true,
+  "serviceAccountsEnabled": true,
+  "authorizationServicesEnabled": true,
+  "publicClient": false,
+  "attributes": {
+    "descriptor_hash": "1694317664"
+  },
+  "authorizationSettings": {
+    "allowRemoteResourceManagement": true,
+    "policyEnforcementMode": "ENFORCING",
+    "decisionStrategy": "AFFIRMATIVE",
+    "resources": [
+      {
+        "name": "Default Resource"
+      },
+      {
+        "name": "/foo/{id}",
+        "scopes": [
+          {
+            "name": "DELETE"
+          },
+          {
+            "name": "GET"
+          }
+        ]
+      },
+      {
+        "name": "/foo",
+        "scopes": [
+          {
+            "name": "GET"
+          },
+          {
+            "name": "POST"
+          }
+        ]
+      },
+      {
+        "name": "/bar/{id}",
+        "scopes": [
+          {
+            "name": "GET"
+          }
+        ]
+      }
+    ],
+    "policies": [
+      {
+        "name": "Default Policy"
+      },
+      {
+        "name": "Policy for role: Manager Test - Read only permissions",
+        "type": "role",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "roles": "[{\"id\":\"Manager Test - Read only permissions\",\"required\":false}]"
+        }
+      },
+      {
+        "name": "Policy for role: Manager Test - Manage foo",
+        "type": "role",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "roles": "[{\"id\":\"Manager Test - Manage foo\",\"required\":false}]"
+        }
+      },
+      {
+        "name": "Policy for role: Manager Test - All permissions",
+        "type": "role",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "roles": "[{\"id\":\"Manager Test - All permissions\",\"required\":false}]"
+        }
+      },
+      {
+        "name": "[GET] access for role 'Manager Test - Read only permissions' to '/foo/{id}'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/foo/{id}\"]",
+          "scopes": "[\"GET\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - Read only permissions\"]"
+        }
+      },
+      {
+        "name": "[GET] access for role 'Manager Test - Manage foo' to '/foo/{id}'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/foo/{id}\"]",
+          "scopes": "[\"GET\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - Manage foo\"]"
+        }
+      },
+      {
+        "name": "[GET] access for role 'Manager Test - All permissions' to '/foo/{id}'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/foo/{id}\"]",
+          "scopes": "[\"GET\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - All permissions\"]"
+        }
+      },
+      {
+        "name": "[POST] access for role 'Manager Test - Manage foo' to '/foo'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/foo\"]",
+          "scopes": "[\"POST\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - Manage foo\"]"
+        }
+      },
+      {
+        "name": "[POST] access for role 'Manager Test - All permissions' to '/foo'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/foo\"]",
+          "scopes": "[\"POST\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - All permissions\"]"
+        }
+      },
+      {
+        "name": "Default Permission",
+        "description": "A permission that applies to the default resource type",
+        "type": "resource",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "defaultResourceType": "urn:mgr-test:resources:default",
+          "applyPolicies": "[\"Default Policy\"]"
+        }
+      },
+      {
+        "name": "[GET] access for role 'Manager Test - Read only permissions' to '/bar/{id}'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/bar/{id}\"]",
+          "scopes": "[\"GET\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - Read only permissions\"]"
+        }
+      },
+      {
+        "name": "[GET] access for role 'Manager Test - All permissions' to '/bar/{id}'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/bar/{id}\"]",
+          "scopes": "[\"GET\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - All permissions\"]"
+        }
+      },
+      {
+        "name": "[GET] access for role 'Manager Test - Read only permissions' to '/foo'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/foo\"]",
+          "scopes": "[\"GET\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - Read only permissions\"]"
+        }
+      },
+      {
+        "name": "[GET] access for role 'Manager Test - Manage foo' to '/foo'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/foo\"]",
+          "scopes": "[\"GET\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - Manage foo\"]"
+        }
+      },
+      {
+        "name": "[GET] access for role 'Manager Test - All permissions' to '/foo'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/foo\"]",
+          "scopes": "[\"GET\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - All permissions\"]"
+        }
+      },
+      {
+        "name": "[DELETE] access for role 'Manager Test - Manage foo' to '/foo/{id}'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/foo/{id}\"]",
+          "scopes": "[\"DELETE\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - Manage foo\"]"
+        }
+      },
+      {
+        "name": "[DELETE] access for role 'Manager Test - All permissions' to '/foo/{id}'",
+        "type": "scope",
+        "logic": "POSITIVE",
+        "decisionStrategy": "UNANIMOUS",
+        "config": {
+          "resources": "[\"/foo/{id}\"]",
+          "scopes": "[\"DELETE\"]",
+          "applyPolicies": "[\"Policy for role: Manager Test - All permissions\"]"
+        }
+      }
+    ],
+    "scopes": [
+      {
+        "name": "GET"
+      },
+      {
+        "name": "HEAD"
+      },
+      {
+        "name": "POST"
+      },
+      {
+        "name": "PUT"
+      },
+      {
+        "name": "PATCH"
+      },
+      {
+        "name": "DELETE"
+      },
+      {
+        "name": "OPTIONS"
+      },
+      {
+        "name": "TRACE"
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "clients": [
+    {
+      "clientId": "folio-backend-admin-client",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "supersecret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-folio-backend-admin-client",
+      "enabled": true,
+      "serviceAccountClientId": "folio-backend-admin-client",
+      "realmRoles": [
+        "default-roles-master",
+        "admin",
+        "create-realm"
+      ]
+    }
+  ]
+}
