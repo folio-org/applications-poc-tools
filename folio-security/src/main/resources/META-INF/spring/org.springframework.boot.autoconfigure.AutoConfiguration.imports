@@ -1,1 +1,1 @@
-configuration.keycloak.integration.org.folio.security.KeycloakDataImportConfiguration
+org.folio.security.integration.keycloak.configuration.KeycloakDataImportConfiguration
