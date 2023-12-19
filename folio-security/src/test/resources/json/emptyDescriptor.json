@@ -1,0 +1,26 @@
+{
+  "id": "mod-foo-1.0.0",
+  "name": "mod-foo",
+  "permissionSets": [
+    {
+      "description": "Create a new Foo item",
+      "displayName": "Foo - create new item",
+      "permissionName": "foo.item.post"
+    },
+    {
+      "description": "Get a Foo item",
+      "displayName": "Foo - get an item",
+      "permissionName": "foo.item.get"
+    },
+    {
+      "description": "Update a Foo item",
+      "displayName": "Foo - update an item",
+      "permissionName": "foo.item.put"
+    },
+    {
+      "description": "Delete a Foo item",
+      "displayName": "Foo - delete an item",
+      "permissionName": "foo.item.delete"
+    }
+  ]
+}
