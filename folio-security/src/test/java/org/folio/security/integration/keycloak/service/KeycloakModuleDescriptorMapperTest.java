@@ -14,6 +14,8 @@ import org.keycloak.representations.idm.authorization.ResourceRepresentation;
 class KeycloakModuleDescriptorMapperTest {
 
   private static final ModuleDescriptor MD = parse(readString("json/mappingDescriptor.json"), ModuleDescriptor.class);
+  private static final ModuleDescriptor EMPTY_MD =
+    parse(readString("json/emptyDescriptor.json"), ModuleDescriptor.class);
   private static final String RESOURCE_FOO = "/foo";
   private static final String RESOURCE_FOO_PERMS = "POST#foo.item.post";
   private static final String RESOURCE_FOO_ID = "/foo/{id}";
@@ -28,6 +30,14 @@ class KeycloakModuleDescriptorMapperTest {
     var resources = actual.getResourceServer().getResources();
     assertThat(resources).anySatisfy(resourceWithTypeAndName(RESOURCE_FOO_ID, RESOURCE_FOO_ID_PERMS));
     assertThat(resources).anySatisfy(resourceWithTypeAndName(RESOURCE_FOO, RESOURCE_FOO_PERMS));
+  }
+
+  @Test
+  void map_positive_empty_md() {
+    var actual = mapper.map(EMPTY_MD);
+
+    var resources = actual.getResourceServer().getResources();
+    assertThat(resources).isEmpty();
   }
 
   private static ThrowingConsumer<ResourceRepresentation> resourceWithTypeAndName(String name, String type) {

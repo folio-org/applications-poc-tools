@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.common.utils.CollectionUtils.toStream;
 import static org.folio.common.utils.UuidUtils.randomId;
 
 import java.util.ArrayList;
@@ -303,8 +304,8 @@ public class KeycloakModuleDescriptorMapper {
   }
 
   private static List<RoutingEntry> getRoutingEntries(ModuleDescriptor descriptor) {
-    return descriptor.getProvides().stream()
-      .flatMap(i -> emptyIfNull(i.getHandlers()).stream())
+    return toStream(descriptor.getProvides())
+      .flatMap(i -> toStream(i.getHandlers()))
       .collect(toList());
   }
 
