@@ -1,8 +1,6 @@
 {
   "id": "mod-foo-1.0.0",
   "name": "mod-foo",
-  "provides": [],
-  "requires" : [],
   "permissionSets": [
     {
       "description": "Create a new Foo item",

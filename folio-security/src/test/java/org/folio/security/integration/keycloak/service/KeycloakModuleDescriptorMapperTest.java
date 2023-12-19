@@ -33,7 +33,7 @@ class KeycloakModuleDescriptorMapperTest {
   }
 
   @Test
-  void map_positive_empty_md() {
+  void map_positive_emptyModuleDescriptor() {
     var actual = mapper.map(EMPTY_MD);
 
     var resources = actual.getResourceServer().getResources();
