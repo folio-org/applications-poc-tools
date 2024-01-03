@@ -16,6 +16,7 @@
     <spring-cloud-bom.version>2022.0.1</spring-cloud-bom.version>
     <keycloak-admin-client.version>23.0.3</keycloak-admin-client.version>
     <jwks-rsa.version>0.22.0</jwks-rsa.version>
+    <folio-backend-testing.version>1.1.0-SNAPSHOT</folio-backend-testing.version>
   </properties>
 
   <dependencies>
@@ -83,7 +84,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-backend-testing</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${folio-backend-testing.version}</version>
       <scope>test</scope>
     </dependency>
 
