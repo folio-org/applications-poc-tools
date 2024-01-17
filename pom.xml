@@ -41,7 +41,7 @@
     <spring-boot-starter-validation.version>3.0.4</spring-boot-starter-validation.version>
 
     <!-- Test dependencies versions -->
-    <wiremock.version>2.33.2</wiremock.version>
+    <wiremock.version>2.35.1</wiremock.version>
     <testcontainer.version>1.19.3</testcontainer.version>
 
     <!-- Plugins versions -->
