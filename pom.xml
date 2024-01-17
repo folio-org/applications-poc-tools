@@ -49,7 +49,7 @@
     <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
     <maven-checkstyle-plugin.version>3.2.1</maven-checkstyle-plugin.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
-    <maven-release-plugin.version>3.0.0-M7</maven-release-plugin.version>
+    <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
     <folio-java-checkstyle.version>1.0.0-SNAPSHOT</folio-java-checkstyle.version>
   </properties>
 
