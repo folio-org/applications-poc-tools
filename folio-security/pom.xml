@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.folio</groupId>
     <artifactId>applications-poc-tools</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
   </parent>
 
   <name>folio-security</name>
@@ -16,6 +16,7 @@
     <spring-cloud-bom.version>2022.0.1</spring-cloud-bom.version>
     <keycloak-admin-client.version>23.0.3</keycloak-admin-client.version>
     <jwks-rsa.version>0.22.0</jwks-rsa.version>
+    <folio-backend-testing.version>1.1.0-SNAPSHOT</folio-backend-testing.version>
   </properties>
 
   <dependencies>
@@ -83,13 +84,14 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-backend-testing</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${folio-backend-testing.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-inline</artifactId>
+      <version>5.2.0</version>
       <scope>test</scope>
     </dependency>
 
