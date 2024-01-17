@@ -10,7 +10,7 @@ public class PostgresContainerExtension implements BeforeAllCallback, AfterAllCa
   private static final String SPRING_PROPERTY_NAME = "spring.datasource.url";
 
   @SuppressWarnings("resource")
-  private static final PostgreSQLContainer<?> CONTAINER = new PostgreSQLContainer<>("postgres:12.11")
+  private static final PostgreSQLContainer<?> CONTAINER = new PostgreSQLContainer<>("postgres:12-alpine")
     .withDatabaseName("folio_test")
     .withUsername("folio_admin")
     .withPassword("qwerty123");
