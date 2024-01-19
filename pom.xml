@@ -49,7 +49,7 @@
     <maven-checkstyle-plugin.version>3.2.1</maven-checkstyle-plugin.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
     <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
-    <folio-java-checkstyle.version>1.0.0-SNAPSHOT</folio-java-checkstyle.version>
+    <folio-java-checkstyle.version>1.0.1</folio-java-checkstyle.version>
   </properties>
 
   <dependencyManagement>
@@ -295,6 +295,14 @@
       <url>https://maven.indexdata.com</url>
     </repository>
   </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>folio-nexus</id>
+      <name>FOLIO Maven repository</name>
+      <url>https://repository.folio.org/repository/maven-folio</url>
+    </pluginRepository>
+  </pluginRepositories>
 
   <distributionManagement>
     <repository>
