@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
     <version>3.2.0</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <name>applications-poc-tools</name>
@@ -50,7 +49,7 @@
     <maven-checkstyle-plugin.version>3.2.1</maven-checkstyle-plugin.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
     <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
-    <folio-java-checkstyle.version>1.0.0-SNAPSHOT</folio-java-checkstyle.version>
+    <folio-java-checkstyle.version>1.0.1</folio-java-checkstyle.version>
   </properties>
 
   <dependencyManagement>
@@ -297,6 +296,14 @@
     </repository>
   </repositories>
 
+  <pluginRepositories>
+    <pluginRepository>
+      <id>folio-nexus</id>
+      <name>FOLIO Maven repository</name>
+      <url>https://repository.folio.org/repository/maven-folio</url>
+    </pluginRepository>
+  </pluginRepositories>
+
   <distributionManagement>
     <repository>
       <id>folio-nexus</id>
@@ -313,4 +320,11 @@
       <layout>default</layout>
     </snapshotRepository>
   </distributionManagement>
+
+  <scm>
+    <url>https://github.com/folio-org/applications-poc-tools</url>
+    <connection>scm:git:git://github.com:folio-org/applications-poc-tools.git</connection>
+    <developerConnection>scm:git:git@github.com:folio-org/applications-poc-tools.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 </project>
