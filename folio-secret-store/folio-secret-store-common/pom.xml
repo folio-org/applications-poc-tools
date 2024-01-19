@@ -1,24 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.folio</groupId>
     <artifactId>folio-secret-store</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
   </parent>
 
   <name>folio-secret-store-common</name>
   <artifactId>folio-secret-store-common</artifactId>
-  <description/>
+  <description />
 
   <properties>
     <vault.version>5.1.0</vault.version>
     <aws.version>2.20.51</aws.version>
     <apache-commons-text.version>1.10.0</apache-commons-text.version>
-    <folio-backend-testing.version>1.1.0-SNAPSHOT</folio-backend-testing.version>
+    <folio-backend-testing.version>1.0.0</folio-backend-testing.version>
   </properties>
 
   <dependencies>
