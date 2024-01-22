@@ -11,9 +11,9 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.security.domain.model.descriptor.InterfaceDescriptor;
-import org.folio.security.domain.model.descriptor.ModuleDescriptor;
-import org.folio.security.domain.model.descriptor.RoutingEntry;
+import org.folio.common.domain.model.InterfaceDescriptor;
+import org.folio.common.domain.model.ModuleDescriptor;
+import org.folio.common.domain.model.RoutingEntry;
 
 @RequiredArgsConstructor
 public class RoutingEntryMatcher {

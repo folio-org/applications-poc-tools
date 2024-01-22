@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
-import org.folio.security.domain.model.descriptor.RoutingEntry;
+import org.folio.common.domain.model.RoutingEntry;
 import org.folio.security.exception.ForbiddenException;
 import org.folio.security.exception.NotAuthorizedException;
 import org.folio.security.exception.RoutingEntryMatchingException;
