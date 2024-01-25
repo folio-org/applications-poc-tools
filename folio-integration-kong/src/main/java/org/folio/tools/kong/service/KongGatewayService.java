@@ -248,6 +248,7 @@ public class KongGatewayService {
     }
   }
 
+  @SuppressWarnings("java:S4790")
   private static Optional<Route> getRoute(
     String tenant, String moduleId, String interfaceId, RoutingEntry re, boolean isMultiple) {
 

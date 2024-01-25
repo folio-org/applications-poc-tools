@@ -14,6 +14,10 @@
 
   <properties>
     <folio-backend-testing.version>1.1.0-SNAPSHOT</folio-backend-testing.version>
+
+    <sonar.exclusions>
+      src/main/java/**/domain/model/**/*
+    </sonar.exclusions>
   </properties>
 
   <dependencies>
