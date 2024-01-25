@@ -22,6 +22,7 @@
     <module>folio-security</module>
     <module>folio-secret-store</module>
     <module>folio-backend-testing</module>
+    <module>folio-integration-kong</module>
   </modules>
 
   <licenses>

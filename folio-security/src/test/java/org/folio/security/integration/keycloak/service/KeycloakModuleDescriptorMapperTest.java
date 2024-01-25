@@ -5,7 +5,7 @@ import static org.folio.test.TestUtils.parse;
 import static org.folio.test.TestUtils.readString;
 
 import org.assertj.core.api.ThrowingConsumer;
-import org.folio.security.domain.model.descriptor.ModuleDescriptor;
+import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.test.types.UnitTest;
 import org.junit.jupiter.api.Test;
 import org.keycloak.representations.idm.authorization.ResourceRepresentation;
