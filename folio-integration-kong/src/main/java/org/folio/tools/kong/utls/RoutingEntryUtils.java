@@ -2,7 +2,6 @@ package org.folio.tools.kong.utls;
 
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
 
 import java.util.List;
@@ -35,6 +34,6 @@ public class RoutingEntryUtils {
   private static List<String> getAllHttpMethods() {
     return stream(HttpMethod.values())
       .map(HttpMethod::name)
-      .collect(toUnmodifiableList());
+      .toList();
   }
 }

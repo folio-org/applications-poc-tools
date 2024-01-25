@@ -285,7 +285,7 @@ public class KeycloakModuleDescriptorMapper {
     var permissionSets = policyMappings.keySet();
     var parentPermissionSets = permissions.stream()
       .flatMap(permission -> findParentPermissionsOf(permissionSets, permission).stream())
-      .collect(toList());
+      .toList();
 
     var associatedPolicies = new ArrayList<RolePolicyRepresentation>();
     for (var permissionSet : parentPermissionSets) {
@@ -306,7 +306,7 @@ public class KeycloakModuleDescriptorMapper {
   private static List<RoutingEntry> getRoutingEntries(ModuleDescriptor descriptor) {
     return toStream(descriptor.getProvides())
       .flatMap(i -> toStream(i.getHandlers()))
-      .collect(toList());
+      .toList();
   }
 
   private static List<Permission> getPermissionSets(ModuleDescriptor descriptor) {

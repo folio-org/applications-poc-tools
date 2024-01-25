@@ -141,7 +141,7 @@ public class KongGatewayService {
       .filter(not(pair1 -> existingRouteNames.contains(pair1.getLeft().getName())))
       .map(pair -> createKongRoute(serviceId, pair.getLeft(), pair.getRight()))
       .flatMap(Optional::stream)
-      .collect(toList());
+      .toList();
 
     var routeNames = routes.stream()
       .map(pair -> pair.getLeft().getName())
@@ -151,7 +151,7 @@ public class KongGatewayService {
       .filter(not(routeNames::contains))
       .map(routeName -> deleteRoute(serviceId, routeName))
       .flatMap(Optional::stream)
-      .collect(toList());
+      .toList();
 
     var resultErrorParameters = new ArrayList<>(newRoutesCreationErrors);
     resultErrorParameters.addAll(deprecatedRoutesDeletionErrors);
@@ -165,14 +165,14 @@ public class KongGatewayService {
     return prepareRoutes(moduleDescriptor, moduleId, tenant).stream()
       .map(kongRoutePair -> createKongRoute(serviceId, kongRoutePair.getLeft(), kongRoutePair.getRight()))
       .flatMap(Optional::stream)
-      .collect(toList());
+      .toList();
   }
 
   private List<Pair<Route, RoutingEntry>> prepareRoutes(ModuleDescriptor desc, String moduleId, String tenant) {
     return toStream(desc.getProvides())
       .map(interfaceDescriptor -> prepareRoutes(interfaceDescriptor, moduleId, tenant))
       .flatMap(Collection::stream)
-      .collect(toList());
+      .toList();
   }
 
   private List<Pair<Route, RoutingEntry>> prepareRoutes(InterfaceDescriptor desc, String moduleId, String tenant) {
@@ -188,7 +188,7 @@ public class KongGatewayService {
       .map(routingEntry -> getRoute(tenant, moduleId, interfaceId, routingEntry, isMultiple)
         .map(route -> Pair.of(route, routingEntry)))
       .flatMap(Optional::stream)
-      .collect(toList());
+      .toList();
   }
 
   private String getExistingServiceId(String moduleId) {
@@ -236,7 +236,7 @@ public class KongGatewayService {
     return getKongRoutes(tenant, moduleId).stream()
       .map(kongRoute -> deleteRoute(serviceId, kongRoute.getId()))
       .flatMap(Optional::stream)
-      .collect(toList());
+      .toList();
   }
 
   private Optional<Parameter> deleteRoute(String serviceId, String routeIdOrName) {
