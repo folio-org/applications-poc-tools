@@ -27,6 +27,21 @@
           "permissionsRequired": [ "foo.item.delete" ]
         }
       ]
+    },
+    {
+      "id": "_timer",
+      "version": "1.0",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/foo/timer",
+          "unit": "day",
+          "delay": "5"
+        }
+      ]
     }
   ],
   "requires": [

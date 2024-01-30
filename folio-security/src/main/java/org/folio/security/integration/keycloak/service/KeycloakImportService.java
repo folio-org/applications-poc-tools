@@ -51,7 +51,7 @@ public class KeycloakImportService {
   public void importData() {
     var descriptor = descriptorProvider.getModuleDescriptor();
     var descriptorHash = descriptor.hashCode();
-    var mappings = mapper.map(descriptor);
+    var mappings = mapper.map(descriptor, false);
     var clientId = props.getClient().getClientId();
     var realmResource = keycloakClient.realm(REALM);
     var client = getClientIfExists(realmResource, clientId);
