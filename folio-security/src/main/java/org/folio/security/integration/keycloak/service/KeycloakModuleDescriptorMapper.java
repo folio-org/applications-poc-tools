@@ -45,7 +45,8 @@ public class KeycloakModuleDescriptorMapper {
   private static final String SCOPE_PERM_DELIMITER = "#";
 
   public KeycloakMappings map(ModuleDescriptor descriptor, boolean excludeSystemInterfaces) {
-    log.debug("Preparing keycloak mappings from module descriptor [id='{}']", descriptor.getId());
+    log.debug("Preparing keycloak mappings from module descriptor [id='{}', excludeSystemInterfaces={}]",
+      descriptor.getId(), excludeSystemInterfaces);
 
     var allScopes = mapScopes(HTTP_METHODS);
     var roleMappings = mapRoles(descriptor);
