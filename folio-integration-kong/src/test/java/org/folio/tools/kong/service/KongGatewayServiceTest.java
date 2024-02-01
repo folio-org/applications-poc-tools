@@ -162,9 +162,10 @@ class KongGatewayServiceTest {
 
       var routingEntry = new RoutingEntry().methods(List.of("GET")).pathPattern("/entities/{id}");
       var interfaceDesc = new InterfaceDescriptor().id("test").version("1.0").handlers(List.of(routingEntry));
-      var moduleDesc = new ModuleDescriptor().id(MOD_ID).provides(List.of(interfaceDesc));
+      var moduleDescriptor = new ModuleDescriptor().id(MOD_ID).provides(List.of(interfaceDesc));
 
-      assertThatThrownBy(() -> kongGatewayService.addRoutes(TENANT_NAME, List.of(moduleDesc)))
+      var moduleDescriptors = List.of(moduleDescriptor);
+      assertThatThrownBy(() -> kongGatewayService.addRoutes(TENANT_NAME, moduleDescriptors))
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to create routes")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(
@@ -176,10 +177,10 @@ class KongGatewayServiceTest {
     @Test
     void negative_serviceNotFound() {
       var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
-      var moduleDescriptor = moduleDescriptor();
       when(kongAdminClient.getService(MOD_ID)).thenThrow(new NotFound("Not found", request, null, emptyMap()));
 
-      assertThatThrownBy(() -> kongGatewayService.addRoutes(TENANT_NAME, List.of(moduleDescriptor)))
+      var moduleDescriptors = List.of(moduleDescriptor());
+      assertThatThrownBy(() -> kongGatewayService.addRoutes(TENANT_NAME, moduleDescriptors))
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to find Kong service for module: test-module-0.0.1")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
@@ -331,9 +332,8 @@ class KongGatewayServiceTest {
       var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
       when(kongAdminClient.getService(MOD_ID)).thenThrow(new NotFound("Not found", request, null, emptyMap()));
 
-      var moduleDescriptor = moduleDescriptor();
-
-      assertThatThrownBy(() -> kongGatewayService.addRoutes(TENANT_NAME, List.of(moduleDescriptor)))
+      var moduleDescriptors = List.of(moduleDescriptor());
+      assertThatThrownBy(() -> kongGatewayService.addRoutes(TENANT_NAME, moduleDescriptors))
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to find Kong service for module: test-module-0.0.1")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
