@@ -110,6 +110,20 @@ public class KongGatewayService {
     }
   }
 
+  /**
+   * Deletes Kong service by service name or id.
+   *
+   * @throws KongIntegrationException - if integration exception happened
+   */
+  public void deleteService(String serviceNameOrId) {
+    try {
+      kongAdminClient.deleteService(serviceNameOrId);
+    } catch (Exception e) {
+      var parameters = List.of(new Parameter().key("cause").value(e.getMessage()));
+      throw new KongIntegrationException("Failed to delete Kong service: " + serviceNameOrId, parameters);
+    }
+  }
+
   private String getUrl(Service service) {
     return service.getUrl() != null
       ? service.getUrl()
@@ -137,7 +151,7 @@ public class KongGatewayService {
 
     var routes = prepareRoutes(moduleDescriptor, moduleId, tenant);
     var newRoutesCreationErrors = toStream(routes)
-      .filter(not(pair1 -> existingRouteNames.contains(pair1.getLeft().getName())))
+      .filter(not(pair -> existingRouteNames.contains(pair.getLeft().getName())))
       .map(pair -> createKongRoute(serviceId, pair.getLeft(), pair.getRight()))
       .flatMap(Optional::stream)
       .toList();
@@ -319,7 +333,7 @@ public class KongGatewayService {
   }
 
   @SafeVarargs
-  private static <T> List<T> getNonNullValues(T ... nullableValues) {
+  private static <T> List<T> getNonNullValues(T... nullableValues) {
     return Stream.of(nullableValues).filter(Objects::nonNull).toList();
   }
 }

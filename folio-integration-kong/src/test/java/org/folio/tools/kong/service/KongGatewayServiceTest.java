@@ -401,6 +401,32 @@ class KongGatewayServiceTest {
     }
   }
 
+  @Nested
+  @DisplayName("deleteService")
+  class DeleteService {
+
+    @Test
+    void positive() {
+      kongGatewayService.deleteService(MOD_ID);
+      verify(kongAdminClient).deleteService(MOD_ID);
+    }
+
+    @Test
+    void negative_serviceIsNotFound() {
+      var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
+      var errorMessage = "Service is not found: test-module-0.0.1";
+      var notFoundException = new NotFound(errorMessage, request, null, emptyMap());
+
+      doThrow(notFoundException).when(kongAdminClient).deleteService(MOD_ID);
+
+      assertThatThrownBy(() -> kongGatewayService.deleteService(MOD_ID))
+        .isInstanceOf(KongIntegrationException.class)
+        .hasMessage("Failed to delete Kong service: test-module-0.0.1")
+        .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors())
+          .isEqualTo(List.of(new Parameter().key("cause").value(errorMessage))));
+    }
+  }
+
   static class TestValues {
 
     static Route route(List<String> methods, String path, String interfaceId) {
