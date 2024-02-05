@@ -4,7 +4,6 @@ import static java.util.Collections.emptyList;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
@@ -321,6 +320,6 @@ public class KongGatewayService {
 
   @SafeVarargs
   private static <T> List<T> getNonNullValues(T ... nullableValues) {
-    return Stream.of(nullableValues).filter(Objects::nonNull).collect(toList());
+    return Stream.of(nullableValues).filter(Objects::nonNull).toList();
   }
 }
