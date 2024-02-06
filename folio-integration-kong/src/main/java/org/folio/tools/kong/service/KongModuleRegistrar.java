@@ -27,8 +27,11 @@ public class KongModuleRegistrar {
   @EventListener(ApplicationReadyEvent.class)
   public void registerRoutes() {
     var moduleDescriptor = getModuleDescriptor();
-    var service = new Service().name(moduleDescriptor.getId()).url(kongConfigurationProperties.getModuleSelfUrl());
-    kongGatewayService.upsertService(service);
+    var moduleId = moduleDescriptor.getId();
+    var moduleUrl = kongConfigurationProperties.getModuleSelfUrl();
+
+    log.info("Self-registering service in Kong: moduleId = {}, url = {}", moduleId, moduleUrl);
+    kongGatewayService.upsertService(new Service().name(moduleId).url(moduleUrl));
     kongGatewayService.updateRoutes(null, singletonList(moduleDescriptor));
   }
 
