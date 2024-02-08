@@ -127,7 +127,7 @@ class PaginationUtilsTest {
     return list.stream().filter(shuffled::contains).collect(Collectors.toList());
   }
 
-  private static class TestClient {
+  private static final class TestClient {
 
     public List<String> query(List<String> ids, int batchSize) {
       return null;
