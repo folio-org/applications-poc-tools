@@ -10,7 +10,7 @@
 
   <name>folio-backend-testing</name>
   <artifactId>folio-backend-testing</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <description />
 
   <properties>
