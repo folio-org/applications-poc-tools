@@ -18,7 +18,7 @@ import org.keycloak.representations.idm.PartialImportRepresentation;
 public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
   @SuppressWarnings("resource")
-  private static final KeycloakContainer CONTAINER = new KeycloakContainer("quay.io/keycloak/keycloak:23.0.3")
+  private static final KeycloakContainer CONTAINER = new KeycloakContainer("quay.io/keycloak/keycloak:23.0.6")
     .withFeaturesEnabled("scripts", "token-exchange", "admin-fine-grained-authz")
     .withProviderLibsFrom(List.of(readToFile("keycloak/folio-scripts.jar", "folio-scripts", ".jar")));
 
