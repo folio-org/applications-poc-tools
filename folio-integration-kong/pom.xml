@@ -14,7 +14,7 @@
   <properties>
     <folio-backend-testing.version>1.2.0-SNAPSHOT</folio-backend-testing.version>
     <spring-cloud-starter-openfeign.version>4.1.0</spring-cloud-starter-openfeign.version>
-    <commons-codec.version>1.16.0</commons-codec.version>
+    <commons-codec.version>1.16.1</commons-codec.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
 
     <sonar.exclusions>
