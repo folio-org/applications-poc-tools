@@ -9,10 +9,8 @@
 
   <name>folio-integration-kong</name>
   <artifactId>folio-integration-kong</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
 
   <properties>
-    <folio-backend-testing.version>1.2.0-SNAPSHOT</folio-backend-testing.version>
     <spring-cloud-starter-openfeign.version>4.1.0</spring-cloud-starter-openfeign.version>
     <commons-codec.version>1.16.1</commons-codec.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
@@ -55,7 +53,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-backend-testing</artifactId>
-      <version>${folio-backend-testing.version}</version>
+      <version>${project.parent.version}</version>
       <scope>test</scope>
     </dependency>
 
