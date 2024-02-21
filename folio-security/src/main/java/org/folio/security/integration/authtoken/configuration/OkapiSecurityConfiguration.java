@@ -19,6 +19,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.openfeign.FeignClientsConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.web.util.UrlPathHelper;
 
@@ -41,12 +42,12 @@ public class OkapiSecurityConfiguration {
 
   @Bean
   public AuthorizationService authorizationService(AuthtokenClient authtokenClient,
-    InternalModuleDescriptorProvider internalModuleDescriptorProvider,
-    RoutingEntryMatcher routingEntryMatcher,
-    UrlPathHelper urlPathHelper) {
-    return new OkapiAuthorizationService(urlPathHelper, routingEntryMatcher, internalModuleDescriptorProvider,
-      authtokenClient,
-      properties.getUrl());
+    InternalModuleDescriptorProvider internalModuleDescriptorProvider, RoutingEntryMatcher routingEntryMatcher,
+    UrlPathHelper urlPathHelper, Environment environment) {
+    var okapiAuthorizationService = new OkapiAuthorizationService(urlPathHelper, routingEntryMatcher,
+      internalModuleDescriptorProvider, authtokenClient, properties.getUrl());
+    okapiAuthorizationService.setEnvironment(environment);
+    return okapiAuthorizationService;
   }
 
   @Bean

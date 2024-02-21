@@ -19,6 +19,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.openfeign.FeignClientsConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 
 @ConditionalOnProperty({"application.security.enabled", "application.keycloak.enabled"})
@@ -38,8 +39,10 @@ public class KeycloakSecurityConfiguration {
 
   @Bean
   public KeycloakAuthorizationService authorizationService(KeycloakAuthClient keycloakClient,
-    RoutingEntryMatcher routingEntryMatcher, KeycloakTokenValidator tokenValidator) {
-    return new KeycloakAuthorizationService(keycloakClient, routingEntryMatcher, tokenValidator, properties);
+    RoutingEntryMatcher routingEntryMatcher, KeycloakTokenValidator tokenValidator, Environment environment) {
+    var service = new KeycloakAuthorizationService(keycloakClient, routingEntryMatcher, tokenValidator, properties);
+    service.setEnvironment(environment);
+    return service;
   }
 
   @Bean

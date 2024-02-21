@@ -17,7 +17,7 @@ import org.folio.security.exception.ForbiddenException;
 import org.folio.security.exception.NotAuthorizedException;
 import org.folio.security.exception.RoutingEntryMatchingException;
 import org.folio.security.integration.authtoken.client.AuthtokenClient;
-import org.folio.security.service.AuthorizationService;
+import org.folio.security.service.AbstractAuthorizationService;
 import org.folio.security.service.InternalModuleDescriptorProvider;
 import org.folio.security.service.RoutingEntryMatcher;
 import org.springframework.security.core.Authentication;
@@ -25,7 +25,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.web.util.UrlPathHelper;
 
 @RequiredArgsConstructor
-public class OkapiAuthorizationService implements AuthorizationService {
+public class OkapiAuthorizationService extends AbstractAuthorizationService {
 
   private static final String COMMA = ",";
 
@@ -37,7 +37,7 @@ public class OkapiAuthorizationService implements AuthorizationService {
 
   @Override
   public Authentication authorize(HttpServletRequest request, String token) {
-    var path = urlPathHelper.getPathWithinApplication(request);
+    var path = updatePath(urlPathHelper.getPathWithinApplication(request));
     var method = request.getMethod();
 
     var routingEntry = routingEntryMatcher.lookup(method, path)

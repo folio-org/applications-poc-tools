@@ -3,7 +3,6 @@ package org.folio.security.configuration;
 import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.folio.security.filter.AuthorizationFilter;
 import org.folio.security.filter.ExceptionHandlerFilter;
 import org.folio.security.integration.authtoken.configuration.OkapiSecurityConfiguration;
 import org.folio.security.integration.keycloak.configuration.KeycloakSecurityConfiguration;
@@ -18,9 +17,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 
 @EnableWebSecurity
 @Import({KeycloakSecurityConfiguration.class, OkapiSecurityConfiguration.class})
@@ -39,26 +39,22 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
   @ConditionalOnBean(AuthorizationService.class)
   public SecurityFilterChain filterChain(HttpSecurity http, AuthorizationService authService, ObjectMapper mapper)
     throws Exception {
-    http
-      .csrf().disable()
-      .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-      .and().authorizeHttpRequests()
-      .anyRequest().authenticated()
-      .and()
-      .addFilterBefore(new AuthorizationFilter(authService), FilterSecurityInterceptor.class)
-      .addFilterBefore(new ExceptionHandlerFilter(mapper), AuthorizationFilter.class);
-    return http.build();
+    return http
+      .csrf(AbstractHttpConfigurer::disable)
+      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+      .addFilterBefore(new org.folio.security.filter.AuthorizationFilter(authService), AuthorizationFilter.class)
+      .addFilterBefore(new ExceptionHandlerFilter(mapper), org.folio.security.filter.AuthorizationFilter.class)
+      .build();
   }
 
   @Bean
   @ConditionalOnMissingBean
   public SecurityFilterChain noAuthFilterChain(HttpSecurity http) throws Exception {
-    http
-      .csrf().disable()
-      .authorizeHttpRequests()
-      .requestMatchers("/**").permitAll()
-      .and()
-      .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-    return http.build();
+    return http
+      .csrf(AbstractHttpConfigurer::disable)
+      .authorizeHttpRequests(auth -> auth.requestMatchers("/**").permitAll())
+      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .build();
   }
 }

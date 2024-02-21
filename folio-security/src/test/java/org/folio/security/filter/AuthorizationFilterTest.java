@@ -33,6 +33,7 @@ class AuthorizationFilterTest {
 
   private static final String OKAPI_TOKEN = "test";
   private static final String BEARER_OKAPI_TOKEN = "Bearer " + OKAPI_TOKEN;
+
   @Mock private FilterChain filterChain;
   @Mock private HttpServletRequest request;
   @Mock private HttpServletResponse response;

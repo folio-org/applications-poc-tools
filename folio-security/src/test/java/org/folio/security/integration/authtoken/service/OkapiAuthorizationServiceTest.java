@@ -1,6 +1,7 @@
 package org.folio.security.integration.authtoken.service;
 
 import static org.folio.common.utils.OkapiHeaders.SUPERTENANT_ID;
+import static org.folio.security.service.AbstractAuthorizationService.ROUTER_PREFIX_PROPERTY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -19,6 +20,7 @@ import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
 import org.folio.security.exception.ForbiddenException;
 import org.folio.security.exception.NotAuthorizedException;
+import org.folio.security.exception.RoutingEntryMatchingException;
 import org.folio.security.integration.authtoken.client.AuthtokenClient;
 import org.folio.security.service.InternalModuleDescriptorProvider;
 import org.folio.security.service.RoutingEntryMatcher;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.util.UrlPathHelper;
 
@@ -45,24 +48,18 @@ class OkapiAuthorizationServiceTest {
   private static final String MODULE_PERMISSION_2 = "module_permission2";
   private static final String MODULE_ID = "module_id";
 
-  @Mock
-  private UrlPathHelper urlPathHelper;
-  @Mock
-  private RoutingEntryMatcher routingEntryMatcher;
-  @Mock
-  private InternalModuleDescriptorProvider descriptorProvider;
-  @Mock
-  private AuthtokenClient client;
-  @Mock
-  private HttpServletRequest request;
+  @Mock private Environment environment;
+  @Mock private UrlPathHelper urlPathHelper;
+  @Mock private RoutingEntryMatcher routingEntryMatcher;
+  @Mock private InternalModuleDescriptorProvider descriptorProvider;
+  @Mock private AuthtokenClient client;
+  @Mock private HttpServletRequest request;
 
-  @InjectMocks
-  private OkapiAuthorizationService service;
+  @InjectMocks private OkapiAuthorizationService service;
 
   @BeforeEach
   void setup() {
-    when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
-    when(request.getMethod()).thenReturn(METHOD);
+    service.setEnvironment(environment);
   }
 
   @Test
@@ -73,12 +70,42 @@ class OkapiAuthorizationServiceTest {
       .modulePermissions(modulePermissions);
     var moduleDescriptor = new ModuleDescriptor().id(MODULE_ID);
 
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("/");
+    when(request.getMethod()).thenReturn(METHOD);
+    when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
 
     var auth = service.authorize(request, TOKEN);
 
     assertEquals(PreAuthenticatedAuthenticationToken.class, auth.getClass());
+  }
+
+  @Test
+  void authorize_positive_pathWithPrefix() {
+    var permissionsRequired = List.of(PERMISSION_1, PERMISSION_2);
+    var modulePermissions = List.of(MODULE_PERMISSION_1, MODULE_PERMISSION_2);
+    var routingEntry = new RoutingEntry().path(PATH).methods(List.of(METHOD)).permissionsRequired(permissionsRequired)
+      .modulePermissions(modulePermissions);
+    var moduleDescriptor = new ModuleDescriptor().id(MODULE_ID);
+
+    when(request.getMethod()).thenReturn(METHOD);
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("/prefix");
+    when(urlPathHelper.getPathWithinApplication(request)).thenReturn("/prefix" + PATH);
+    when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
+    when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
+
+    var auth = service.authorize(request, TOKEN);
+
+    assertEquals(PreAuthenticatedAuthenticationToken.class, auth.getClass());
+  }
+
+  @Test
+  void authorize_positive_pathWithoutPrefixWhenItsDefinedInConfiguration() {
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("/prefix");
+    when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
+
+    assertThrows(RoutingEntryMatchingException.class, () -> service.authorize(request, TOKEN));
   }
 
   @Test
@@ -91,6 +118,9 @@ class OkapiAuthorizationServiceTest {
     var reqPerms = String.join(",", permissionsRequired);
     var modPerms = Map.of(MODULE_ID, modulePermissions);
 
+    when(request.getMethod()).thenReturn(METHOD);
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("");
+    when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
     doThrow(FeignException.Forbidden.class).when(client)
@@ -109,6 +139,9 @@ class OkapiAuthorizationServiceTest {
     var reqPerms = String.join(",", permissionsRequired);
     var modPerms = Map.of(MODULE_ID, modulePermissions);
 
+    when(request.getMethod()).thenReturn(METHOD);
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("");
+    when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
     doThrow(FeignException.Unauthorized.class).when(client)
@@ -125,6 +158,9 @@ class OkapiAuthorizationServiceTest {
       .modulePermissions(modulePermissions);
     var moduleDescriptor = new ModuleDescriptor().id(MODULE_ID);
 
+    when(request.getMethod()).thenReturn(METHOD);
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("");
+    when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
     doThrow(FeignException.InternalServerError.class).when(client)
@@ -134,13 +170,16 @@ class OkapiAuthorizationServiceTest {
   }
 
   @Test
-  void authorize_negative_modAuthtokenNotAvailable() {
+  void authorize_negative_modAuthokenNotAvailable() {
     var permissionsRequired = List.of(PERMISSION_1, PERMISSION_2);
     var modulePermissions = List.of(MODULE_PERMISSION_1, MODULE_PERMISSION_2);
     var routingEntry = new RoutingEntry().path(PATH).methods(List.of(METHOD)).permissionsRequired(permissionsRequired)
       .modulePermissions(modulePermissions);
     var moduleDescriptor = new ModuleDescriptor().id(MODULE_ID);
 
+    when(request.getMethod()).thenReturn(METHOD);
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("");
+    when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
     doThrow(RetryableException.class).when(client)

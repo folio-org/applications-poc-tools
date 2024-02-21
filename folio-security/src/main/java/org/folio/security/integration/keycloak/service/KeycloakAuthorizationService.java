@@ -18,7 +18,7 @@ import org.folio.security.exception.NotAuthorizedException;
 import org.folio.security.exception.RoutingEntryMatchingException;
 import org.folio.security.integration.keycloak.client.KeycloakAuthClient;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
-import org.folio.security.service.AuthorizationService;
+import org.folio.security.service.AbstractAuthorizationService;
 import org.folio.security.service.RoutingEntryMatcher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -26,7 +26,7 @@ import org.springframework.web.util.UrlPathHelper;
 
 @Log4j2
 @RequiredArgsConstructor
-public class KeycloakAuthorizationService implements AuthorizationService {
+public class KeycloakAuthorizationService extends AbstractAuthorizationService {
 
   private final UrlPathHelper urlPathHelper = new UrlPathHelper();
   private final KeycloakAuthClient keycloakClient;
@@ -36,7 +36,7 @@ public class KeycloakAuthorizationService implements AuthorizationService {
 
   @Override
   public Authentication authorize(HttpServletRequest request, String token) {
-    var path = urlPathHelper.getPathWithinApplication(request);
+    var path = updatePath(urlPathHelper.getPathWithinApplication(request));
     var method = request.getMethod();
     var routingEntry = routingEntryMatcher.lookup(method, path)
       .orElseThrow(() -> new RoutingEntryMatchingException("Unable to resolve routing entry for path: " + path));
