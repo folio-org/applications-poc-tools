@@ -62,7 +62,7 @@ public class WireMockExtension implements BeforeAllCallback, AfterAllCallback {
   public void beforeAll(ExtensionContext context) {
     runContainer();
 
-    String wmUrl = getUrlForExposedPort(WM_DOCKER_PORT);
+    String wmUrl = getUrlForExposedPort();
     setProperty(WM_URL_PROPERTY, wmUrl);
 
     setSystemVarsToWireMockUrl(context, wmUrl);
@@ -82,7 +82,7 @@ public class WireMockExtension implements BeforeAllCallback, AfterAllCallback {
     if (!WM_CONTAINER.isRunning()) {
       WM_CONTAINER.start();
 
-      var wmUrl = getUrlForExposedPort(WM_DOCKER_PORT);
+      var wmUrl = getUrlForExposedPort();
       log.info("Wire mock server started [url: {}]", wmUrl);
 
       int hostPort = WM_CONTAINER.getMappedPort(WM_DOCKER_PORT);
@@ -130,7 +130,7 @@ public class WireMockExtension implements BeforeAllCallback, AfterAllCallback {
     }
   }
 
-  private static String getUrlForExposedPort(int port) {
-    return String.format("http://%s:%s", WM_CONTAINER.getHost(), WM_CONTAINER.getMappedPort(port));
+  private static String getUrlForExposedPort() {
+    return String.format("http://%s:%s", WM_CONTAINER.getHost(), WM_CONTAINER.getMappedPort(WM_DOCKER_PORT));
   }
 }
