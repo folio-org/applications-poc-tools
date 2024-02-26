@@ -62,7 +62,7 @@ public class WireMockExtension implements BeforeAllCallback, AfterAllCallback {
   public void beforeAll(ExtensionContext context) {
     runContainer();
 
-    String wmUrl = getUrlForExposedPort();
+    var wmUrl = getUrlForExposedPort();
     setProperty(WM_URL_PROPERTY, wmUrl);
 
     setSystemVarsToWireMockUrl(context, wmUrl);
