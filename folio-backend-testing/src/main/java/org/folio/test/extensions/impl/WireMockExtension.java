@@ -10,6 +10,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -25,17 +26,19 @@ import org.testcontainers.utility.DockerImageName;
 @Slf4j
 public class WireMockExtension implements BeforeAllCallback, AfterAllCallback {
 
+  public static final int WM_DOCKER_PORT = 8080;
+  public static final String WM_NETWORK_ALIAS = UUID.randomUUID().toString();
   public static final String WM_URL_PROPERTY = "wm.url";
 
   private static final DockerImageName WM_IMAGE = DockerImageName.parse("wiremock/wiremock:2.35.0");
-  private static final int WM_PORT = 8080;
   private static final String WM_URL_VARS_FILE = "wiremock-url.vars";
 
   @SuppressWarnings("resource")
   private static final GenericContainer<?> WM_CONTAINER = new GenericContainer<>(WM_IMAGE)
     .withNetwork(Network.SHARED)
-    .withExposedPorts(WM_PORT)
+    .withExposedPorts(WM_DOCKER_PORT)
     .withAccessToHost(true)
+    .withNetworkAliases(WM_NETWORK_ALIAS)
     .withCommand(
       "--local-response-templating",
       "--disable-banner",
@@ -59,7 +62,7 @@ public class WireMockExtension implements BeforeAllCallback, AfterAllCallback {
   public void beforeAll(ExtensionContext context) {
     runContainer();
 
-    String wmUrl = getUrlForExposedPort(WM_PORT);
+    String wmUrl = getUrlForExposedPort(WM_DOCKER_PORT);
     setProperty(WM_URL_PROPERTY, wmUrl);
 
     setSystemVarsToWireMockUrl(context, wmUrl);
@@ -79,10 +82,10 @@ public class WireMockExtension implements BeforeAllCallback, AfterAllCallback {
     if (!WM_CONTAINER.isRunning()) {
       WM_CONTAINER.start();
 
-      var wmUrl = getUrlForExposedPort(WM_PORT);
+      var wmUrl = getUrlForExposedPort(WM_DOCKER_PORT);
       log.info("Wire mock server started [url: {}]", wmUrl);
 
-      int hostPort = WM_CONTAINER.getMappedPort(WM_PORT);
+      int hostPort = WM_CONTAINER.getMappedPort(WM_DOCKER_PORT);
       Testcontainers.exposeHostPorts(hostPort);
       log.info("Host port exposed to containers: {}", hostPort);
 
