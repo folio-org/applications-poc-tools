@@ -42,7 +42,7 @@
 
     <!-- Test dependencies versions -->
     <wiremock.version>2.35.2</wiremock.version>
-    <testcontainer.version>1.19.5</testcontainer.version>
+    <testcontainer.version>1.19.6</testcontainer.version>
 
     <!-- Plugins versions -->
     <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
