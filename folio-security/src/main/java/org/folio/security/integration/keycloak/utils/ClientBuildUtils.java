@@ -1,7 +1,9 @@
 package org.folio.security.integration.keycloak.utils;
 
+import static jakarta.ws.rs.client.ClientBuilder.newBuilder;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
+import static org.apache.http.conn.ssl.NoopHostnameVerifier.INSTANCE;
 import static org.apache.http.ssl.SSLContextBuilder.create;
 import static org.springframework.util.ResourceUtils.getFile;
 
@@ -33,7 +35,7 @@ public class ClientBuildUtils {
       .contract(contract).encoder(encoder).decoder(decoder);
 
     if (properties.getTls() != null && properties.getTls().isEnabled()) {
-      builder.client(new Client.Default(createSslContext(properties.getTls()), new NoopHostnameVerifier()));
+      builder.client(new Client.Default(createSslContext(properties.getTls()),INSTANCE));
     }
 
     return builder.target(clientClass, properties.getUrl());
@@ -58,7 +60,7 @@ public class ClientBuildUtils {
   }
 
   private static ResteasyClient buildResteasyClient(KeycloakTlsProperties properties) {
-    return (ResteasyClient) ClientBuilder.newBuilder().sslContext(getSslContext(properties)).build();
+    return (ResteasyClient) newBuilder().sslContext(getSslContext(properties)).hostnameVerifier(INSTANCE).build();
   }
 
   private static SSLSocketFactory createSslContext(KeycloakTlsProperties properties) {
