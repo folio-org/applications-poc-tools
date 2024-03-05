@@ -97,8 +97,8 @@ class ClientBuildUtilsTest {
 
     var tls = new KeycloakTlsProperties();
     tls.setEnabled(tlsEnabled);
-    tls.setTrustStorePath("classpath:certificates/truststore.jks");
-    tls.setTrustStorePassword("changeit");
+    tls.setTrustStorePath("classpath:certificates/test.truststore.jks");
+    tls.setTrustStorePassword("secretpassword");
     properties.setTls(tls);
     return properties;
   }
