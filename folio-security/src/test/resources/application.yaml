@@ -27,6 +27,10 @@ application:
       grant_type: ${KC_ADMIN_GRANT_TYPE:client_credentials}
     client:
       client_id: mgr-test
+    tls:
+      enabled: true
+      trustStorePath: classpath:certificates/truststore.jks
+      trustStorePassword: changeit
   secret-store:
     type: Ephemeral
     ephemeral:

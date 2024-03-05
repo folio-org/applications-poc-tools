@@ -1,6 +1,6 @@
 package org.folio.security.integration.keycloak.configuration;
 
-import static org.apache.commons.lang3.StringUtils.stripToNull;
+import static org.folio.security.integration.keycloak.utils.ClientBuildUtils.buildKeycloakAdminClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,6 @@ import org.folio.security.service.InternalModuleDescriptorProvider;
 import org.folio.tools.store.SecureStore;
 import org.folio.tools.store.exception.NotFoundException;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -33,26 +32,8 @@ public class KeycloakDataImportConfiguration {
 
   @Bean
   public Keycloak keycloak() {
-    var admin = properties.getAdmin();
-
-    String clientId = admin.getClientId();
-
-    String secret = null;
-    try {
-      secret = secureStore.get(KeycloakSecretUtils.globalStoreKey(clientId));
-    } catch (NotFoundException e) {
-      log.debug("Secret for 'admin' client is not defined in the secret store: clientId = {}", clientId);
-    }
-
-    return KeycloakBuilder.builder()
-      .realm("master")
-      .serverUrl(properties.getUrl())
-      .clientId(clientId)
-      .clientSecret(stripToNull(secret))
-      .username(stripToNull(admin.getUsername()))
-      .password(stripToNull(admin.getPassword()))
-      .grantType(admin.getGrantType())
-      .build();
+    var secret = findSecret();
+    return buildKeycloakAdminClient(secret, properties);
   }
 
   @Bean
@@ -71,5 +52,17 @@ public class KeycloakDataImportConfiguration {
   public KeycloakImportService keycloakImportService(Keycloak keycloakClient,
     InternalModuleDescriptorProvider descriptorProvider, KeycloakModuleDescriptorMapper mapper) {
     return new KeycloakImportService(keycloakClient, properties, descriptorProvider, mapper);
+  }
+
+  private String findSecret() {
+    var admin = properties.getAdmin();
+    String clientId = admin.getClientId();
+    String secret = null;
+    try {
+      secret = secureStore.get(KeycloakSecretUtils.globalStoreKey(clientId));
+    } catch (NotFoundException e) {
+      log.warn("Secret for 'admin' client is not defined in the secret store: clientId = {}", clientId);
+    }
+    return secret;
   }
 }

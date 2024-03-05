@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @IntegrationTest
-@EnableKeycloak
+@EnableKeycloak(tlsEnabled = true)
 @EnableKeycloakDataImport
 @SpringBootTest(classes = {
   KeycloakDataImportConfiguration.class,

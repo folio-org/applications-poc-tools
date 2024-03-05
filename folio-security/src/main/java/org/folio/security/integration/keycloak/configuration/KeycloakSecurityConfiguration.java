@@ -1,8 +1,9 @@
 package org.folio.security.integration.keycloak.configuration;
 
+import static org.folio.security.integration.keycloak.utils.ClientBuildUtils.buildTargetFeignClient;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Contract;
-import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import lombok.RequiredArgsConstructor;
@@ -32,9 +33,7 @@ public class KeycloakSecurityConfiguration {
 
   @Bean
   public KeycloakAuthClient keycloakAuthClient(Contract contract, Encoder encoder, Decoder decoder) {
-    return Feign.builder()
-      .contract(contract).encoder(encoder).decoder(decoder)
-      .target(KeycloakAuthClient.class, properties.getUrl());
+    return buildTargetFeignClient(contract, encoder, decoder, properties, KeycloakAuthClient.class);
   }
 
   @Bean
