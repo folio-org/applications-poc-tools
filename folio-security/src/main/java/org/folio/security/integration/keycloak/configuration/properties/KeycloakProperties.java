@@ -16,4 +16,6 @@ public class KeycloakProperties {
   private KeycloakAdminProperties admin;
   @NestedConfigurationProperty
   private KeycloakClientProperties client;
+  @NestedConfigurationProperty
+  private KeycloakTlsProperties tls;
 }
