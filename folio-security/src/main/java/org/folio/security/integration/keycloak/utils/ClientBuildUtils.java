@@ -12,12 +12,10 @@ import feign.Contract;
 import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
-import jakarta.ws.rs.client.ClientBuilder;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.ssl.SSLInitializationException;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakTlsProperties;
@@ -35,7 +33,7 @@ public class ClientBuildUtils {
       .contract(contract).encoder(encoder).decoder(decoder);
 
     if (properties.getTls() != null && properties.getTls().isEnabled()) {
-      builder.client(new Client.Default(createSslContext(properties.getTls()),INSTANCE));
+      builder.client(new Client.Default(createSslContext(properties.getTls()), INSTANCE));
     }
 
     return builder.target(clientClass, properties.getUrl());
