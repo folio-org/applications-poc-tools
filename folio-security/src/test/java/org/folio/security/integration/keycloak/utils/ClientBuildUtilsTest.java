@@ -29,8 +29,9 @@ class ClientBuildUtilsTest {
     var keycloakAuthClient =
       buildTargetFeignClient(CONTRACT, ENCODER, DECODER, keycloakProperties, KeycloakAuthClient.class);
 
-    assertThat(keycloakAuthClient).isNotNull();
-    assertThat(keycloakAuthClient).isInstanceOf(KeycloakAuthClient.class);
+    assertThat(keycloakAuthClient)
+      .isNotNull()
+      .isInstanceOf(KeycloakAuthClient.class);
   }
 
   @Test
@@ -39,8 +40,9 @@ class ClientBuildUtilsTest {
     var keycloakAuthClient =
       buildTargetFeignClient(CONTRACT, ENCODER, DECODER, keycloakProperties, KeycloakAuthClient.class);
 
-    assertThat(keycloakAuthClient).isNotNull();
-    assertThat(keycloakAuthClient).isInstanceOf(KeycloakAuthClient.class);
+    assertThat(keycloakAuthClient)
+      .isNotNull()
+      .isInstanceOf(KeycloakAuthClient.class);
   }
 
   @Test
@@ -50,8 +52,9 @@ class ClientBuildUtilsTest {
     var keycloakAuthClient =
       buildTargetFeignClient(CONTRACT, ENCODER, DECODER, keycloakProperties, KeycloakAuthClient.class);
 
-    assertThat(keycloakAuthClient).isNotNull();
-    assertThat(keycloakAuthClient).isInstanceOf(KeycloakAuthClient.class);
+    assertThat(keycloakAuthClient)
+      .isNotNull()
+      .isInstanceOf(KeycloakAuthClient.class);
   }
 
   @Test
