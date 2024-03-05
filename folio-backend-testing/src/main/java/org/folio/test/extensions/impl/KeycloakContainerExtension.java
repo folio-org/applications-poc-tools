@@ -72,7 +72,9 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
     var targetClass = context.getRequiredTestClass();
     var annotation = targetClass.getAnnotation(EnableKeycloak.class);
     var useTls = annotation.tlsEnabled();
-    return useTls ? keycloakContainer().useTls() : keycloakContainer();
+    return useTls
+      ? keycloakContainer().useTlsKeystore("certificates/test.keystore.jks", "secretpassword")
+      : keycloakContainer();
   }
 
   @SuppressWarnings("resource")

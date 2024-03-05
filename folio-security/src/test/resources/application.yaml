@@ -29,8 +29,8 @@ application:
       client_id: mgr-test
     tls:
       enabled: true
-      trustStorePath: classpath:certificates/truststore.jks
-      trustStorePassword: changeit
+      trustStorePath: classpath:certificates/test.truststore.jks
+      trustStorePassword: secretpassword
   secret-store:
     type: Ephemeral
     ephemeral:
