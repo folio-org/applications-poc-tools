@@ -26,4 +26,26 @@ public class KongConfigurationProperties {
    * Defines if module must be registered.
    */
   private boolean registerModule;
+
+  /**
+   * The number of retries to execute upon failure to proxy.
+   */
+  private Integer retries;
+
+  /**
+   * The timeout in milliseconds for establishing a connection from Kong to upstream service.
+   */
+  private Integer connectTimeout;
+
+  /**
+   * The timeout in milliseconds between two successive write operations for transmitting a request from Kong
+   * to the upstream service.
+   */
+  private Integer writeTimeout;
+
+  /**
+   * The timeout in milliseconds between two successive read operations for transmitting a request from Kong
+   * to the upstream service.
+   */
+  private Integer readTimeout;
 }

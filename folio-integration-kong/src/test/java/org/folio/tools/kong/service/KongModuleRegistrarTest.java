@@ -48,8 +48,17 @@ class KongModuleRegistrarTest {
     var path = "classpath:descriptors/ModuleDescriptor.json";
     var moduleUrl = "https://test-module:8081";
     var serviceName = "test-service";
+    var connectTimeout = 60000;
+    var readTimeout = 60000;
+    var writeTimeout = 60000;
+    var retries = 5;
 
     when(kongConfigurationProperties.getModuleSelfUrl()).thenReturn(moduleUrl);
+    when(kongConfigurationProperties.getConnectTimeout()).thenReturn(connectTimeout);
+    when(kongConfigurationProperties.getReadTimeout()).thenReturn(readTimeout);
+    when(kongConfigurationProperties.getWriteTimeout()).thenReturn(writeTimeout);
+    when(kongConfigurationProperties.getRetries()).thenReturn(retries);
+
     when(resourceLoader.getResource(path)).thenReturn(resource);
     when(resource.getInputStream()).thenReturn(inputStream);
     when(objectMapper.readValue(inputStream, ModuleDescriptor.class)).thenReturn(moduleDescriptor);
@@ -57,7 +66,11 @@ class KongModuleRegistrarTest {
 
     kongModuleRegistrar.registerRoutes();
 
-    var expectedService = new Service().name(serviceName).url(moduleUrl);
+    var expectedService = new Service().name(serviceName).url(moduleUrl)
+      .connectTimeout(connectTimeout)
+      .writeTimeout(writeTimeout)
+      .readTimeout(readTimeout)
+      .retries(retries);
     verify(kongGatewayService).upsertService(expectedService);
     verify(kongGatewayService).updateRoutes(null, List.of(moduleDescriptor));
   }
