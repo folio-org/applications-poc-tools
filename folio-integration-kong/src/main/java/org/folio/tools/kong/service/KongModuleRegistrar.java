@@ -22,16 +22,22 @@ public class KongModuleRegistrar {
   private final ObjectMapper objectMapper;
   private final ResourceLoader resourceLoader;
   private final KongGatewayService kongGatewayService;
-  private final KongConfigurationProperties kongConfigurationProperties;
+  private final KongConfigurationProperties properties;
 
   @EventListener(ApplicationReadyEvent.class)
   public void registerRoutes() {
     var moduleDescriptor = getModuleDescriptor();
     var moduleId = moduleDescriptor.getId();
-    var moduleUrl = kongConfigurationProperties.getModuleSelfUrl();
+    var moduleUrl = properties.getModuleSelfUrl();
 
     log.info("Self-registering service in Kong: moduleId = {}, url = {}", moduleId, moduleUrl);
-    kongGatewayService.upsertService(new Service().name(moduleId).url(moduleUrl));
+    kongGatewayService.upsertService(
+      new Service().name(moduleId).url(moduleUrl)
+        .connectTimeout(properties.getConnectTimeout())
+        .readTimeout(properties.getReadTimeout())
+        .writeTimeout(properties.getWriteTimeout())
+        .retries(properties.getRetries())
+    );
     kongGatewayService.updateRoutes(null, singletonList(moduleDescriptor));
   }
 

@@ -22,13 +22,13 @@ public class Service {
   private Boolean enabled = true;
 
   @JsonProperty("connect_timeout")
-  private Integer connectTimeout = 60000;
+  private Integer connectTimeout;
 
   @JsonProperty("write_timeout")
-  private Integer writeTimeout = 60000;
+  private Integer writeTimeout;
 
   @JsonProperty("read_timeout")
-  private Integer readTimeout = 60000;
+  private Integer readTimeout;
 
   @JsonProperty("client_certificate")
   private Identifier clientCertificate;
