@@ -109,7 +109,7 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
 
   @SuppressWarnings("resource")
   private static KeycloakContainer keycloakContainer() {
-    return new KeycloakContainer("quay.io/keycloak/keycloak:23.0.6")
+    return new KeycloakContainer("quay.io/keycloak/keycloak:24.0.0")
       .withFeaturesEnabled("scripts", "token-exchange", "admin-fine-grained-authz")
       .withProviderLibsFrom(List.of(readToFile("keycloak/folio-scripts.jar", "folio-scripts", ".jar")));
   }
