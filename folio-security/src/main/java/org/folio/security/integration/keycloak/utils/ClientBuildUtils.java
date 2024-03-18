@@ -57,15 +57,7 @@ public class ClientBuildUtils {
     return builder.build();
   }
 
-  private static ResteasyClient buildResteasyClient(KeycloakTlsProperties properties) {
-    return (ResteasyClient) newBuilder().sslContext(getSslContext(properties)).hostnameVerifier(INSTANCE).build();
-  }
-
-  private static SSLSocketFactory createSslContext(KeycloakTlsProperties properties) {
-    return getSslContext(properties).getSocketFactory();
-  }
-
-  private static SSLContext getSslContext(KeycloakTlsProperties properties) {
+  public static SSLContext buildSslContext(KeycloakTlsProperties properties) {
     var trustStorePath = requireNonNull(properties.getTrustStorePath(), "Trust store path is not defined");
     var trustStorePassword = requireNonNull(properties.getTrustStorePassword(), "Trust store password is not defined");
     try {
@@ -76,5 +68,13 @@ public class ClientBuildUtils {
       log.error("Error creating SSL context", e);
       throw new SSLInitializationException("Error creating SSL context", e);
     }
+  }
+
+  private static ResteasyClient buildResteasyClient(KeycloakTlsProperties properties) {
+    return (ResteasyClient) newBuilder().sslContext(buildSslContext(properties)).hostnameVerifier(INSTANCE).build();
+  }
+
+  private static SSLSocketFactory createSslContext(KeycloakTlsProperties properties) {
+    return buildSslContext(properties).getSocketFactory();
   }
 }

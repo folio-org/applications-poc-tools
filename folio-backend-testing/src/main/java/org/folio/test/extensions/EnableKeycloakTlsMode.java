@@ -18,7 +18,4 @@ import org.springframework.test.context.TestExecutionListeners;
 @Retention(RetentionPolicy.RUNTIME)
 @ExtendWith(KeycloakContainerExtension.class)
 @TestExecutionListeners(value = KeycloakExecutionListener.class, mergeMode = MERGE_WITH_DEFAULTS)
-public @interface EnableKeycloak {
-
-  boolean tlsEnabled() default false;
-}
+public @interface EnableKeycloakTlsMode {}
