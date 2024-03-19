@@ -1,22 +1,25 @@
 package org.folio.security.integration.keycloak.service;
 
-import com.auth0.jwk.UrlJwkProvider;
-import java.net.URL;
+import static java.util.Arrays.stream;
+
 import java.security.PublicKey;
 import lombok.RequiredArgsConstructor;
-import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
+import org.folio.security.integration.keycloak.client.KeycloakAuthClient;
+import org.keycloak.jose.jwk.JWKParser;
 import org.springframework.cache.annotation.Cacheable;
 
 @RequiredArgsConstructor
 public class KeycloakPublicKeyProvider {
 
-  private final KeycloakProperties properties;
+  private final KeycloakAuthClient keycloakClient;
 
   @Cacheable(cacheNames = "keycloak-jwk", key = "#realm-#keyId")
   public PublicKey retrievePublicKey(String realm, String keyId) throws Exception {
-    var url = new URL(properties.getUrl() + "/realms/" + realm + "/protocol/openid-connect/certs");
-    var provider = new UrlJwkProvider(url);
-    var jwk = provider.get(keyId);
-    return jwk.getPublicKey();
+    var jsonWebKeySet = keycloakClient.retrieveJwk(realm);
+    var jwk = stream(jsonWebKeySet.getKeys())
+      .filter(j -> j.getKeyId().equals(keyId))
+      .findFirst()
+      .orElseThrow(() -> new IllegalArgumentException("Key not found"));
+    return JWKParser.create(jwk).toPublicKey();
   }
 }
