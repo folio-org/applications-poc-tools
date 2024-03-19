@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.folio.security.integration.keycloak.configuration.KeycloakDataImportConfiguration;
 import org.folio.security.support.TestConfiguration;
-import org.folio.test.extensions.EnableKeycloak;
 import org.folio.test.extensions.EnableKeycloakDataImport;
+import org.folio.test.extensions.EnableKeycloakTlsMode;
 import org.folio.test.types.IntegrationTest;
 import org.folio.tools.store.configuration.SecureStoreAutoconfiguration;
 import org.json.JSONException;
@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @IntegrationTest
-@EnableKeycloak(tlsEnabled = true)
+@EnableKeycloakTlsMode
 @EnableKeycloakDataImport
 @SpringBootTest(classes = {
   KeycloakDataImportConfiguration.class,
