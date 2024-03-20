@@ -45,8 +45,8 @@ public class KeycloakSecurityConfiguration {
   }
 
   @Bean
-  public KeycloakPublicKeyProvider publicKeyProvider() {
-    return new KeycloakPublicKeyProvider(properties);
+  public KeycloakPublicKeyProvider publicKeyProvider(KeycloakAuthClient keycloakAuthClient) {
+    return new KeycloakPublicKeyProvider(keycloakAuthClient);
   }
 
   @Bean

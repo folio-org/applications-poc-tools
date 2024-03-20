@@ -14,6 +14,11 @@
     <spring-cloud-bom.version>2023.0.0</spring-cloud-bom.version>
     <keycloak-admin-client.version>24.0.1</keycloak-admin-client.version>
     <jwks-rsa.version>0.22.1</jwks-rsa.version>
+
+    <sonar.exclusions>
+      src/main/java/**/configuration/**/*,
+      src/main/java/**/integration/**/model/**/*
+    </sonar.exclusions>
   </properties>
 
   <dependencies>
