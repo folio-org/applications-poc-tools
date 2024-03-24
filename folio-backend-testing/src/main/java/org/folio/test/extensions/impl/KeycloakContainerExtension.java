@@ -62,11 +62,13 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
     System.clearProperty("KC_ADMIN_PASSWORD");
     System.clearProperty("KC_ADMIN_GRANT_TYPE");
 
-    try {
-      ADMIN_CLIENT.realm(MASTER_REALM).remove();
-      log.info("Master realm removed");
-    } finally {
-      ADMIN_CLIENT.close();
+    if (ADMIN_CLIENT != null) {
+      try {
+        ADMIN_CLIENT.realm(MASTER_REALM).remove();
+        log.info("Master realm removed");
+      } finally {
+        ADMIN_CLIENT.close();
+      }
     }
   }
 
