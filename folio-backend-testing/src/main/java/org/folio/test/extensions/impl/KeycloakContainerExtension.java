@@ -31,6 +31,11 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   private static final String REALM_JSON = "json/keycloak/master-realm.json";
   private static final String IMPORTED_CLIENT_ID = "folio-backend-admin-client";
   private static final String IMPORTED_CLIENT_SECRET = "supersecret";
+
+  private static final String SSL_KEYSTORE_PATH = "certificates/test.keystore.jks";
+  private static final String SSL_TRUSTSTORE_PATH = "classpath:certificates/test.truststore.jks";
+  private static final String SSL_KEYSTORE_PASSWORD = "secretpassword";
+
   private static final KeycloakContainer CONTAINER = keycloakContainer();
 
   private static Keycloak ADMIN_CLIENT;
@@ -104,7 +109,7 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
     return new KeycloakContainer(KEYCLOAK_IMAGE)
       .withFeaturesEnabled("scripts", "token-exchange", "admin-fine-grained-authz")
       .withProviderLibsFrom(List.of(readToFile("keycloak/folio-scripts.jar", "folio-scripts", ".jar")))
-      .useTlsKeystore("certificates/test.keystore.jks", "secretpassword");
+      .useTlsKeystore(SSL_KEYSTORE_PATH, SSL_KEYSTORE_PASSWORD);
   }
 
   private static ResteasyClient buildResteasyClient() {
@@ -114,7 +119,7 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   private static SSLContext getSslContext() {
     try {
       return create()
-        .loadTrustMaterial(getFile("classpath:certificates/test.truststore.jks"), "secretpassword".toCharArray())
+        .loadTrustMaterial(getFile(SSL_TRUSTSTORE_PATH), SSL_KEYSTORE_PASSWORD.toCharArray())
         .build();
     } catch (Exception e) {
       log.error("Error creating SSL context", e);
