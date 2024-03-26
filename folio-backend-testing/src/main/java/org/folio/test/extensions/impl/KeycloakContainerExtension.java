@@ -27,7 +27,7 @@ import org.keycloak.representations.idm.PartialImportRepresentation;
 @Log4j2
 public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
-  private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:24.0.0";
+  private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:23.0.7";
   private static final String REALM_JSON = "json/keycloak/master-realm.json";
   private static final String IMPORTED_CLIENT_ID = "folio-backend-admin-client";
   private static final String IMPORTED_CLIENT_SECRET = "supersecret";
@@ -66,15 +66,6 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
     System.clearProperty("KC_ADMIN_USERNAME");
     System.clearProperty("KC_ADMIN_PASSWORD");
     System.clearProperty("KC_ADMIN_GRANT_TYPE");
-
-    if (ADMIN_CLIENT != null) {
-      try {
-        ADMIN_CLIENT.realm(MASTER_REALM).remove();
-        log.info("Master realm removed");
-      } finally {
-        ADMIN_CLIENT.close();
-      }
-    }
   }
 
   public static Keycloak getKeycloakAdminClient() {
