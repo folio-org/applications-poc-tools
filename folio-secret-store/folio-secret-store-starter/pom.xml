@@ -16,7 +16,6 @@
   <properties>
     <sonar.exclusions>src/main/**/*</sonar.exclusions>
     <jsonassert.version>1.5.1</jsonassert.version>
-    <testcontainers-keycloak.version>2.1.2</testcontainers-keycloak.version>
   </properties>
 
   <dependencies>
