@@ -18,6 +18,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import lombok.extern.log4j.Log4j2;
 import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -36,6 +38,11 @@ public abstract class BaseBackendIntegrationTest {
   @BeforeAll
   static void setupMockMvc(@Autowired MockMvc mockMvc) {
     BaseBackendIntegrationTest.mockMvc = mockMvc;
+  }
+
+  @BeforeEach
+  void logTestDisplayName(TestInfo testInfo) {
+    log.info("[{}.{}] is running...", this.getClass().getSimpleName(), testInfo.getDisplayName());
   }
 
   public static ResultActions attemptGet(String uri, Object... args) throws Exception {
