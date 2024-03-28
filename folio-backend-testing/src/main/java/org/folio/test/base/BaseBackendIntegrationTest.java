@@ -41,7 +41,7 @@ public abstract class BaseBackendIntegrationTest {
   }
 
   @BeforeEach
-  void setUp(TestInfo testInfo) {
+  void logTestDisplayName(TestInfo testInfo) {
     log.info("[{}.{}] is running...", this.getClass().getSimpleName(), testInfo.getDisplayName());
   }
 
