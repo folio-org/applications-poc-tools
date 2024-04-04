@@ -17,9 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import lombok.extern.log4j.Log4j2;
 import org.assertj.core.util.Arrays;
+import org.folio.test.extensions.LogTestMethod;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -29,6 +28,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @Log4j2
+@LogTestMethod
 public abstract class BaseBackendIntegrationTest {
 
   protected static final String TOKEN = "X-Okapi-Token";
@@ -38,11 +38,6 @@ public abstract class BaseBackendIntegrationTest {
   @BeforeAll
   static void setupMockMvc(@Autowired MockMvc mockMvc) {
     BaseBackendIntegrationTest.mockMvc = mockMvc;
-  }
-
-  @BeforeEach
-  void logTestDisplayName(TestInfo testInfo) {
-    log.info("[{}.{}] is running...", this.getClass().getSimpleName(), testInfo.getDisplayName());
   }
 
   public static ResultActions attemptGet(String uri, Object... args) throws Exception {
