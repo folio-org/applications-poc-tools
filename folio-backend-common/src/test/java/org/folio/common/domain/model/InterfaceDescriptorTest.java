@@ -56,4 +56,17 @@ class InterfaceDescriptorTest {
     var comparisonResult = given.isCompatible(interfaceToCompare);
     assertThat(comparisonResult).isEqualTo(expected);
   }
+
+  @ParameterizedTest(name = "[{index}] id=''{0}-{1}'', isTimer={2}")
+  @CsvSource({
+    "_timer, 1.0, true",
+    "_TimeR, 1.0, false",
+    "timer, 1.0, false",
+    "test-interface, 1.0, false"
+  })
+  void isTimer_parameterized(String name, String version, boolean expected) {
+    var given = new InterfaceDescriptor(name, version);
+    var actual = given.isTimer();
+    assertThat(actual).isEqualTo(expected);
+  }
 }
