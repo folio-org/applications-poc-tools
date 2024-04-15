@@ -14,11 +14,14 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.folio.common.domain.model.InterfaceDescriptor.SYSTEM_INTERFACE_TYPE;
+import static org.folio.common.domain.model.InterfaceDescriptor.TIMER_INTERFACE;
 import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
 import static org.folio.common.utils.OkapiHeaders.TENANT;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.kongService;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithMultipleInterface1;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithMultipleInterface2;
+import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithTimerInterface;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.moduleDescriptor;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.multipleTypeHeaders;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.route;
@@ -34,6 +37,7 @@ import static org.mockito.Mockito.when;
 import feign.FeignException.InternalServerError;
 import feign.FeignException.NotFound;
 import feign.RequestTemplate;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -147,6 +151,25 @@ class KongGatewayServiceTest {
         route(List.of("POST"), "/foo/entities", 1, "foo-1.0", fooModuleId, emptyMap()),
         route(List.of("GET"), "/baz/entities", 1, "baz-multiple-1.0", barModuleId, Map.of(MODULE_ID, barModuleId)),
         route(List.of("POST"), "/bar/entities", 1, "bar-1.0", barModuleId, emptyMap())));
+    }
+
+    @Test
+    void positive_timerInterface() {
+      var serviceId = UUID.randomUUID().toString();
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
+      when(kongAdminClient.upsertRoute(eq(serviceId), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
+
+      kongGatewayService.addRoutes(TENANT_NAME, singletonList(mdWithTimerInterface()));
+
+      assertThat(routeCaptor.getAllValues()).hasSize(7).isEqualTo(List.of(
+        route(List.of("GET"), "^/entities/([^/]+)$", "test1-2.0"),
+        route(List.of("PUT"), "^/entities/([^/]+)/sub-entities$", "test1-2.0"),
+        route(List.of("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE"),
+          "^/entities/sub-entities(.*)$", 0, "test1-2.0", MOD_ID),
+        route(List.of("PUT"), "/tests/1", 1, "test1-2.0", MOD_ID),
+        route(List.of("GET"), "/test2-entities", 1, "test2-1.0", MOD_ID),
+        route(List.of("POST"), "/test/timer1", 1, "_timer-1.0", MOD_ID),
+        route(List.of("POST"), "/test/timer2", 1, "_timer-1.0", MOD_ID)));
     }
 
     @Test
@@ -463,7 +486,7 @@ class KongGatewayServiceTest {
       return new ModuleDescriptor()
         .id(MOD_ID)
         .provides(List.of(
-          new InterfaceDescriptor().id("_tenant").version("1.0").interfaceType("system").handlers(List.of(
+          new InterfaceDescriptor().id("_tenant").version("1.0").interfaceType(SYSTEM_INTERFACE_TYPE).handlers(List.of(
             new RoutingEntry().methods(List.of("POST")).pathPattern("/_/tenant"),
             new RoutingEntry().methods(List.of("GET", "DELETE")).pathPattern("/_/tenant/{id}"))),
           new InterfaceDescriptor().id("test1").version("2.0").handlers(List.of(
@@ -496,6 +519,23 @@ class KongGatewayServiceTest {
         new InterfaceDescriptor().id("bar").version("1.0").addHandlersItem(
           new RoutingEntry().methods(List.of("POST")).pathPattern("/bar/entities"))
       ));
+    }
+
+    static ModuleDescriptor mdWithTimerInterface() {
+      var md = moduleDescriptor();
+
+      var provides = new ArrayList<>(md.getProvides());
+      provides.add(
+        new InterfaceDescriptor().id(TIMER_INTERFACE).version("1.0").interfaceType(SYSTEM_INTERFACE_TYPE).handlers(
+          List.of(
+            new RoutingEntry().methods(List.of("POST")).pathPattern("/test/timer1"),
+            new RoutingEntry().methods(List.of("POST")).pathPattern("/test/timer2")
+          ))
+      );
+      
+      md.setProvides(provides);
+
+      return md;
     }
 
     static Map<String, String> multipleTypeHeaders(String moduleId) {

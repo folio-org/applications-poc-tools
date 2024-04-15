@@ -12,6 +12,7 @@ import org.folio.common.utils.InterfaceComparisonUtils;
 public class InterfaceDescriptor {
 
   public static final String SYSTEM_INTERFACE_TYPE = "system";
+  public static final String TIMER_INTERFACE = "_timer";
 
   private String id;
   private String version;
@@ -160,6 +161,16 @@ public class InterfaceDescriptor {
   @JsonIgnore
   public boolean isSystem() {
     return SYSTEM_INTERFACE_TYPE.equals(this.interfaceType);
+  }
+
+  /**
+   * Checks if interface is a time interface.
+   *
+   * @return true if interface represents timer, false - otherwise.
+   */
+  @JsonIgnore
+  public boolean isTimer() {
+    return TIMER_INTERFACE.equals(this.id);
   }
 
   /**
