@@ -70,8 +70,6 @@ public class FakeKafkaConsumer {
   public static <T> List<ConsumerRecord<String, T>> getEvents(String topic,
     Function<ConsumerRecord<String, String>, ConsumerRecord<String, T>> consumerRecordValueMapper) {
     var foundEvents = EVENTS.getOrDefault(topic, emptyList());
-    // clear events, since they are consumed for assertion
-    EVENTS.remove(topic);
     return foundEvents.stream().map(consumerRecordValueMapper).collect(toList());
   }
 
@@ -89,8 +87,8 @@ public class FakeKafkaConsumer {
   }
 
   private KafkaMessageListenerContainer<String, String> createContainer(String topic) {
-    var consumer = new DefaultKafkaConsumerFactory<String, String>(kafkaProperties.buildConsumerProperties());
-    log.info("Consumer config: {}", kafkaProperties.buildConsumerProperties());
+    var consumer = new DefaultKafkaConsumerFactory<String, String>(kafkaProperties.buildConsumerProperties(null));
+    log.info("Consumer config: {}", kafkaProperties.buildConsumerProperties(null));
 
     configureDeserializers(consumer);
 
