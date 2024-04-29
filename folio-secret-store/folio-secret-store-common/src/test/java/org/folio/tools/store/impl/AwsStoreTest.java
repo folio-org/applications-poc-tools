@@ -29,7 +29,9 @@ import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 class AwsStoreTest {
 
   public static final AwsConfigProperties AWS_CONFIG_PROPERTIES =
-    AwsConfigProperties.builder().region("us-east-1").useIam(true).build();
+    AwsConfigProperties.builder().region("us-east-1").useIam(true).fipsEnabled(true)
+      .trustStorePath("/certificates/keystore.bcfks").trustStorePassword("secretpassword")
+      .trustStoreFileType("BCFKS").build();
 
   @Mock
   private SsmClient ssmClient;
