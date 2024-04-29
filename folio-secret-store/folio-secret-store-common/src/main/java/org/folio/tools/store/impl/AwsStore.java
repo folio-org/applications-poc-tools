@@ -5,10 +5,18 @@ import static java.lang.Boolean.parseBoolean;
 import static java.util.Objects.nonNull;
 import static software.amazon.awssdk.services.ssm.model.ParameterType.SECURE_STRING;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyStore;
+import java.security.Security;
 import java.util.Properties;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import lombok.extern.log4j.Log4j2;
+import org.apache.http.ssl.SSLInitializationException;
+import org.apache.http.util.Asserts;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.folio.tools.store.SecureStore;
 import org.folio.tools.store.exception.NotFoundException;
 import org.folio.tools.store.properties.AwsConfigProperties;
@@ -17,6 +25,7 @@ import software.amazon.awssdk.auth.credentials.ContainerCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
@@ -78,6 +87,11 @@ public final class AwsStore implements SecureStore {
     log.info("Initializing...");
     var builder = SsmClient.builder();
     builder.region(Region.of(properties.getRegion()));
+    if (properties.isFipsEnabled()) {
+      builder.httpClient(ApacheHttpClient.builder()
+        .tlsTrustManagersProvider(() -> getTrustManager(properties)).build());
+      builder.fipsEnabled(true);
+    }
     if (nonNull(properties.getUseIam()) && properties.getUseIam()) {
       log.info("Using IAM");
     } else {
@@ -87,6 +101,24 @@ public final class AwsStore implements SecureStore {
       builder.endpointOverride(endpoint(properties));
     }
     return builder.build();
+  }
+
+  private TrustManager[] getTrustManager(AwsConfigProperties properties) {
+    Asserts.notBlank(properties.getTrustStorePath(), "Truststore path must not be blank");
+    try {
+      Security.addProvider(new BouncyCastleFipsProvider());
+      KeyStore trustStore = KeyStore.getInstance(properties.getTrustStoreFileType());
+
+      try (InputStream trustStoreStream = this.getClass().getResourceAsStream(properties.getTrustStorePath())) {
+        trustStore.load(trustStoreStream, properties.getTrustStorePassword().toCharArray());
+      }
+      TrustManagerFactory trustManagerFactory =
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      trustManagerFactory.init(trustStore);
+      return trustManagerFactory.getTrustManagers();
+    } catch (Exception e) {
+      throw new SSLInitializationException("Error initializing TrustManager", e);
+    }
   }
 
   private AwsCredentialsProvider getAwsCredentialsProvider() {

@@ -17,6 +17,7 @@
     <vault.version>5.1.0</vault.version>
     <aws.version>2.25.40</aws.version>
     <apache-commons-text.version>1.12.0</apache-commons-text.version>
+    <bc-fips>1.0.2.4</bc-fips>
   </properties>
 
   <dependencies>
@@ -39,6 +40,16 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>ssm</artifactId>
       <version>${aws.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>apache-client</artifactId>
+      <version>${aws.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bc-fips</artifactId>
+      <version>${bc-fips}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

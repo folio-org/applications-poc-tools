@@ -41,4 +41,24 @@ public class AwsConfigProperties {
    * <p>You won't typically need to set this unless using AwsParamStore from outside an ECS container</p>
    */
   private String ecsCredentialsPath;
+
+  /**
+   * Defines whether FIPS mode is enabled.
+   */
+  private boolean fipsEnabled;
+
+  /**
+   * The path to a BCFKS truststore file containing FIPS server certs that can be trusted.
+   */
+  private String trustStorePath;
+
+  /**
+   * The password used to access the BCFKS truststore.
+   */
+  private String trustStorePassword;
+
+  /**
+   * The file type for truststore.
+   */
+  private String trustStoreFileType;
 }
