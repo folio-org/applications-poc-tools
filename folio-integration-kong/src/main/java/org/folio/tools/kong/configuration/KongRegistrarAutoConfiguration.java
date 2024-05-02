@@ -1,8 +1,9 @@
 package org.folio.tools.kong.configuration;
 
+import static org.folio.common.utils.FeignClientTlsUtils.buildTargetFeignClient;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Contract;
-import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import org.folio.tools.kong.client.KongAdminClient;
@@ -26,7 +27,7 @@ public class KongRegistrarAutoConfiguration {
   /**
    * Creates a {@link org.springframework.cloud.openfeign.FeignClient} for integration with Kong Admin API.
    *
-   * @param kongConfigurationProperties - kong configuration properties with required data
+   * @param properties - kong configuration properties with required data
    * @param contract - feign contract
    * @param encoder - feign http body encoder
    * @param decoder - feign http body decoder
@@ -34,13 +35,10 @@ public class KongRegistrarAutoConfiguration {
    */
   @Bean(name = "folioKongAdminClient")
   @ConditionalOnMissingBean(KongAdminClient.class)
-  public KongAdminClient folioKongIntegrationClient(KongConfigurationProperties kongConfigurationProperties,
-    Contract contract, Encoder encoder, Decoder decoder) {
-    return Feign.builder()
-      .contract(contract)
-      .encoder(encoder)
-      .decoder(decoder)
-      .target(KongAdminClient.class, kongConfigurationProperties.getUrl());
+  public KongAdminClient folioKongIntegrationClient(okhttp3.OkHttpClient okHttpClient,
+    KongConfigurationProperties properties, Contract contract, Encoder encoder, Decoder decoder) {
+    return buildTargetFeignClient(okHttpClient, contract, encoder, decoder, properties.getTls(), properties.getUrl(),
+      KongAdminClient.class);
   }
 
   /**

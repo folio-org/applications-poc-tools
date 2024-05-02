@@ -1,18 +1,21 @@
 package org.folio.security.integration.keycloak.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.common.utils.FeignClientTlsUtils.buildTargetFeignClient;
 import static org.folio.security.integration.keycloak.utils.ClientBuildUtils.buildKeycloakAdminClient;
-import static org.folio.security.integration.keycloak.utils.ClientBuildUtils.buildTargetFeignClient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import feign.Contract;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
+import okhttp3.OkHttpClient;
+import okhttp3.OkHttpClient.Builder;
+import org.folio.common.configuration.properties.TlsProperties;
 import org.folio.security.integration.keycloak.client.KeycloakAuthClient;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakAdminProperties;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakClientProperties;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
-import org.folio.security.integration.keycloak.configuration.properties.KeycloakTlsProperties;
 import org.folio.test.types.UnitTest;
 import org.junit.jupiter.api.Test;
 
@@ -22,12 +25,13 @@ class ClientBuildUtilsTest {
   private static final Contract CONTRACT = mock(Contract.class);
   private static final Encoder ENCODER = mock(Encoder.class);
   private static final Decoder DECODER = mock(Decoder.class);
+  private final OkHttpClient okHttpClient = mock(OkHttpClient.class);
 
   @Test
   void buildTargetFeignClient_positive_tlsDisabled() {
-    var keycloakProperties = keycloakProperties(false);
-    var keycloakAuthClient =
-      buildTargetFeignClient(CONTRACT, ENCODER, DECODER, keycloakProperties, KeycloakAuthClient.class);
+    var properties = keycloakProperties(false);
+    var keycloakAuthClient = buildTargetFeignClient(
+      okHttpClient, CONTRACT, ENCODER, DECODER, properties.getTls(), properties.getUrl(), KeycloakAuthClient.class);
 
     assertThat(keycloakAuthClient)
       .isNotNull()
@@ -36,9 +40,10 @@ class ClientBuildUtilsTest {
 
   @Test
   void buildTargetFeignClient_positive_tlsEnabled() {
-    var keycloakProperties = keycloakProperties(true);
-    var keycloakAuthClient =
-      buildTargetFeignClient(CONTRACT, ENCODER, DECODER, keycloakProperties, KeycloakAuthClient.class);
+    when(okHttpClient.newBuilder()).thenReturn(new Builder());
+    var properties = keycloakProperties(true);
+    var keycloakAuthClient = buildTargetFeignClient(
+      okHttpClient, CONTRACT, ENCODER, DECODER, properties.getTls(), properties.getUrl(), KeycloakAuthClient.class);
 
     assertThat(keycloakAuthClient)
       .isNotNull()
@@ -47,10 +52,10 @@ class ClientBuildUtilsTest {
 
   @Test
   void buildTargetFeignClient_positive_tlsPropertiesIsNull() {
-    var keycloakProperties = keycloakProperties(true);
-    keycloakProperties.setTls(null);
-    var keycloakAuthClient =
-      buildTargetFeignClient(CONTRACT, ENCODER, DECODER, keycloakProperties, KeycloakAuthClient.class);
+    var properties = keycloakProperties(true);
+    properties.setTls(null);
+    var keycloakAuthClient = buildTargetFeignClient(
+      okHttpClient, CONTRACT, ENCODER, DECODER, properties.getTls(), properties.getUrl(), KeycloakAuthClient.class);
 
     assertThat(keycloakAuthClient)
       .isNotNull()
@@ -98,7 +103,7 @@ class ClientBuildUtilsTest {
     client.setClientId("super-client");
     properties.setClient(client);
 
-    var tls = new KeycloakTlsProperties();
+    var tls = new TlsProperties();
     tls.setEnabled(tlsEnabled);
     tls.setTrustStorePath("classpath:certificates/test.truststore.jks");
     tls.setTrustStorePassword("secretpassword");
