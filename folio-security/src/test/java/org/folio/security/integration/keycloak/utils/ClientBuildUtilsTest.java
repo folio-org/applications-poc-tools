@@ -107,6 +107,7 @@ class ClientBuildUtilsTest {
     tls.setEnabled(tlsEnabled);
     tls.setTrustStorePath("classpath:certificates/test.truststore.jks");
     tls.setTrustStorePassword("secretpassword");
+    tls.setTrustStoreType("JKS");
     properties.setTls(tls);
     return properties;
   }

@@ -1,6 +1,7 @@
 package org.folio.common.utils;
 
 import static java.util.Objects.nonNull;
+import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.springframework.util.ResourceUtils.getFile;
 
@@ -17,15 +18,17 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.ssl.SSLInitializationException;
 import org.folio.common.configuration.properties.TlsProperties;
+import org.folio.common.utils.exception.SslInitializationException;
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @UtilityClass
@@ -40,35 +43,50 @@ public class FeignClientTlsUtils {
   }
 
   public static OkHttpClient getOkHttpClient(okhttp3.OkHttpClient okHttpClient, TlsProperties tls) {
-    var client = nonNull(tls) && tls.isEnabled() ? sslClient(okHttpClient.newBuilder(), tls) : okHttpClient;
+    var client = nonNull(tls) && tls.isEnabled() ? getSslOkHttpClient(okHttpClient, tls) : okHttpClient;
     return new OkHttpClient(client);
   }
 
-  private static okhttp3.OkHttpClient sslClient(okhttp3.OkHttpClient.Builder clientBuilder, TlsProperties tls) {
+  public static okhttp3.OkHttpClient getSslOkHttpClient(@NotNull okhttp3.OkHttpClient okHttpClient,
+    @NotNull TlsProperties tls) {
     log.debug("Creating OkHttpClient with SSL enabled...");
-    if (isBlank(tls.getTrustStorePath()) || isBlank(tls.getTrustStorePassword())) {
+    if (isBlank(tls.getTrustStorePath())) {
       log.debug("Creating OkHttpClient for Public Trusted Certificates");
-      return clientBuilder.build();
+      return okHttpClient.newBuilder().build();
     }
     try {
       var keyStore = initKeyStore(tls);
       var trustManager = trustManager(keyStore);
       var sslSocketFactory = sslContext(trustManager).getSocketFactory();
 
-      return clientBuilder
+      return okHttpClient.newBuilder()
         .sslSocketFactory(sslSocketFactory, trustManager)
         .hostnameVerifier(NoopHostnameVerifier.INSTANCE)
         .build();
     } catch (Exception e) {
       log.error("Error creating OkHttpClient with SSL context", e);
-      throw new SSLInitializationException("Error creating OkHttpClient with SSL context", e);
+      throw new SslInitializationException("Error creating OkHttpClient with SSL context", e);
+    }
+  }
+
+  public static SSLContext buildSslContext(@NotNull TlsProperties tls) {
+    requireNonNull(tls.getTrustStorePath(), "Trust store path is not defined");
+    requireNonNull(tls.getTrustStorePassword(), "Trust store password cannot be null");
+    try {
+      var keyStore = initKeyStore(tls);
+      var trustManager = trustManager(keyStore);
+      return sslContext(trustManager);
+    } catch (Exception e) {
+      log.error("Error creating SSL context", e);
+      throw new SslInitializationException("Error creating SSL context", e);
     }
   }
 
   private static KeyStore initKeyStore(TlsProperties tls)
     throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
 
-    KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+    KeyStore trustStore = KeyStore.getInstance(
+      isBlank(tls.getTrustStoreType()) ? KeyStore.getDefaultType() : tls.getTrustStoreType());
     try (var is = new FileInputStream(getFile(tls.getTrustStorePath()))) {
       trustStore.load(is, tls.getTrustStorePassword().toCharArray());
     }
@@ -95,5 +113,22 @@ public class FeignClientTlsUtils {
     sslContext.init(null, new TrustManager[] {trustManager}, null);
     log.debug("SSL context initialized: protocol = {}", sslContext.getProtocol());
     return sslContext;
+  }
+
+  @SuppressWarnings("java:S6548")
+  private static final class NoopHostnameVerifier implements HostnameVerifier {
+
+    static final NoopHostnameVerifier INSTANCE = new NoopHostnameVerifier();
+
+    @Override
+    @SuppressWarnings("java:S5527")
+    public boolean verify(String s, SSLSession sslSession) {
+      return true;
+    }
+
+    @Override
+    public String toString() {
+      return "NO_OP";
+    }
   }
 }

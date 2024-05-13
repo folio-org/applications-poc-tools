@@ -14,4 +14,5 @@ public class TlsProperties {
   private boolean enabled;
   private String trustStorePath;
   private String trustStorePassword;
+  private String trustStoreType;
 }
