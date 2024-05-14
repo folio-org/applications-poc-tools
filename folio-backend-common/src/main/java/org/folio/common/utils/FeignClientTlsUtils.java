@@ -1,15 +1,22 @@
 package org.folio.common.utils;
 
-import static java.util.Objects.nonNull;
-import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.springframework.util.ResourceUtils.getFile;
-
 import feign.Contract;
 import feign.Feign;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.okhttp.OkHttpClient;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import org.folio.common.configuration.properties.TlsProperties;
+import org.folio.common.utils.exception.SslInitializationException;
+import org.jetbrains.annotations.NotNull;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -18,17 +25,11 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
-import org.folio.common.configuration.properties.TlsProperties;
-import org.folio.common.utils.exception.SslInitializationException;
-import org.jetbrains.annotations.NotNull;
+
+import static java.util.Objects.nonNull;
+import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.springframework.util.ResourceUtils.getFile;
 
 @Slf4j
 @UtilityClass
@@ -71,7 +72,6 @@ public class FeignClientTlsUtils {
 
   public static SSLContext buildSslContext(@NotNull TlsProperties tls) {
     requireNonNull(tls.getTrustStorePath(), "Trust store path is not defined");
-    requireNonNull(tls.getTrustStorePassword(), "Trust store password cannot be null");
     try {
       var keyStore = initKeyStore(tls);
       var trustManager = trustManager(keyStore);
