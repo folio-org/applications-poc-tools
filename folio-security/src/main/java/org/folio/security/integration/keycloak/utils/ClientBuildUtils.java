@@ -7,18 +7,12 @@ import static org.apache.http.conn.ssl.NoopHostnameVerifier.INSTANCE;
 import static org.apache.http.ssl.SSLContextBuilder.create;
 import static org.springframework.util.ResourceUtils.getFile;
 
-import feign.Client;
-import feign.Contract;
-import feign.Feign;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.ssl.SSLInitializationException;
+import org.folio.common.configuration.properties.TlsProperties;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
-import org.folio.security.integration.keycloak.configuration.properties.KeycloakTlsProperties;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -26,18 +20,6 @@ import org.keycloak.admin.client.KeycloakBuilder;
 @Slf4j
 @UtilityClass
 public class ClientBuildUtils {
-
-  public static <T> T buildTargetFeignClient(Contract contract, Encoder encoder, Decoder decoder,
-    KeycloakProperties properties, Class<T> clientClass) {
-    var builder = Feign.builder()
-      .contract(contract).encoder(encoder).decoder(decoder);
-
-    if (properties.getTls() != null && properties.getTls().isEnabled()) {
-      builder.client(new Client.Default(createSslContext(properties.getTls()), INSTANCE));
-    }
-
-    return builder.target(clientClass, properties.getUrl());
-  }
 
   public static Keycloak buildKeycloakAdminClient(String clientSecret, KeycloakProperties properties) {
     var admin = properties.getAdmin();
@@ -53,11 +35,10 @@ public class ClientBuildUtils {
     if (properties.getTls() != null && properties.getTls().isEnabled()) {
       builder.resteasyClient(buildResteasyClient(properties.getTls()));
     }
-
     return builder.build();
   }
 
-  public static SSLContext buildSslContext(KeycloakTlsProperties properties) {
+  public static SSLContext buildSslContext(TlsProperties properties) {
     var trustStorePath = requireNonNull(properties.getTrustStorePath(), "Trust store path is not defined");
     var trustStorePassword = requireNonNull(properties.getTrustStorePassword(), "Trust store password is not defined");
     try {
@@ -70,11 +51,7 @@ public class ClientBuildUtils {
     }
   }
 
-  private static ResteasyClient buildResteasyClient(KeycloakTlsProperties properties) {
+  private static ResteasyClient buildResteasyClient(TlsProperties properties) {
     return (ResteasyClient) newBuilder().sslContext(buildSslContext(properties)).hostnameVerifier(INSTANCE).build();
-  }
-
-  private static SSLSocketFactory createSslContext(KeycloakTlsProperties properties) {
-    return buildSslContext(properties).getSocketFactory();
   }
 }

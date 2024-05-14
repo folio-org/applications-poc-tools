@@ -1,6 +1,7 @@
 package org.folio.tools.kong.configuration;
 
 import lombok.Data;
+import org.folio.common.configuration.properties.TlsProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
@@ -48,4 +49,9 @@ public class KongConfigurationProperties {
    * to the upstream service.
    */
   private Integer readTimeout;
+
+  /**
+   * Class that represents TLS connection properties.
+   */
+  private TlsProperties tls;
 }
