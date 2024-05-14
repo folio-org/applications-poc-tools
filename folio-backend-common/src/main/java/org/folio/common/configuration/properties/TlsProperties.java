@@ -1,6 +1,6 @@
 package org.folio.common.configuration.properties;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +19,6 @@ public class TlsProperties {
   private String trustStoreType;
 
   public String getTrustStorePassword() {
-    return trustStorePassword == null ? EMPTY : trustStorePassword;
+    return defaultString(trustStorePassword);
   }
 }
