@@ -208,7 +208,7 @@ public class KongGatewayService {
     try {
       return kongAdminClient.getService(moduleId).getId();
     } catch (Exception exception) {
-      var parameter = new Parameter().key("moduleId").value("Service is not found: test-module-0.0.1");
+      var parameter = new Parameter().key(moduleId).value("Service is not found");
       throw new KongIntegrationException("Failed to find Kong service for module: " + moduleId, List.of(parameter));
     }
   }
