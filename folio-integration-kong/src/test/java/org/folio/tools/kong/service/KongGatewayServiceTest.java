@@ -207,7 +207,7 @@ class KongGatewayServiceTest {
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to find Kong service for module: test-module-0.0.1")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
-          new Parameter().key("moduleId").value("Service is not found: test-module-0.0.1"))));
+          new Parameter().key("test-module-0.0.1").value("Service is not found"))));
 
       verify(kongAdminClient, never()).upsertRoute(anyString(), anyString(), any(Route.class));
     }
@@ -274,7 +274,7 @@ class KongGatewayServiceTest {
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to find Kong service for module: test-module-0.0.1")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
-          new Parameter().key("moduleId").value("Service is not found: test-module-0.0.1"))));
+          new Parameter().key("test-module-0.0.1").value("Service is not found"))));
     }
 
     @Test
@@ -360,7 +360,7 @@ class KongGatewayServiceTest {
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to find Kong service for module: test-module-0.0.1")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
-          new Parameter().key("moduleId").value("Service is not found: test-module-0.0.1"))));
+          new Parameter().key("test-module-0.0.1").value("Service is not found"))));
 
       verify(kongAdminClient, never()).upsertRoute(anyString(), anyString(), any(Route.class));
       verify(kongAdminClient, never()).deleteRoute(anyString(), anyString());
