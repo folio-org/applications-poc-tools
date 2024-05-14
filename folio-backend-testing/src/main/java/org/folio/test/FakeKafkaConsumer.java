@@ -5,10 +5,10 @@ import static java.util.stream.Collectors.toList;
 import static org.folio.test.TestUtils.parse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -83,7 +83,7 @@ public class FakeKafkaConsumer {
   }
 
   private void addEvent(String topic, ConsumerRecord<String, String> record) {
-    EVENTS.computeIfAbsent(topic, k -> new ArrayList<>()).add(record);
+    EVENTS.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(record);
   }
 
   private KafkaMessageListenerContainer<String, String> createContainer(String topic) {
