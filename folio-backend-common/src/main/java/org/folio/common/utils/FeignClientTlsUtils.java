@@ -71,7 +71,6 @@ public class FeignClientTlsUtils {
 
   public static SSLContext buildSslContext(@NotNull TlsProperties tls) {
     requireNonNull(tls.getTrustStorePath(), "Trust store path is not defined");
-    requireNonNull(tls.getTrustStorePassword(), "Trust store password cannot be null");
     try {
       var keyStore = initKeyStore(tls);
       var trustManager = trustManager(keyStore);
