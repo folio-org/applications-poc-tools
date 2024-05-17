@@ -23,11 +23,14 @@ import org.junit.jupiter.api.Test;
 class FeignClientTlsUtilsTest {
 
   private final OkHttpClient okHttpClient = mock(OkHttpClient.class);
+  private final Contract contract = mock(Contract.class);
+  private final Encoder encoder = mock(Encoder.class);
+  private final Decoder decoder = mock(Decoder.class);
 
   @Test
   void buildTargetFeignClient_positive_tlsDisabled() {
-    Client client = buildTargetFeignClient(okHttpClient, mock(Contract.class), mock(Encoder.class),
-      mock(Decoder.class), TlsProperties.of(false, null, null, null), "dummy", Client.class);
+    var client = buildTargetFeignClient(okHttpClient, contract, encoder, decoder,
+      TlsProperties.of(false, null, null, null), "dummy", Client.class);
     assertThat(client).isNotNull();
   }
 
@@ -35,8 +38,8 @@ class FeignClientTlsUtilsTest {
   void buildTargetFeignClient_positive_tlsEnabled() {
     when(okHttpClient.newBuilder()).thenReturn(new Builder());
 
-    Client client = buildTargetFeignClient(okHttpClient, mock(Contract.class), mock(Encoder.class),
-      mock(Decoder.class), getEnabledTlsProperties(), "dummy", Client.class);
+    var client = buildTargetFeignClient(okHttpClient, contract, encoder, decoder, getEnabledTlsProperties(), "dummy",
+      Client.class);
     assertThat(client).isNotNull();
   }
 
@@ -44,8 +47,8 @@ class FeignClientTlsUtilsTest {
   void buildTargetFeignClient_positive_tlsEnabledWithDefaultTruststore() {
     when(okHttpClient.newBuilder()).thenReturn(new Builder());
 
-    Client client = buildTargetFeignClient(okHttpClient, mock(Contract.class), mock(Encoder.class),
-      mock(Decoder.class), TlsProperties.of(true, "", null, null), "dummy", Client.class);
+    var client = buildTargetFeignClient(okHttpClient, contract, encoder, decoder,
+      TlsProperties.of(true, "", null, null), "dummy", Client.class);
     assertThat(client).isNotNull();
   }
 
