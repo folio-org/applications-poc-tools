@@ -23,6 +23,7 @@
     <module>folio-secret-store</module>
     <module>folio-backend-testing</module>
     <module>folio-integration-kong</module>
+    <module>folio-tls-utils</module>
   </modules>
 
   <licenses>
