@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.2.5</version>
+    <version>3.3.0</version>
     <relativePath />
   </parent>
 
@@ -36,9 +36,9 @@
   <properties>
     <java.version>17</java.version>
     <lombok.version>1.18.32</lombok.version>
-    <spring-boot.version>3.2.5</spring-boot.version>
+    <spring-boot.version>3.3.0</spring-boot.version>
     <apache-commons-collections4.version>4.4</apache-commons-collections4.version>
-    <spring-kafka.version>3.1.4</spring-kafka.version>
+    <spring-kafka.version>3.2.0</spring-kafka.version>
     <spring-boot-starter-validation.version>3.0.4</spring-boot-starter-validation.version>
 
     <!-- Test dependencies versions -->
@@ -150,7 +150,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>10.16.0</version>
+              <version>10.17.0</version>
             </dependency>
             <dependency>
               <groupId>org.folio</groupId>
