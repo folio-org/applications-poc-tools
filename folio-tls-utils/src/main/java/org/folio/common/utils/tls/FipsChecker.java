@@ -65,7 +65,7 @@ public final class FipsChecker {
     for (Provider p : Security.getProviders()) {
       builder.append("  ").append(p.toString()).append(" - ").append(p.getClass()).append(",\n");
     }
-    return builder.append("]").toString();
+    return builder.append("]\n").toString();
   }
 
   public static String dumpSecurityProperties() {
@@ -80,7 +80,7 @@ public final class FipsChecker {
       .append("\n\n");
     Stream.of(ENV_VARS).forEach(propertyName ->
       builder.append("  ").append(propertyName).append(": ").append(System.getProperty(propertyName)).append("\n"));
-    return builder.append("]").toString();
+    return builder.append("]\n").toString();
   }
 
   public static String getFipsChecksResultString() {
