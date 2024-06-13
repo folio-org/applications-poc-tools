@@ -1,5 +1,5 @@
 import org.jenkinsci.plugins.workflow.libs.Library
-@Library('jenkins-pipeline-libs@US1270433') _
+@Library('folio_jenkins_shared_libs@US1270433') _
 buildMvn {
   publishModDescriptor = 'no'
   mvnDeploy = 'yes'
