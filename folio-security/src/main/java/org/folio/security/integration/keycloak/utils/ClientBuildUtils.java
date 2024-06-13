@@ -1,19 +1,14 @@
 package org.folio.security.integration.keycloak.utils;
 
 import static jakarta.ws.rs.client.ClientBuilder.newBuilder;
-import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 import static org.apache.http.conn.ssl.NoopHostnameVerifier.INSTANCE;
-import static org.apache.http.ssl.SSLContextBuilder.create;
-import static org.springframework.util.ResourceUtils.getFile;
 
-import java.security.KeyStore;
-import javax.net.ssl.SSLContext;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.ssl.SSLInitializationException;
 import org.folio.common.configuration.properties.TlsProperties;
+import org.folio.common.utils.FeignClientTlsUtils;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.keycloak.admin.client.Keycloak;
@@ -40,25 +35,12 @@ public class ClientBuildUtils {
     return builder.build();
   }
 
-  public static SSLContext buildSslContext(TlsProperties tls) {
-    var trustStorePath = requireNonNull(tls.getTrustStorePath(), "Trust store path is not defined");
-    try {
-      return create()
-        .loadTrustMaterial(getFile(trustStorePath), tls.getTrustStorePassword().toCharArray())
-        .setKeyStoreType(isBlank(tls.getTrustStoreType()) ? KeyStore.getDefaultType() : tls.getTrustStoreType())
-        .build();
-    } catch (Exception e) {
-      log.error("Error creating SSL context", e);
-      throw new SSLInitializationException("Error creating SSL context", e);
-    }
-  }
-
   private static ResteasyClient buildResteasyClient(TlsProperties tls) {
     var clientBuilder = newBuilder().hostnameVerifier(INSTANCE);
     if (isBlank(tls.getTrustStorePath())) {
       log.debug("Creating ResteasyClient for Public Trusted Certificates");
       return (ResteasyClient) clientBuilder.build();
     }
-    return (ResteasyClient) clientBuilder.sslContext(buildSslContext(tls)).build();
+    return (ResteasyClient) clientBuilder.sslContext(FeignClientTlsUtils.buildSslContext(tls)).build();
   }
 }

@@ -2,10 +2,7 @@ package org.folio.security.integration.keycloak.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.security.integration.keycloak.utils.ClientBuildUtils.buildKeycloakAdminClient;
-import static org.folio.security.integration.keycloak.utils.ClientBuildUtils.buildSslContext;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.apache.http.ssl.SSLInitializationException;
 import org.folio.common.configuration.properties.TlsProperties;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakAdminProperties;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakClientProperties;
@@ -39,22 +36,6 @@ class ClientBuildUtilsTest {
     var keycloakAdminClient = buildKeycloakAdminClient("secretPassword", keycloakProperties);
 
     assertThat(keycloakAdminClient).isNotNull();
-  }
-
-  @Test
-  void buildSslContext_positive() {
-    var tls = new TlsProperties();
-    tls.setTrustStorePath("classpath:certificates/test.truststore.jks");
-    tls.setTrustStorePassword("secretpassword");
-    tls.setTrustStoreType("JKS");
-    assertThat(buildSslContext(tls)).isNotNull();
-  }
-
-  @Test
-  void buildSslContext_negative() {
-    var tls = new TlsProperties();
-    tls.setTrustStorePath("");
-    assertThrows(SSLInitializationException.class, () -> buildSslContext(tls));
   }
 
   @Test
