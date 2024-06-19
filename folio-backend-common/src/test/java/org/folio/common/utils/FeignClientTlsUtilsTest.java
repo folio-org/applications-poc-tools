@@ -3,6 +3,7 @@ package org.folio.common.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.common.utils.FeignClientTlsUtils.buildSslContext;
 import static org.folio.common.utils.FeignClientTlsUtils.buildTargetFeignClient;
+import static org.folio.common.utils.FeignClientTlsUtils.getHttpClientBuilder;
 import static org.folio.common.utils.FeignClientTlsUtils.getSslOkHttpClient;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -66,6 +67,31 @@ class FeignClientTlsUtilsTest {
   void buildSslContext_positive() {
     var sslContext = buildSslContext(getEnabledTlsProperties());
     assertThat(sslContext).isNotNull();
+  }
+
+  @Test
+  void buildTargetHttpClient_positive_tlsDisabled() {
+    var client = getHttpClientBuilder(
+      TlsProperties.of(false, null, null, null));
+    assertThat(client).isNotNull();
+  }
+
+  @Test
+  void buildTargetHttpClient_positive_tlsEnabledWithPublicCa() {
+    var client = getHttpClientBuilder(
+      TlsProperties.of(true, null, null, null));
+    assertThat(client).isNotNull();
+  }
+
+  @Test
+  void buildTargetHttpClient_positive_tlsEnabled() {
+    var client = getHttpClientBuilder(getEnabledTlsProperties());
+    assertThat(client).isNotNull();
+  }
+
+  @Test
+  void buildTargetHttpClient_positive_negative() {
+    assertThrows(SslInitializationException.class, () -> getHttpClientBuilder(getInvalidTlsProperties()));
   }
 
   private static TlsProperties getEnabledTlsProperties() {

@@ -12,6 +12,7 @@ import feign.codec.Encoder;
 import feign.okhttp.OkHttpClient;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.http.HttpClient;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -26,6 +27,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.common.configuration.properties.TlsProperties;
 import org.folio.common.utils.exception.SslInitializationException;
 import org.jetbrains.annotations.NotNull;
@@ -67,6 +69,21 @@ public class FeignClientTlsUtils {
       log.error("Error creating OkHttpClient with SSL context", e);
       throw new SslInitializationException("Error creating OkHttpClient with SSL context", e);
     }
+  }
+
+  public static HttpClient.Builder getHttpClientBuilder(TlsProperties tls) {
+    HttpClient.Builder builder = HttpClient.newBuilder();
+    if (tls != null && tls.isEnabled() && StringUtils.isNotBlank(tls.getTrustStorePath())) {
+      try {
+        var keyStore = initKeyStore(tls);
+        var trustManager = trustManager(keyStore);
+        var sslContext = sslContext(trustManager);
+        builder.sslContext(sslContext);
+      } catch (Exception e) {
+        throw new SslInitializationException("Failed to initialize HttpClient with SSL", e);
+      }
+    }
+    return builder;
   }
 
   public static SSLContext buildSslContext(@NotNull TlsProperties tls) {
