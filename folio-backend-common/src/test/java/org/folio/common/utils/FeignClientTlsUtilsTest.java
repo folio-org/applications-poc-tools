@@ -77,9 +77,21 @@ class FeignClientTlsUtilsTest {
   }
 
   @Test
+  void buildTargetHttpClient_positive_tlsEnabledWithPublicCa() {
+    var client = getHttpClientBuilder(
+      TlsProperties.of(true, null, null, null));
+    assertThat(client).isNotNull();
+  }
+
+  @Test
   void buildTargetHttpClient_positive_tlsEnabled() {
     var client = getHttpClientBuilder(getEnabledTlsProperties());
     assertThat(client).isNotNull();
+  }
+
+  @Test
+  void buildTargetHttpClient_positive_negative() {
+    assertThrows(SslInitializationException.class, () -> getHttpClientBuilder(getInvalidTlsProperties()));
   }
 
   private static TlsProperties getEnabledTlsProperties() {
