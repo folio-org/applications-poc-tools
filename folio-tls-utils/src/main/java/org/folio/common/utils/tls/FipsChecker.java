@@ -2,12 +2,17 @@ package org.folio.common.utils.tls;
 
 import java.lang.reflect.Method;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.Provider;
+import java.security.SecureRandom;
 import java.security.Security;
 import java.util.stream.Stream;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public final class FipsChecker {
 
   public static final String JAVA_SECURITY_PROPERTIES = "java.security.properties";
@@ -23,6 +28,9 @@ public final class FipsChecker {
     new String[] {KEYSTORE_TYPE_COMPAT, JAVAX_NET_SSL_TRUST_STORE_TYPE, JAVAX_NET_SSL_TRUST_STORE,
       JAVAX_NET_SSL_TRUST_STORE_PROVIDER, JAVAX_NET_SSL_KEY_STORE_TYPE, JAVAX_NET_SSL_KEY_STORE,
       JAVAX_NET_SSL_KEY_STORE_PROVIDER, ORG_BOUNCYCASTLE_FIPS_APPROVED_ONLY};
+  public static final String ENABLED = "Enabled";
+  public static final String DISABLED = "Disabled";
+  public static final String UNKNOWN = "Unknown";
 
   private FipsChecker() {
   }
@@ -33,10 +41,10 @@ public final class FipsChecker {
         FipsChecker.class.getClassLoader().loadClass("org.bouncycastle.crypto.CryptoServicesRegistrar");
       Method isInApprovedOnlyMode = clazz.getDeclaredMethod("isInApprovedOnlyMode");
       boolean isEnabled = (boolean) isInApprovedOnlyMode.invoke(null);
-      return isEnabled ? "Enabled" : "Disabled";
+      return isEnabled ? ENABLED : DISABLED;
     } catch (Throwable ignore) {
       System.out.println("Could not detect org.bouncycastle.crypto.CryptoServicesRegistrar: " + ignore);
-      return "Unknown";
+      return UNKNOWN;
     }
   }
 
@@ -49,10 +57,10 @@ public final class FipsChecker {
       isSystemFipsEnabled = securityConfigurator.getDeclaredMethod("isSystemFipsEnabled");
       isSystemFipsEnabled.setAccessible(true);
       boolean isEnabled = (boolean) isSystemFipsEnabled.invoke(null);
-      return isEnabled ? "Enabled" : "Disabled";
+      return isEnabled ? ENABLED : DISABLED;
     } catch (Throwable ignore) {
       System.out.println("Could not detect if FIPS is enabled from the host: " + ignore);
-      return "Unknown";
+      return UNKNOWN;
     } finally {
       if (isSystemFipsEnabled != null) {
         isSystemFipsEnabled.setAccessible(false);
@@ -88,5 +96,23 @@ public final class FipsChecker {
       + ", FIPS-JVM: " + isSystemFipsEnabled() + ")\n"
       + dumpJavaSecurityProviders()
       + dumpSecurityProperties();
+  }
+
+  /**
+   * Returns a SecureRandom instance that is approved by Bouncy Castle in FIPS mode.
+   *
+   * @return an instance of SecureRandom or null if Bouncy Castle is not in the approved mode
+   */
+  public static SecureRandom getApprovedSecureRandomSafe() {
+    if (!ENABLED.equals(isInBouncycastleApprovedOnlyMode())) {
+      log.warn("Bouncy Castle is not in the approved mode, cannot retrieve approved SecureRandom instance");
+      return null;
+    }
+    try {
+      return SecureRandom.getInstance("DEFAULT", "BCFIPS");
+    } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+      log.warn("Cannot retrieve approved SecureRandom instance", e);
+      return null;
+    }
   }
 }
