@@ -10,7 +10,9 @@ import java.security.Security;
 import java.util.stream.Stream;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public final class FipsChecker {
 
   public static final String JAVA_SECURITY_PROPERTIES = "java.security.properties";
@@ -103,11 +105,13 @@ public final class FipsChecker {
    */
   public static SecureRandom getApprovedSecureRandomSafe() {
     if (!ENABLED.equals(isInBouncycastleApprovedOnlyMode())) {
+      log.warn("Bouncy Castle is not in the approved mode, cannot retrieve approved SecureRandom instance");
       return null;
     }
     try {
       return SecureRandom.getInstance("DEFAULT", "BCFIPS");
     } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+      log.warn("Cannot retrieve approved SecureRandom instance", e);
       return null;
     }
   }
