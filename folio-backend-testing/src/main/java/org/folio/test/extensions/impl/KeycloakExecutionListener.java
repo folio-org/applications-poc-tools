@@ -7,6 +7,7 @@ import static org.springframework.core.annotation.AnnotatedElementUtils.getMerge
 import static org.springframework.test.context.util.TestContextResourceUtils.convertToClasspathResourcePaths;
 import static org.springframework.test.context.util.TestContextResourceUtils.convertToResourceList;
 
+import jakarta.ws.rs.NotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.AnnotatedElement;
@@ -49,7 +50,11 @@ public class KeycloakExecutionListener implements TestExecutionListener {
     if (importedRawRealmNames instanceof List importedRealmNamesList) {
       for (var rawRealmName : importedRealmNamesList) {
         if (rawRealmName instanceof String realmName) {
-          keycloak.realm(realmName).remove();
+          try {
+            keycloak.realm(realmName).remove();
+          } catch (NotFoundException e) {
+            // nothing to do, cause realm is not found
+          }
         }
       }
     }
