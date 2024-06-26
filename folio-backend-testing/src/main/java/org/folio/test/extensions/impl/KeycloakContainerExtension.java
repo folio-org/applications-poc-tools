@@ -14,6 +14,7 @@ import dasniko.testcontainers.keycloak.KeycloakContainer;
 import java.util.List;
 import javax.net.ssl.SSLContext;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.http.ssl.SSLInitializationException;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -27,7 +28,7 @@ import org.keycloak.representations.idm.PartialImportRepresentation;
 @Log4j2
 public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
-  private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:23.0.7";
+  private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:25.0.1";
   private static final String REALM_JSON = "json/keycloak/master-realm.json";
   private static final String IMPORTED_CLIENT_ID = "folio-backend-admin-client";
   private static final String IMPORTED_CLIENT_SECRET = "supersecret";
@@ -99,6 +100,8 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   private static KeycloakContainer keycloakContainer() {
     return new KeycloakContainer(KEYCLOAK_IMAGE)
       .withFeaturesEnabled("scripts", "token-exchange", "admin-fine-grained-authz")
+      .withAdminUsername("keycloak-test-admin")
+      .withAdminPassword(RandomStringUtils.random(20, true, true))
       .withProviderLibsFrom(List.of(readToFile("keycloak/folio-scripts.jar", "folio-scripts", ".jar")))
       .useTlsKeystore(SSL_KEYSTORE_PATH, SSL_KEYSTORE_PASSWORD);
   }
