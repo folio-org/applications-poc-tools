@@ -8,15 +8,15 @@ import static software.amazon.awssdk.services.ssm.model.ParameterType.SECURE_STR
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyStore;
-import java.security.Security;
 import java.util.Properties;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.ssl.SSLInitializationException;
 import org.apache.http.util.Asserts;
-import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.folio.tools.store.SecureStore;
 import org.folio.tools.store.exception.NotFoundException;
 import org.folio.tools.store.properties.AwsConfigProperties;
@@ -106,10 +106,10 @@ public final class AwsStore implements SecureStore {
   private TrustManager[] getTrustManager(AwsConfigProperties properties) {
     Asserts.notBlank(properties.getTrustStorePath(), "Truststore path must not be blank");
     try {
-      Security.addProvider(new BouncyCastleFipsProvider());
       KeyStore trustStore = KeyStore.getInstance(properties.getTrustStoreFileType());
 
-      try (InputStream trustStoreStream = this.getClass().getResourceAsStream(properties.getTrustStorePath())) {
+      try (InputStream trustStoreStream =
+        Files.newInputStream(Path.of(properties.getTrustStorePath()).toAbsolutePath())) {
         trustStore.load(trustStoreStream, properties.getTrustStorePassword().toCharArray());
       }
       TrustManagerFactory trustManagerFactory =
