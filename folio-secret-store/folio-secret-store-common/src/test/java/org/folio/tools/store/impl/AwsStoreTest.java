@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.amazon.awssdk.services.ssm.model.ParameterType.SECURE_STRING;
 
+import java.security.Security;
+import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.folio.test.types.UnitTest;
 import org.folio.tools.store.exception.NotFoundException;
 import org.folio.tools.store.properties.AwsConfigProperties;
@@ -30,8 +32,12 @@ class AwsStoreTest {
 
   public static final AwsConfigProperties AWS_CONFIG_PROPERTIES =
     AwsConfigProperties.builder().region("us-east-1").useIam(true).fipsEnabled(true)
-      .trustStorePath("/certificates/keystore.bcfks").trustStorePassword("secretpassword")
+      .trustStorePath("src/test/resources/certificates/keystore.bcfks").trustStorePassword("secretpassword")
       .trustStoreFileType("BCFKS").build();
+
+  static {
+    Security.addProvider(new BouncyCastleFipsProvider());
+  }
 
   @Mock
   private SsmClient ssmClient;
