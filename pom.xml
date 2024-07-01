@@ -12,7 +12,7 @@
   <name>applications-poc-tools</name>
   <groupId>org.folio</groupId>
   <artifactId>applications-poc-tools</artifactId>
-  <version>1.5.3</version>
+  <version>1.5.4-SNAPSHOT</version>
   <description>Library with general purpose classes to help with FOLIO backend development and testing</description>
   <packaging>pom</packaging>
 
@@ -327,6 +327,6 @@
     <url>https://github.com/folio-org/applications-poc-tools</url>
     <connection>scm:git:git://github.com:folio-org/applications-poc-tools.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/applications-poc-tools.git</developerConnection>
-    <tag>v1.5.3</tag>
+    <tag>v1.2.0</tag>
   </scm>
 </project>
