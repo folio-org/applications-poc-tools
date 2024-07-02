@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.folio</groupId>
     <artifactId>folio-secret-store</artifactId>
-    <version>1.5.3-SNAPSHOT</version>
+    <version>1.5.4-SNAPSHOT</version>
   </parent>
 
   <name>folio-secret-store-common</name>
@@ -15,7 +15,7 @@
 
   <properties>
     <vault.version>5.1.0</vault.version>
-    <aws.version>2.26.9</aws.version>
+    <aws.version>2.26.12</aws.version>
     <apache-commons-text.version>1.12.0</apache-commons-text.version>
     <bc-fips>1.0.2.5</bc-fips>
   </properties>
