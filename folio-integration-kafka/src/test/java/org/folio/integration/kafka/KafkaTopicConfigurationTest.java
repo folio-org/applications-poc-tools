@@ -1,6 +1,7 @@
 package org.folio.integration.kafka;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -33,5 +34,14 @@ class KafkaTopicConfigurationTest {
     verify(kafkaAdminService).createTopic(new NewTopic("folio.topic1", Optional.of(10), Optional.empty()));
     verify(kafkaAdminService).createTopic(new NewTopic("folio.topic2", Optional.empty(), Optional.of((short) 2)));
     verify(kafkaAdminService).createTopic(new NewTopic("folio.topic3", Optional.of(30), Optional.of((short) -1)));
+  }
+
+  @Test
+  void createTopics_positive_topicsEmpty() {
+    when(folioKafkaProperties.getTopics()).thenReturn(null);
+
+    kafkaTopicConfiguration.createTopics();
+
+    verifyNoInteractions(kafkaAdminService);
   }
 }
