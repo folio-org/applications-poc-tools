@@ -1,5 +1,6 @@
 package org.folio.integration.kafka;
 
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.folio.integration.kafka.KafkaUtils.getEnvTopicName;
 
 import jakarta.annotation.PostConstruct;
@@ -17,6 +18,11 @@ public class KafkaTopicConfiguration {
 
   @PostConstruct
   public void createTopics() {
+    if (isEmpty(folioKafkaProperties.getTopics())) {
+      log.debug("No topics to create");
+      return;
+    }
+
     for (var topic : folioKafkaProperties.getTopics()) {
       var topicName = getEnvTopicName(topic.getName());
       var newTopic = KafkaUtils.createTopic(topicName, topic.getNumPartitions(), topic.getReplicationFactor());
