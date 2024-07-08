@@ -5,7 +5,6 @@ import static java.lang.Boolean.parseBoolean;
 import static java.util.Objects.nonNull;
 import static software.amazon.awssdk.services.ssm.model.ParameterType.SECURE_STRING;
 
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -106,14 +105,12 @@ public final class AwsStore implements SecureStore {
   private TrustManager[] getTrustManager(AwsConfigProperties properties) {
     Asserts.notBlank(properties.getTrustStorePath(), "Truststore path must not be blank");
     try {
-      KeyStore trustStore = KeyStore.getInstance(properties.getTrustStoreFileType());
-
-      try (InputStream trustStoreStream =
-        Files.newInputStream(Path.of(properties.getTrustStorePath()).toAbsolutePath())) {
+      var trustStore = KeyStore.getInstance(properties.getTrustStoreFileType());
+      try (var trustStoreStream = Files.newInputStream(Path.of(properties.getTrustStorePath()).toAbsolutePath())) {
         trustStore.load(trustStoreStream, properties.getTrustStorePassword().toCharArray());
       }
-      TrustManagerFactory trustManagerFactory =
-        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+
+      var trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
       trustManagerFactory.init(trustStore);
       return trustManagerFactory.getTrustManagers();
     } catch (Exception e) {

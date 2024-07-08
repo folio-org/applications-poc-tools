@@ -26,42 +26,52 @@
       <artifactId>spring-boot-starter-log4j2</artifactId>
       <optional>true</optional>
     </dependency>
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <optional>true</optional>
     </dependency>
+
     <dependency>
       <groupId>com.bettercloud</groupId>
       <artifactId>vault-java-driver</artifactId>
       <version>${vault.version}</version>
     </dependency>
+
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>ssm</artifactId>
       <version>${aws.version}</version>
     </dependency>
+
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>apache-client</artifactId>
       <version>${aws.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bc-fips</artifactId>
-      <version>${bc-fips}</version>
-    </dependency>
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-text</artifactId>
       <version>${apache-commons-text.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-backend-testing</artifactId>
       <version>${project.parent.version}</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bc-fips</artifactId>
+      <version>${bc-fips}</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
