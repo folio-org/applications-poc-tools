@@ -1,5 +1,6 @@
 package org.folio.tools.store.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -14,12 +15,12 @@ import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.folio.test.types.UnitTest;
 import org.folio.tools.store.exception.NotFoundException;
 import org.folio.tools.store.properties.AwsConfigProperties;
+import org.folio.tools.store.utils.SsmClientProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
 import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
@@ -30,25 +31,27 @@ import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 @ExtendWith(MockitoExtension.class)
 class AwsStoreTest {
 
-  public static final AwsConfigProperties AWS_CONFIG_PROPERTIES =
-    AwsConfigProperties.builder().region("us-east-1").useIam(true).fipsEnabled(true)
-      .trustStorePath("src/test/resources/certificates/keystore.bcfks").trustStorePassword("secretpassword")
-      .trustStoreFileType("BCFKS").build();
+  public static final AwsConfigProperties AWS_CONFIG_PROPERTIES = AwsConfigProperties.builder()
+    .region("us-east-1")
+    .useIam(true)
+    .fipsEnabled(true)
+    .trustStorePath("src/test/resources/certificates/keystore.bcfks")
+    .trustStorePassword("secretpassword")
+    .trustStoreFileType("BCFKS").build();
 
   static {
     Security.addProvider(new BouncyCastleFipsProvider());
   }
 
-  @Mock
-  private SsmClient ssmClient;
-
-  @InjectMocks
-  private AwsStore awsStore = AwsStore.create(AWS_CONFIG_PROPERTIES);
+  @InjectMocks private AwsStore awsStore;
+  @Mock private SsmClient ssmClient;
+  @Mock private SsmClientProvider ssmClientProvider;
 
   @Test
   void get_positive() {
     var key = "my_key";
     var value = "my_value";
+    when(ssmClientProvider.get()).thenReturn(ssmClient);
     when(ssmClient.getParameter(any(GetParameterRequest.class))).thenReturn(
       GetParameterResponse.builder().parameter(Parameter.builder().value(value).build()).build());
 
@@ -61,6 +64,7 @@ class AwsStoreTest {
   void get_negative_notFound() {
     var key = "my_key";
 
+    when(ssmClientProvider.get()).thenReturn(ssmClient);
     when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(NotFoundException.class);
 
     assertThrows(NotFoundException.class, () -> awsStore.get(key));
@@ -70,8 +74,9 @@ class AwsStoreTest {
   void lookup_positive() {
     var key = "my_key";
     var value = "my_value";
-    when(ssmClient.getParameter(any(GetParameterRequest.class))).thenReturn(
-      GetParameterResponse.builder().parameter(Parameter.builder().value(value).build()).build());
+    var ssmResponse = GetParameterResponse.builder().parameter(Parameter.builder().value(value).build()).build();
+    when(ssmClientProvider.get()).thenReturn(ssmClient);
+    when(ssmClient.getParameter(any(GetParameterRequest.class))).thenReturn(ssmResponse);
 
     var result = awsStore.lookup(key);
 
@@ -83,6 +88,7 @@ class AwsStoreTest {
   void lookup_negative_notFound() {
     var key = "my_key";
 
+    when(ssmClientProvider.get()).thenReturn(ssmClient);
     when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(NotFoundException.class);
 
     var result = awsStore.lookup(key);
@@ -96,6 +102,7 @@ class AwsStoreTest {
     var tenant = "foo";
     var user = "bar";
 
+    when(ssmClientProvider.get()).thenReturn(ssmClient);
     when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(RuntimeException.class);
 
     assertThrows(NotFoundException.class, () -> awsStore.get(clientId, tenant, user));
@@ -111,6 +118,7 @@ class AwsStoreTest {
 
     var req = GetParameterRequest.builder().name(key).withDecryption(true).build();
     var resp = GetParameterResponse.builder().parameter(Parameter.builder().name(key).value(val).build()).build();
+    when(ssmClientProvider.get()).thenReturn(ssmClient);
     when(ssmClient.getParameter(req)).thenReturn(resp);
 
     var actual = awsStore.get(clientId, tenant, user);
@@ -121,6 +129,7 @@ class AwsStoreTest {
   void set_positive() {
     var key = "key";
     var value = "value";
+    when(ssmClientProvider.get()).thenReturn(ssmClient);
     when(ssmClient.putParameter(any(PutParameterRequest.class))).thenReturn(null);
 
     awsStore.set(key, value);
@@ -131,9 +140,8 @@ class AwsStoreTest {
   }
 
   @Test
-  void initializeStoreWithIamDisabled_negative() {
-    var props = AwsConfigProperties.builder().region("us-east-1").useIam(false).build();
-
-    assertThrows(SdkClientException.class, () -> AwsStore.create(props));
+  void create_positive() {
+    var actual = AwsStore.create(AWS_CONFIG_PROPERTIES);
+    assertThat(actual).isNotNull();
   }
 }

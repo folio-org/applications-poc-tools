@@ -21,7 +21,7 @@ public final class SecureStoreFactory {
 
     secureStore = switch (type) {
       case VaultStore.TYPE -> new VaultStore(props);
-      case AwsStore.TYPE -> new AwsStore(props);
+      case AwsStore.TYPE -> AwsStore.create(props);
       default -> new EphemeralStore(props);
     };
 
