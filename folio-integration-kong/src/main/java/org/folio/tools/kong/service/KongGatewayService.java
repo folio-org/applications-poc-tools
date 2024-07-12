@@ -119,6 +119,7 @@ public class KongGatewayService {
     try {
       kongAdminClient.deleteService(serviceNameOrId);
     } catch (Exception e) {
+      log.warn("Failed to delete Kong service: {}", serviceNameOrId, e);
       var parameters = List.of(new Parameter().key("cause").value(e.getMessage()));
       throw new KongIntegrationException("Failed to delete Kong service: " + serviceNameOrId, parameters);
     }
