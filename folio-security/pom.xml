@@ -11,7 +11,7 @@
   <artifactId>folio-security</artifactId>
 
   <properties>
-    <spring-cloud-bom.version>2023.0.2</spring-cloud-bom.version>
+    <spring-cloud-bom.version>2023.0.3</spring-cloud-bom.version>
     <keycloak-admin-client.version>25.0.1</keycloak-admin-client.version>
     <jwks-rsa.version>0.22.1</jwks-rsa.version>
 
