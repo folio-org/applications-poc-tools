@@ -17,10 +17,14 @@ public class ModuleDescriptor {
   private List<RoutingEntry> filters;
   private List<Permission> permissionSets;
   private List<EnvEntry> env;
-  private Object metadata;
   private UiModuleDescriptor uiDescriptor;
   private LaunchDescriptor launchDescriptor;
+
+  @Deprecated
   private UserDescriptor user;
+
+  private AnyDescriptor metadata;
+  private AnyDescriptor extensions;
 
   /**
    * Sets id field and returns {@link ModuleDescriptor}.
@@ -227,16 +231,6 @@ public class ModuleDescriptor {
   }
 
   /**
-   * Sets metadata field and returns {@link ModuleDescriptor}.
-   *
-   * @return modified {@link ModuleDescriptor} value
-   */
-  public ModuleDescriptor metadata(Object metadata) {
-    this.metadata = metadata;
-    return this;
-  }
-
-  /**
    * Sets uiDescriptor field and returns {@link ModuleDescriptor}.
    *
    * @return modified {@link ModuleDescriptor} value
@@ -261,8 +255,29 @@ public class ModuleDescriptor {
    *
    * @return modified {@link ModuleDescriptor} value
    */
+  @Deprecated
   public ModuleDescriptor user(UserDescriptor user) {
     this.user = user;
+    return this;
+  }
+
+  /**
+   * Sets metadata field and returns {@link ModuleDescriptor}.
+   *
+   * @return modified {@link ModuleDescriptor} value
+   */
+  public ModuleDescriptor metadata(AnyDescriptor metadata) {
+    this.metadata = metadata;
+    return this;
+  }
+
+  /**
+   * Sets extensions for {@link ModuleDescriptor} and returns {@link ModuleDescriptor}.
+   *
+   * @return this {@link ModuleDescriptor} with new extensions value
+   */
+  public ModuleDescriptor extensions(AnyDescriptor extensions) {
+    this.extensions = extensions;
     return this;
   }
 }
