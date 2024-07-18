@@ -8,14 +8,19 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
+import java.util.Optional;
 import java.util.Properties;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.ssl.SSLInitializationException;
 import org.apache.http.util.Asserts;
 import org.folio.tools.store.properties.AwsConfigProperties;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
@@ -28,6 +33,8 @@ public class SsmClientProvider {
   public static final String PROP_USE_IAM = "useIAM";
   public static final String PROP_ECS_CREDENTIALS_PATH = "ecsCredentialsPath";
   public static final String PROP_ECS_CREDENTIALS_ENDPOINT = "ecsCredentialsEndpoint";
+  public static final String PROP_ACCESS_KEY = "accessKey";
+  public static final String PROP_SECRET_KEY = "secretKey";
   public static final String DEFAULT_USE_IAM = "true";
   public static final String ECS_CREDENTIALS_PATH_VAR = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI";
 
@@ -58,8 +65,8 @@ public class SsmClientProvider {
     if (nonNull(properties.getUseIam()) && properties.getUseIam()) {
       log.debug("Using IAM");
     } else {
-      builder.credentialsProvider(DefaultCredentialsProvider.create());
-      builder.endpointOverride(endpoint(properties));
+      builder.credentialsProvider(getAwsCredentialsProvider(properties));
+      endpoint(properties).ifPresent(builder::endpointOverride);
     }
     return builder.build();
   }
@@ -80,19 +87,31 @@ public class SsmClientProvider {
     }
   }
 
-  private static URI endpoint(AwsConfigProperties properties) {
+  private AwsCredentialsProvider getAwsCredentialsProvider(AwsConfigProperties properties) {
+    AwsCredentialsProvider credProvider;
+    try {
+      credProvider = StaticCredentialsProvider.create(
+        AwsBasicCredentials.create(properties.getAccessKey(), properties.getSecretKey()));
+    } catch (Exception e) {
+      log.warn("Error creating StaticCredentialsProvider", e);
+      credProvider = DefaultCredentialsProvider.create();
+    }
+    return credProvider;
+  }
+
+  private static Optional<URI> endpoint(AwsConfigProperties properties) {
     var path = properties.getEcsCredentialsPath();
     if (path == null) {
       path = System.getenv(ECS_CREDENTIALS_PATH_VAR);
     }
-    if (path == null) {
-      throw SdkClientException.create("No credentials path was provided and the environment variable "
-        + ECS_CREDENTIALS_PATH_VAR + " is empty");
+    if (path == null || StringUtils.isBlank(properties.getEcsCredentialsEndpoint())) {
+      return Optional.empty();
     }
 
     try {
-      return new URI(properties.getEcsCredentialsEndpoint() + path);
+      return Optional.of(new URI(properties.getEcsCredentialsEndpoint() + path));
     } catch (URISyntaxException e) {
+      log.warn("Error creating URI", e);
       throw SdkClientException.builder().cause(e).build();
     }
   }
@@ -101,6 +120,8 @@ public class SsmClientProvider {
     return AwsConfigProperties.builder()
       .useIam(parseBoolean(properties.getProperty(PROP_USE_IAM, DEFAULT_USE_IAM)))
       .region(properties.getProperty(PROP_REGION))
+      .accessKey(properties.getProperty(PROP_ACCESS_KEY))
+      .secretKey(properties.getProperty(PROP_SECRET_KEY))
       .ecsCredentialsPath(properties.getProperty(PROP_ECS_CREDENTIALS_PATH))
       .ecsCredentialsEndpoint(properties.getProperty(PROP_ECS_CREDENTIALS_ENDPOINT))
       .build();
