@@ -16,7 +16,7 @@
     <sonar.exclusions>src/main/**/*</sonar.exclusions>
     <jsonassert.version>1.5.3</jsonassert.version>
     <jjwt.version>0.12.6</jjwt.version>
-    <apache-commons-lang3.version>3.14.0</apache-commons-lang3.version>
+    <apache-commons-lang3.version>3.15.0</apache-commons-lang3.version>
     <testcontainers-keycloak.version>3.4.0</testcontainers-keycloak.version>
   </properties>
 
