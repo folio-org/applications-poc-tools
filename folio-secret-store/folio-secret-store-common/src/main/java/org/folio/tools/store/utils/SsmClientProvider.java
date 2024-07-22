@@ -88,15 +88,13 @@ public class SsmClientProvider {
   }
 
   private AwsCredentialsProvider getAwsCredentialsProvider(AwsConfigProperties properties) {
-    AwsCredentialsProvider credProvider;
     try {
-      credProvider = StaticCredentialsProvider.create(
+      return StaticCredentialsProvider.create(
         AwsBasicCredentials.create(properties.getAccessKey(), properties.getSecretKey()));
     } catch (Exception e) {
-      log.warn("Error creating StaticCredentialsProvider", e);
-      credProvider = DefaultCredentialsProvider.create();
+      log.info("Using DefaultCredentialsProvider", e);
+      return DefaultCredentialsProvider.create();
     }
-    return credProvider;
   }
 
   private static Optional<URI> endpoint(AwsConfigProperties properties) {
