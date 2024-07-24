@@ -52,6 +52,8 @@ To use secrete stores, you must add dependencies to your pom.xml file:
 | Property name          | type   | Property value                                                                                               |
 |------------------------|--------|--------------------------------------------------------------------------------------------------------------|
 | region                 | string | The AWS region to pass to the AWS SSM Client Builder.                                                        |
+| accessKey              | string | The AWS access key to pass to the AWS SSM Client.                                                            |
+| secretKey              | string | The AWS secret key to pass to the AWS SSM Client.                                                            |
 | useIam                 | string | If true, will rely on the current IAM role for authorization instead of explicitly providing AWS credentials |
 | ecsCredentialsEndpoint | string | The HTTP endpoint to use for retrieving AWS credentials.                                                     |
 | ecsCredentialsPath     | string | The path component of the credentials' endpoint URI.                                                         |

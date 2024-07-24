@@ -28,11 +28,16 @@ class SsmClientProviderTest {
   }
 
   @Test
-  void get_negative_iamDisabled() {
-    var props = AwsConfigProperties.builder().region("us-east-1").useIam(false).build();
-    var ssmClientProvider = new SsmClientProvider(props);
+  void get_positive_iamDisabled() {
+    var props = AwsConfigProperties.builder().region("us-east-1").accessKey("accessKey").secretKey("secretKey")
+      .useIam(false).build();
+    assertThat(new SsmClientProvider(props).get()).isNotNull();
+  }
 
-    assertThatThrownBy(ssmClientProvider::get).isInstanceOf(SdkClientException.class);
+  @Test
+  void get_positive_iamDisabled_defaultCredentialsProvider() {
+    var props = AwsConfigProperties.builder().region("us-east-1").useIam(false).build();
+    assertThat(new SsmClientProvider(props).get()).isNotNull();
   }
 
   @Test
@@ -48,6 +53,8 @@ class SsmClientProviderTest {
     properties.setProperty("ecsCredentialsPath", "https://example.com/test-credentials-path");
     properties.setProperty("ecsCredentialsEndpoint", "https://example.com/test-credentials");
     properties.setProperty("region", "us-east-1");
+    properties.setProperty("accessKey", "accessKey");
+    properties.setProperty("secretKey", "secretKey");
     properties.setProperty("useIAM", "false");
 
     var ssmClientProvider = new SsmClientProvider(properties);
@@ -61,6 +68,8 @@ class SsmClientProviderTest {
     properties.setProperty("ecsCredentialsPath", "/test-credentials");
     properties.setProperty("ecsCredentialsEndpoint", "https://example.com/q/h?s=^IXIC");
     properties.setProperty("region", "us-east-1");
+    properties.setProperty("accessKey", "accessKey");
+    properties.setProperty("secretKey", "secretKey");
     properties.setProperty("useIAM", "false");
 
     var ssmClientProvider = new SsmClientProvider(properties);

@@ -25,6 +25,16 @@ public class AwsConfigProperties {
   private Boolean useIam;
 
   /**
+   * The AWS access key to pass to the AWS SSM Client.
+   */
+  private String accessKey;
+
+  /**
+   * The AWS secret key to pass to the AWS SSM Client.
+   */
+  private String secretKey;
+
+  /**
    * The HTTP endpoint to use for retrieving AWS credentials.
    */
   private String ecsCredentialsEndpoint;
