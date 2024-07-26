@@ -42,6 +42,20 @@
           "delay": "5"
         }
       ]
+    },
+    {
+      "id": "system-interface",
+      "version": "1.0",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/system",
+          "permissionsRequired": [ "system.item.post" ]
+        }
+      ]
     }
   ],
   "requires": [

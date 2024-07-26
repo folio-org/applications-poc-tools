@@ -22,6 +22,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.common.domain.model.InterfaceDescriptor;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.Permission;
 import org.folio.common.domain.model.RoutingEntry;
@@ -294,9 +295,13 @@ public class KeycloakModuleDescriptorMapper {
   private static List<RoutingEntry> getRoutingEntries(ModuleDescriptor descriptor, boolean excludeSystemInterfaces) {
     var stream = toStream(descriptor.getProvides());
     if (excludeSystemInterfaces) {
-      stream = stream.filter(i -> !"system".equals(i.getInterfaceType()));
+      stream = stream.filter(i -> !isInterfaceSystemAndNotTimer(i));
     }
     return stream.flatMap(i -> toStream(i.getHandlers())).toList();
+  }
+
+  private static boolean isInterfaceSystemAndNotTimer(InterfaceDescriptor descriptor) {
+    return "system".equals(descriptor.getInterfaceType()) && !"_timer".equals(descriptor.getId());
   }
 
   private static List<Permission> getPermissionSets(ModuleDescriptor descriptor) {
