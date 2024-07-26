@@ -33,6 +33,10 @@ class KeycloakModuleDescriptorMapperTest {
   private static final List<String> TIMER_PERMISSIONS = Collections.emptyList();
   private static final List<String> TIMER_SCOPES = List.of("POST");
 
+  private static final String SYSTEM_RESOURCE = "/system";
+  private static final List<String> SYSTEM_SCOPES = List.of("POST");
+  private static final List<String> SYSTEM_PERMS = List.of("POST#system.item.post");
+
   private final KeycloakModuleDescriptorMapper mapper = new KeycloakModuleDescriptorMapper();
 
   @Test
@@ -40,26 +44,28 @@ class KeycloakModuleDescriptorMapperTest {
     var fooResource = resource(FOO_RESOURCE, FOO_PERMS, FOO_SCOPES);
     var fooByIdResource = resource(FOO_BY_ID, FOO_BY_ID_PERMS, FOO_BY_ID_SCOPES);
     var timerResource = resource(TIMER_RESOURCE, TIMER_PERMISSIONS, TIMER_SCOPES);
+    var systemResource = resource(SYSTEM_RESOURCE, SYSTEM_PERMS, SYSTEM_SCOPES);
 
     var actual = mapper.map(MD, false);
 
     var resources = actual.getResourceServer().getResources();
 
     assertThat(resources).usingRecursiveFieldByFieldElementComparatorIgnoringFields("id")
-      .containsExactlyInAnyOrder(fooResource, fooByIdResource, timerResource);
+      .containsExactlyInAnyOrder(fooResource, fooByIdResource, timerResource, systemResource);
   }
 
   @Test
   void map_positive_excludingSystemInterfaces() {
     var fooResource = resource(FOO_RESOURCE, FOO_PERMS, FOO_SCOPES);
     var fooByIdResource = resource(FOO_BY_ID, FOO_BY_ID_PERMS, FOO_BY_ID_SCOPES);
+    var timerResource = resource(TIMER_RESOURCE, TIMER_PERMISSIONS, TIMER_SCOPES);
 
     var actual = mapper.map(MD, true);
 
     var resources = actual.getResourceServer().getResources();
 
     assertThat(resources).usingRecursiveFieldByFieldElementComparatorIgnoringFields("id")
-      .containsExactlyInAnyOrder(fooResource, fooByIdResource);
+      .containsExactlyInAnyOrder(fooResource, fooByIdResource, timerResource);
   }
 
   @Test
