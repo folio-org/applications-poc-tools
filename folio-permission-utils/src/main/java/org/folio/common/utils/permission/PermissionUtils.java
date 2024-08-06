@@ -3,6 +3,7 @@ package org.folio.common.utils.permission;
 import static java.util.Collections.emptySet;
 import static java.util.Map.entry;
 import static org.apache.commons.lang3.ObjectUtils.allNotNull;
+import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.commons.lang3.StringUtils.split;
 import static org.folio.common.utils.permission.model.PermissionAction.CREATE;
 import static org.folio.common.utils.permission.model.PermissionAction.DELETE;
@@ -20,7 +21,6 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.function.Function;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.StringUtils;
 import org.folio.common.utils.permission.model.PermissionAction;
 import org.folio.common.utils.permission.model.PermissionData;
 import org.folio.common.utils.permission.model.PermissionType;
@@ -165,12 +165,12 @@ public class PermissionUtils {
 
   private static String toUpperKebabCase(String kebabCaseString) {
     if (!kebabCaseString.contains("-")) {
-      return StringUtils.capitalize(kebabCaseString);
+      return capitalize(kebabCaseString);
     }
 
     var result = new StringJoiner("-");
     for (String s : split(kebabCaseString, "-")) {
-      result.add(StringUtils.capitalize(s));
+      result.add(capitalize(s));
     }
 
     return result.toString();

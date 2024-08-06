@@ -8,9 +8,11 @@ import static org.folio.common.utils.permission.PermissionUtils.hasRequiredField
 import org.folio.common.utils.permission.model.PermissionAction;
 import org.folio.common.utils.permission.model.PermissionData;
 import org.folio.common.utils.permission.model.PermissionType;
+import org.folio.test.types.UnitTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+@UnitTest
 class PermissionUtilsTest {
 
   @ParameterizedTest(name = "[{index}] permission = {0}")

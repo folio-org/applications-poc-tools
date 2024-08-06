@@ -20,7 +20,7 @@
     <assertj-core.version>3.25.3</assertj-core.version>
 
     <sonar.exclusions>
-      src/main/java/org/folio/common/utils/tls/FipsChecker.java
+      src/main/java/**/model/**/*
     </sonar.exclusions>
   </properties>
 
@@ -56,6 +56,13 @@
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
       <version>${assertj-core.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-backend-testing</artifactId>
+      <version>${project.parent.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
