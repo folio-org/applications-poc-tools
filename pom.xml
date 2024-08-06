@@ -24,6 +24,7 @@
     <module>folio-backend-testing</module>
     <module>folio-integration-kong</module>
     <module>folio-tls-utils</module>
+    <module>folio-permission-utils</module>
   </modules>
 
   <licenses>
