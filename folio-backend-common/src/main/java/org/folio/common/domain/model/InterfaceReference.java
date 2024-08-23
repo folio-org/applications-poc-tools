@@ -1,5 +1,6 @@
 package org.folio.common.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,7 +9,7 @@ import org.folio.common.utils.InterfaceComparisonUtils;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
-public class InterfaceReference {
+public class InterfaceReference implements WithNameVersion {
 
   private String id;
   private String version;
@@ -39,5 +40,11 @@ public class InterfaceReference {
    */
   public boolean isCompatible(InterfaceDescriptor required) {
     return InterfaceComparisonUtils.isCompatible(this.id, this.version, required.getId(), required.getVersion());
+  }
+
+  @Override
+  @JsonIgnore
+  public String getName() {
+    return id;
   }
 }
