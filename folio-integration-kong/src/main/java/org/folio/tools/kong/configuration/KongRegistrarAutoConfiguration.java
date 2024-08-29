@@ -1,6 +1,6 @@
 package org.folio.tools.kong.configuration;
 
-import static org.folio.common.utils.FeignClientTlsUtils.buildTargetFeignClient;
+import static org.folio.common.utils.tls.FeignClientTlsUtils.buildTargetFeignClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Contract;

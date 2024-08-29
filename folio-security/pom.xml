@@ -22,6 +22,11 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-tls-utils</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.folio</groupId>
