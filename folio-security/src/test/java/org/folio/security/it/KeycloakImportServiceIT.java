@@ -1,5 +1,6 @@
 package org.folio.security.it;
 
+import static org.apache.commons.lang3.SystemProperties.JDK_INTERNAL_HTTP_CLIENT_DISABLE_HOST_NAME_VERIFICATION;
 import static org.folio.security.integration.keycloak.service.KeycloakImportService.CLIENT_ID_ATTR;
 import static org.folio.security.integration.keycloak.service.KeycloakImportService.REALM;
 import static org.folio.test.TestUtils.OBJECT_MAPPER;
@@ -75,5 +76,9 @@ class KeycloakImportServiceIT {
   private static List<RoleRepresentation> getCreatedRoles(RealmRepresentation realm) {
     return realm.getRoles().getRealm().stream().filter(role -> role.getAttributes().containsKey(CLIENT_ID_ATTR))
       .collect(Collectors.toList());
+  }
+
+  static {
+    System.setProperty(JDK_INTERNAL_HTTP_CLIENT_DISABLE_HOST_NAME_VERIFICATION, "true");
   }
 }

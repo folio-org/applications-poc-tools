@@ -17,10 +17,10 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.RandomUtils;
 import org.folio.test.types.UnitTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -116,7 +116,7 @@ class PaginationUtilsTest {
   }
 
   private List<String> ids(int startInclusive, int endExclusive) {
-    return IntStream.range(0, RandomUtils.nextInt(startInclusive, endExclusive))
+    return IntStream.range(0, ThreadLocalRandom.current().nextInt(startInclusive, endExclusive))
       .mapToObj(i -> String.format("rec=%d", i)).collect(Collectors.toList());
   }
 

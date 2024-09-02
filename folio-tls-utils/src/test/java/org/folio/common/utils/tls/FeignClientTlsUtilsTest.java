@@ -1,10 +1,10 @@
-package org.folio.common.utils;
+package org.folio.common.utils.tls;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.common.utils.FeignClientTlsUtils.buildSslContext;
-import static org.folio.common.utils.FeignClientTlsUtils.buildTargetFeignClient;
-import static org.folio.common.utils.FeignClientTlsUtils.getHttpClientBuilder;
-import static org.folio.common.utils.FeignClientTlsUtils.getSslOkHttpClient;
+import static org.folio.common.utils.tls.FeignClientTlsUtils.buildSslContext;
+import static org.folio.common.utils.tls.FeignClientTlsUtils.buildTargetFeignClient;
+import static org.folio.common.utils.tls.FeignClientTlsUtils.getHttpClientBuilder;
+import static org.folio.common.utils.tls.FeignClientTlsUtils.getSslOkHttpClient;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -13,8 +13,10 @@ import feign.Client;
 import feign.Contract;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
+import javax.net.ssl.HostnameVerifier;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
+import okhttp3.internal.tls.OkHostnameVerifier;
 import org.folio.common.configuration.properties.TlsProperties;
 import org.folio.common.utils.exception.SslInitializationException;
 import org.folio.test.types.UnitTest;
@@ -92,6 +94,17 @@ class FeignClientTlsUtilsTest {
   @Test
   void buildTargetHttpClient_positive_negative() {
     assertThrows(SslInitializationException.class, () -> getHttpClientBuilder(getInvalidTlsProperties()));
+  }
+
+  @Test
+  void testHostnameVerifierWhenVerificationEnabled() {
+    OkHttpClient myOkHttpClient = new OkHttpClient();
+    OkHttpClient customizedClient = FeignClientTlsUtils.getSslOkHttpClient(myOkHttpClient, getEnabledTlsProperties());
+
+    HostnameVerifier hostnameVerifier = customizedClient.hostnameVerifier();
+    assertThat(hostnameVerifier)
+      .isInstanceOf(OkHostnameVerifier.class)
+      .isEqualTo(OkHostnameVerifier.INSTANCE);
   }
 
   private static TlsProperties getEnabledTlsProperties() {
