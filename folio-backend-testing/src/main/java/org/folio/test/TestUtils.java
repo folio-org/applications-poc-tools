@@ -20,7 +20,7 @@ import org.springframework.test.web.servlet.MvcResult;
 public class TestUtils {
 
   public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-    .setSerializationInclusion(Include.NON_NULL)
+    .setSerializationInclusion(Include.NON_EMPTY)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
