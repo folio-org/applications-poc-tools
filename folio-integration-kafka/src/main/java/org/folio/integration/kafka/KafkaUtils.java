@@ -21,7 +21,7 @@ public class KafkaUtils {
   }
 
   /**
-   * Returns topic name in the format - `{env}.{tenant}.{topic-name}`
+   * Returns topic name in the format - `{env}.{tenant}.{topic-name}`.
    *
    * @param name - topic name as {@link String}
    * @param tenantId - tenant id as {@link String}

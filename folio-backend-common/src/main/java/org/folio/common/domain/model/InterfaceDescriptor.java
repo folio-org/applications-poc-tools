@@ -174,7 +174,7 @@ public class InterfaceDescriptor implements WithNameVersion {
   }
 
   /**
-   * Validate that the version conforms to the format XX.YY.ZZ or XX.YY
+   * Validate that the version conforms to the format XX.YY.ZZ or XX.YY.
    *
    * @return true if a good version number
    */
