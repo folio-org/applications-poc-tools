@@ -41,10 +41,10 @@ public class OkapiSecurityConfiguration {
   }
 
   @Bean
-  public AuthorizationService authorizationService(AuthtokenClient authtokenClient,
+  public AuthorizationService authorizationService(AuthtokenClient authtokenClient, ObjectMapper objectMapper,
     InternalModuleDescriptorProvider internalModuleDescriptorProvider, RoutingEntryMatcher routingEntryMatcher,
     UrlPathHelper urlPathHelper, Environment environment) {
-    var okapiAuthorizationService = new OkapiAuthorizationService(urlPathHelper, routingEntryMatcher,
+    var okapiAuthorizationService = new OkapiAuthorizationService(objectMapper, urlPathHelper, routingEntryMatcher,
       internalModuleDescriptorProvider, authtokenClient, properties.getUrl());
     okapiAuthorizationService.setEnvironment(environment);
     return okapiAuthorizationService;

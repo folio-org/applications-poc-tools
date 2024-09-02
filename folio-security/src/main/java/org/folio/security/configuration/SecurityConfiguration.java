@@ -1,8 +1,8 @@
 package org.folio.security.configuration;
 
-import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.security.filter.ExceptionHandlerFilter;
 import org.folio.security.integration.authtoken.configuration.OkapiSecurityConfiguration;
 import org.folio.security.integration.keycloak.configuration.KeycloakSecurityConfiguration;
@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -23,18 +24,40 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 
 @EnableWebSecurity
+@RequiredArgsConstructor
 @Import({KeycloakSecurityConfiguration.class, OkapiSecurityConfiguration.class})
 public class SecurityConfiguration implements WebSecurityCustomizer {
 
+  private final Environment environment;
+
+  /**
+   * Allows unauthorized requests.
+   *
+   * <p>This configuration allows unauthorized requests to:
+   *   <ul>
+   *     <li>Spring-Boot actuator endpoints</li>
+   *   </ul>
+   * </p>
+   *
+   * @param web the instance of {@link WebSecurity} to apply to customizations to
+   */
   @Override
   public void customize(WebSecurity web) {
-    // disable security on actuator endpoints
-    web.ignoring().requestMatchers(EndpointRequest.toAnyEndpoint())
-      //temporary solution for phase1
-      // ui should be able to load all information about tenants, entitlements and module descriptors
-      .requestMatchers(regexMatcher(HttpMethod.GET, "^(?!/entitlements/.*/applications).*$"));
+    web.ignoring().requestMatchers(EndpointRequest.toAnyEndpoint());
   }
 
+  /**
+   * Allows unauthorized requests.
+   *
+   * <p>This configuration allows unauthorized requests to:
+   *   <ul>
+   *     <li>Spring-Boot actuator endpoints</li>
+   *   </ul>
+   * </p>
+   *
+   * @param http - {@link HttpSecurity} object
+   * @param authService - {@link AuthorizationService}
+   */
   @Bean
   @ConditionalOnBean(AuthorizationService.class)
   public SecurityFilterChain filterChain(HttpSecurity http, AuthorizationService authService, ObjectMapper mapper)
@@ -42,7 +65,10 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
     return http
       .csrf(AbstractHttpConfigurer::disable)
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-      .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+      .authorizeHttpRequests(auth -> auth
+        .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
+        .requestMatchers(HttpMethod.GET, getExcludedRoutesPattern()).permitAll()
+        .anyRequest().authenticated())
       .addFilterBefore(new org.folio.security.filter.AuthorizationFilter(authService), AuthorizationFilter.class)
       .addFilterBefore(new ExceptionHandlerFilter(mapper), org.folio.security.filter.AuthorizationFilter.class)
       .build();
@@ -56,5 +82,14 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
       .authorizeHttpRequests(auth -> auth.requestMatchers("/**").permitAll())
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .build();
+  }
+
+  private String getExcludedRoutesPattern() {
+    var pathPrefix = environment.getProperty("application.router.path-prefix", "").strip();
+    pathPrefix = StringUtils.removeStart(pathPrefix, "/");
+    pathPrefix = StringUtils.removeEnd(pathPrefix, "/");
+    pathPrefix = pathPrefix.length() > 1 ? pathPrefix + "/" : pathPrefix;
+
+    return "^(?!/" + pathPrefix + "entitlements/.*/applications).*$";
   }
 }

@@ -1,23 +1,30 @@
 package org.folio.security.integration.authtoken.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.common.utils.OkapiHeaders.SUPERTENANT_ID;
 import static org.folio.security.service.AbstractAuthorizationService.ROUTER_PREFIX_PROPERTY;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.folio.test.TestUtils.OBJECT_MAPPER;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import feign.RetryableException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
+import org.folio.security.domain.AuthUserPrincipal;
+import org.folio.security.domain.OkapiAccessToken;
 import org.folio.security.exception.ForbiddenException;
 import org.folio.security.exception.NotAuthorizedException;
 import org.folio.security.exception.RoutingEntryMatchingException;
@@ -30,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -39,7 +47,19 @@ import org.springframework.web.util.UrlPathHelper;
 @ExtendWith(MockitoExtension.class)
 class OkapiAuthorizationServiceTest {
 
-  private static final String TOKEN = "token";
+  /**
+   * Sample JWT that will expire in 2030 year for test_tenant with randomly generated user id.
+   */
+  private static final String TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJmb2xpbyIsInVzZXJfaWQiOiJlNmQyODVlOS03MmVkLTQxYT"
+    + "QtOGIzYi01Y2VlNGNiYzg0MjUiLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxODkzNTAyODAwLCJpYXQiOjE3MjUzMDM2ODgsInRlbmFudCI6InRlc"
+    + "3RfdGVuYW50In0.SdtIQTrn7_XPnyi75Ai9bBkCWa8eQ69U6VAidCCRFFQ";
+
+  private static final UUID USER_ID = UUID.fromString("e6d285e9-72ed-41a4-8b3b-5cee4cbc8425");
+  private static final String TOKEN_CONTENT = "{"
+    + "\"sub\":\"folio\",\"user_id\":\"" + USER_ID + "\","
+    + "\"type\":\"access\",\"exp\":1893502800,\"iat\":1725303688,"
+    + "\"tenant\":\"test_tenant\"}";
+
   private static final String PATH = "/test";
   private static final String METHOD = "GET";
   private static final String PERMISSION_1 = "permission1";
@@ -54,6 +74,7 @@ class OkapiAuthorizationServiceTest {
   @Mock private InternalModuleDescriptorProvider descriptorProvider;
   @Mock private AuthtokenClient client;
   @Mock private HttpServletRequest request;
+  @Spy private ObjectMapper objectMapper = OBJECT_MAPPER;
 
   @InjectMocks private OkapiAuthorizationService service;
 
@@ -63,7 +84,7 @@ class OkapiAuthorizationServiceTest {
   }
 
   @Test
-  void authorize_positive() {
+  void authorize_positive() throws JsonProcessingException {
     var permissionsRequired = List.of(PERMISSION_1, PERMISSION_2);
     var modulePermissions = List.of(MODULE_PERMISSION_1, MODULE_PERMISSION_2);
     var routingEntry = new RoutingEntry().path(PATH).methods(List.of(METHOD)).permissionsRequired(permissionsRequired)
@@ -78,11 +99,13 @@ class OkapiAuthorizationServiceTest {
 
     var auth = service.authorize(request, TOKEN);
 
-    assertEquals(PreAuthenticatedAuthenticationToken.class, auth.getClass());
+    assertThat(auth).isInstanceOf(PreAuthenticatedAuthenticationToken.class);
+    assertThat(auth.getPrincipal()).isEqualTo(authUserPrincipal());
+    verify(objectMapper).readValue(TOKEN_CONTENT, OkapiAccessToken.class);
   }
 
   @Test
-  void authorize_positive_pathWithPrefix() {
+  void authorize_positive_pathWithPrefix() throws JsonProcessingException {
     var permissionsRequired = List.of(PERMISSION_1, PERMISSION_2);
     var modulePermissions = List.of(MODULE_PERMISSION_1, MODULE_PERMISSION_2);
     var routingEntry = new RoutingEntry().path(PATH).methods(List.of(METHOD)).permissionsRequired(permissionsRequired)
@@ -97,7 +120,9 @@ class OkapiAuthorizationServiceTest {
 
     var auth = service.authorize(request, TOKEN);
 
-    assertEquals(PreAuthenticatedAuthenticationToken.class, auth.getClass());
+    assertThat(auth).isInstanceOf(PreAuthenticatedAuthenticationToken.class);
+    assertThat(auth.getPrincipal()).isEqualTo(authUserPrincipal());
+    verify(objectMapper).readValue(TOKEN_CONTENT, OkapiAccessToken.class);
   }
 
   @Test
@@ -186,5 +211,9 @@ class OkapiAuthorizationServiceTest {
       .checkAuthToken(eq(PATH), anyString(), eq(null), any(), eq(TOKEN), eq(SUPERTENANT_ID), eq(null));
 
     assertThrows(RetryableException.class, () -> service.authorize(request, TOKEN));
+  }
+
+  private static AuthUserPrincipal authUserPrincipal() {
+    return new AuthUserPrincipal().userId(USER_ID).authUserId(USER_ID.toString()).tenant("test_tenant");
   }
 }
