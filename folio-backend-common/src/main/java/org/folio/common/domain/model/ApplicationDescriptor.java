@@ -16,12 +16,12 @@ public class ApplicationDescriptor implements Artifact {
   private String name;
   private String version;
   private String description;
-  @Valid private List<@Valid Module> modules;
-  @Valid private List<@Valid Module> uiModules;
-  @Valid private List<@Valid ModuleDescriptor> moduleDescriptors;
-  @Valid private List<@Valid ModuleDescriptor> uiModuleDescriptors;
+  @Valid private List<Module> modules = new ArrayList<>();
+  @Valid private List<Module> uiModules = new ArrayList<>();
+  @Valid private List<ModuleDescriptor> moduleDescriptors = new ArrayList<>();
+  @Valid private List<ModuleDescriptor> uiModuleDescriptors = new ArrayList<>();
   private String platform;
-  @Valid private List<@Valid Dependency> dependencies;
+  @Valid private List<Dependency> dependencies = new ArrayList<>();
   private ApplicationDeployment deployment;
   private AnyDescriptor metadata;
 

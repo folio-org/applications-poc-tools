@@ -15,14 +15,14 @@ public class ModuleDescriptor implements Artifact {
   private String id;
   @JsonProperty("name")
   private String description;
-  private List<String> replaces;
-  private List<String> tags;
-  private List<InterfaceReference> requires;
-  private List<InterfaceDescriptor> provides;
-  private List<InterfaceReference> optional;
-  private List<RoutingEntry> filters;
-  private List<Permission> permissionSets;
-  private List<EnvEntry> env;
+  private List<String> replaces = new ArrayList<>();
+  private List<String> tags = new ArrayList<>();
+  private List<InterfaceReference> requires = new ArrayList<>();
+  private List<InterfaceDescriptor> provides = new ArrayList<>();
+  private List<InterfaceReference> optional = new ArrayList<>();
+  private List<RoutingEntry> filters = new ArrayList<>();
+  private List<Permission> permissionSets = new ArrayList<>();
+  private List<EnvEntry> env = new ArrayList<>();
   private UiModuleDescriptor uiDescriptor;
   private LaunchDescriptor launchDescriptor;
 

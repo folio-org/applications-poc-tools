@@ -17,8 +17,8 @@ public class InterfaceDescriptor implements WithNameVersion {
   private String id;
   private String version;
   private String interfaceType;
-  private List<RoutingEntry> handlers;
-  private List<Permission> permissionSets;
+  private List<RoutingEntry> handlers = new ArrayList<>();
+  private List<Permission> permissionSets = new ArrayList<>();
   private List<String> scope;
 
   /**

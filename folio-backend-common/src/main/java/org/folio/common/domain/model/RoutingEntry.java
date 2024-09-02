@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 public class RoutingEntry {
 
   @ToString.Include
-  private List<String> methods;
+  private List<String> methods = new ArrayList<>();
 
   @ToString.Include
   private String pathPattern;
@@ -30,10 +30,10 @@ public class RoutingEntry {
   private String delay;
 
   private RoutingEntrySchedule schedule;
-  private List<String> permissionsRequired;
-  private List<String> permissionsDesired;
-  private List<String> modulePermissions;
-  private List<String> permissionsRequiredTenant;
+  private List<String> permissionsRequired = new ArrayList<>();
+  private List<String> permissionsDesired = new ArrayList<>();
+  private List<String> modulePermissions = new ArrayList<>();
+  private List<String> permissionsRequiredTenant = new ArrayList<>();
 
   @JsonProperty("delegateCORS")
   private Boolean delegateCors;

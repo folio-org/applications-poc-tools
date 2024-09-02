@@ -9,8 +9,8 @@ import lombok.Data;
 @Data
 public class ApplicationDeployment {
 
-  @Valid private List<@Valid Module> modules;
-  @Valid private List<@Valid Module> uiModules;
+  @Valid private List<Module> modules = new ArrayList<>();
+  @Valid private List<Module> uiModules = new ArrayList<>();
   private Deployment deployment;
 
   public ApplicationDeployment modules(List<@Valid Module> modules) {
