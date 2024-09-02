@@ -1,5 +1,7 @@
 package org.folio.test;
 
+import static org.springframework.test.util.ReflectionTestUtils.getField;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -7,12 +9,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.springframework.test.web.servlet.MvcResult;
 
 @Log4j2
@@ -68,5 +74,15 @@ public class TestUtils {
     file.deleteOnExit();
     FileUtils.copyInputStreamToFile(readStream(path), file);
     return file;
+  }
+
+  public static void verifyNoMoreInteractions(Object testClassInstance) {
+    var declaredFields = testClassInstance.getClass().getDeclaredFields();
+    var mocks = Arrays.stream(declaredFields)
+      .filter(field -> field.getAnnotation(Mock.class) != null || field.getAnnotation(Spy.class) != null)
+      .map(field -> getField(testClassInstance, field.getName()))
+      .toArray();
+
+    Mockito.verifyNoMoreInteractions(mocks);
   }
 }
