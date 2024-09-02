@@ -41,6 +41,8 @@
     <apache-commons-collections4.version>4.4</apache-commons-collections4.version>
     <spring-kafka.version>3.2.3</spring-kafka.version>
     <spring-boot-starter-validation.version>3.0.4</spring-boot-starter-validation.version>
+    <apache-commons-lang3.version>3.16.0</apache-commons-lang3.version>
+    <feign-okhttp.version>13.3</feign-okhttp.version>
 
     <!-- Test dependencies versions -->
     <wiremock.version>2.35.2</wiremock.version>
@@ -62,6 +64,18 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-collections4</artifactId>
         <version>${apache-commons-collections4.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${apache-commons-lang3.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-okhttp</artifactId>
+        <version>${feign-okhttp.version}</version>
       </dependency>
 
       <dependency>
