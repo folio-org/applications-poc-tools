@@ -41,7 +41,7 @@
     <apache-commons-collections4.version>4.4</apache-commons-collections4.version>
     <spring-kafka.version>3.2.3</spring-kafka.version>
     <spring-boot-starter-validation.version>3.0.4</spring-boot-starter-validation.version>
-    <apache-commons-lang3.version>3.16.0</apache-commons-lang3.version>
+    <apache-commons-lang3.version>3.17.0</apache-commons-lang3.version>
     <feign-okhttp.version>13.3</feign-okhttp.version>
 
     <!-- Test dependencies versions -->
@@ -165,7 +165,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>10.17.0</version>
+              <version>10.18.1</version>
             </dependency>
             <dependency>
               <groupId>org.folio</groupId>
