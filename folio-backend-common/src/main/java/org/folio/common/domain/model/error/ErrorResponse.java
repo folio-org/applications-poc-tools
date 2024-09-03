@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ErrorResponse {
 
-  private List<Error> errors;
+  private List<Error> errors = new ArrayList<>();
 
   @JsonProperty("total_records")
   private Integer totalRecords;

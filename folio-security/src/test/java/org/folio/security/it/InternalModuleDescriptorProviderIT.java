@@ -20,6 +20,6 @@ class InternalModuleDescriptorProviderIT {
   void verifyModuleDescriptorLoadedOnAppStartup() {
     var descriptor = provider.getModuleDescriptor();
     assertNotNull(descriptor);
-    assertEquals("Test Manager Component", descriptor.getName());
+    assertEquals("Test Manager Component", descriptor.getDescription());
   }
 }
