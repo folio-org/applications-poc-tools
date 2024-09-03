@@ -52,6 +52,7 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
    * <p>This configuration allows unauthorized requests to:
    *   <ul>
    *     <li>Spring-Boot actuator endpoints</li>
+   *     <li>All GET endpoints, except excluded by pattern {@code entitlements/.+/applications}</li>
    *   </ul>
    * </p>
    *
@@ -90,6 +91,6 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
     pathPrefix = StringUtils.removeEnd(pathPrefix, "/");
     pathPrefix = pathPrefix.length() > 1 ? pathPrefix + "/" : pathPrefix;
 
-    return "^(?!/" + pathPrefix + "entitlements/.*/applications).*$";
+    return "^(?!/" + pathPrefix + "entitlements/.+/applications).*$";
   }
 }
