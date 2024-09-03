@@ -180,6 +180,7 @@ class KeycloakAuthorizationServiceTest {
 
     when(properties.getClient()).thenReturn(keycloakClientProperties());
     when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("");
+
     when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
     when(routingEntryMatcher.lookup(HTTP_METHOD, PATH)).thenReturn(Optional.of(routingEntry));
@@ -215,6 +216,7 @@ class KeycloakAuthorizationServiceTest {
     return new RoutingEntry()
       .path(PATH)
       .methods(List.of(HTTP_METHOD))
-      .permissionsRequired(List.of("test.permission"));
+      .permissionsRequired(List.of("test.permission"))
+      .permissionsRequiredTenant(null);
   }
 }
