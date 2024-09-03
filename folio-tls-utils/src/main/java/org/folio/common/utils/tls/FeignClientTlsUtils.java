@@ -1,9 +1,8 @@
-package org.folio.common.utils;
+package org.folio.common.utils.tls;
 
 import static java.util.Objects.nonNull;
-import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.springframework.util.ResourceUtils.getFile;
+import static org.folio.common.utils.tls.Utils.IS_HOSTNAME_VERIFICATION_DISABLED;
 
 import feign.Contract;
 import feign.Feign;
@@ -19,18 +18,19 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
-import javax.net.ssl.HostnameVerifier;
+import java.util.Objects;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.internal.tls.OkHostnameVerifier;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.common.configuration.properties.TlsProperties;
 import org.folio.common.utils.exception.SslInitializationException;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.util.ResourceUtils;
 
 @Slf4j
 @UtilityClass
@@ -63,7 +63,8 @@ public class FeignClientTlsUtils {
 
       return okHttpClient.newBuilder()
         .sslSocketFactory(sslSocketFactory, trustManager)
-        .hostnameVerifier(NoopHostnameVerifier.INSTANCE)
+        .hostnameVerifier(
+          IS_HOSTNAME_VERIFICATION_DISABLED ? NoopHostnameVerifier.INSTANCE : OkHostnameVerifier.INSTANCE)
         .build();
     } catch (Exception e) {
       log.error("Error creating OkHttpClient with SSL context", e);
@@ -87,7 +88,7 @@ public class FeignClientTlsUtils {
   }
 
   public static SSLContext buildSslContext(@NotNull TlsProperties tls) {
-    requireNonNull(tls.getTrustStorePath(), "Trust store path is not defined");
+    Objects.requireNonNull(tls.getTrustStorePath(), "Trust store path is not defined");
     try {
       var keyStore = initKeyStore(tls);
       var trustManager = trustManager(keyStore);
@@ -103,7 +104,7 @@ public class FeignClientTlsUtils {
 
     KeyStore trustStore = KeyStore.getInstance(
       isBlank(tls.getTrustStoreType()) ? KeyStore.getDefaultType() : tls.getTrustStoreType());
-    try (var is = new FileInputStream(getFile(tls.getTrustStorePath()))) {
+    try (var is = new FileInputStream(ResourceUtils.getFile(tls.getTrustStorePath()))) {
       trustStore.load(is, tls.getTrustStorePassword().toCharArray());
     }
     log.debug("Keystore initialized from file: keyStoreType = {}, file = {}", trustStore.getType(),
@@ -129,22 +130,5 @@ public class FeignClientTlsUtils {
     sslContext.init(null, new TrustManager[] {trustManager}, null);
     log.debug("SSL context initialized: protocol = {}", sslContext.getProtocol());
     return sslContext;
-  }
-
-  @SuppressWarnings("java:S6548")
-  private static final class NoopHostnameVerifier implements HostnameVerifier {
-
-    static final NoopHostnameVerifier INSTANCE = new NoopHostnameVerifier();
-
-    @Override
-    @SuppressWarnings("java:S5527")
-    public boolean verify(String s, SSLSession sslSession) {
-      return true;
-    }
-
-    @Override
-    public String toString() {
-      return "NO_OP";
-    }
   }
 }
