@@ -10,11 +10,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.common.domain.model.RoutingEntry;
-import org.folio.security.domain.AuthUserPrincipal;
+import org.folio.security.domain.model.AuthUserPrincipal;
 import org.folio.security.exception.ForbiddenException;
 import org.folio.security.exception.NotAuthorizedException;
 import org.folio.security.exception.RoutingEntryMatchingException;
@@ -23,36 +25,40 @@ import org.folio.security.integration.keycloak.configuration.properties.Keycloak
 import org.folio.security.service.AbstractAuthorizationService;
 import org.folio.security.service.RoutingEntryMatcher;
 import org.keycloak.representations.AccessToken;
+import org.keycloak.representations.JsonWebToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
-import org.springframework.web.util.UrlPathHelper;
 
 @Log4j2
 @RequiredArgsConstructor
 public class KeycloakAuthorizationService extends AbstractAuthorizationService {
 
-  private final UrlPathHelper urlPathHelper = new UrlPathHelper();
+  private final KeycloakProperties properties;
   private final KeycloakAuthClient keycloakClient;
   private final RoutingEntryMatcher routingEntryMatcher;
   private final KeycloakTokenValidator tokenValidator;
-  private final KeycloakProperties properties;
 
   @Override
   public Authentication authorize(HttpServletRequest request, String token) {
-    var path = updatePath(urlPathHelper.getPathWithinApplication(request));
+    var path = getRequestPath(request);
     var method = request.getMethod();
     var routingEntry = routingEntryMatcher.lookup(method, path)
       .orElseThrow(() -> new RoutingEntryMatchingException("Unable to resolve routing entry for path: " + path));
 
     var accessToken = tokenValidator.validateAndDecodeToken(token);
     return hasPermissionsRequiredTenant(routingEntry)
-        ? evaluateTenantPermissions(accessToken, request)
-        : evaluatePermissions(routingEntry, method, accessToken, token);
+      ? evaluateTenantPermissions(accessToken, request)
+      : evaluatePermissions(routingEntry, method, accessToken, token);
   }
 
+  /**
+   * Checks if routing entry has empty tenant permissions.
+   *
+   * @param routingEntry - {@link RoutingEntry} object to check
+   * @return true if empty tenant permissions are defined, false - otherwise
+   */
   private static boolean hasPermissionsRequiredTenant(RoutingEntry routingEntry) {
     var permissionsRequiredTenant = routingEntry.getPermissionsRequiredTenant();
-    // currently only empty tenant permissions are supported
     return permissionsRequiredTenant != null && permissionsRequiredTenant.isEmpty();
   }
 
@@ -61,7 +67,7 @@ public class KeycloakAuthorizationService extends AbstractAuthorizationService {
     var resolvedTenant = resolveTenant(accessToken.getIssuer());
     if (!Objects.equals(resolvedTenant, headerTenant)) {
       log.debug("Resolved tenant is not the same as x-okapi-tenant: resolvedTenant = {}, x-okapi-tenant = {}",
-          resolvedTenant, headerTenant);
+        resolvedTenant, headerTenant);
     }
 
     return createAuthentication(accessToken);
@@ -74,9 +80,9 @@ public class KeycloakAuthorizationService extends AbstractAuthorizationService {
       keycloakClient.evaluatePermissions(body, "Bearer " + jwtStr);
       return createAuthentication(jwt);
     } catch (FeignException.Forbidden e) {
-      throw new ForbiddenException("Access forbidden");
+      throw new ForbiddenException("Access forbidden", e);
     } catch (FeignException.Unauthorized e) {
-      throw new NotAuthorizedException("Not authorized");
+      throw new NotAuthorizedException("Not authorized", e);
     }
   }
 
@@ -90,8 +96,20 @@ public class KeycloakAuthorizationService extends AbstractAuthorizationService {
 
   private static PreAuthenticatedAuthenticationToken createAuthentication(AccessToken accessToken) {
     var authUserPrincipal = new AuthUserPrincipal()
-        .authUserId(accessToken.getSubject())
-        .tenant(resolveTenant(accessToken.getIssuer()));
+      .userId(getFolioUserId(accessToken))
+      .authUserId(accessToken.getSubject())
+      .tenant(resolveTenant(accessToken.getIssuer()));
+
     return new PreAuthenticatedAuthenticationToken(authUserPrincipal, null, Collections.emptyList());
+  }
+
+  private static UUID getFolioUserId(AccessToken accessToken) {
+    return Optional.ofNullable(accessToken)
+      .map(JsonWebToken::getOtherClaims)
+      .map(otherClaims -> otherClaims.get("user_id"))
+      .filter(String.class::isInstance)
+      .map(String.class::cast)
+      .map(UUID::fromString)
+      .orElse(null);
   }
 }

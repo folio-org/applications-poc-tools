@@ -1,4 +1,4 @@
-package org.folio.security.domain;
+package org.folio.security.domain.model;
 
 import java.util.UUID;
 import lombok.Data;

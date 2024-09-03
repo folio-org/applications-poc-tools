@@ -44,9 +44,10 @@ public class OkapiSecurityConfiguration {
   public AuthorizationService authorizationService(AuthtokenClient authtokenClient, ObjectMapper objectMapper,
     InternalModuleDescriptorProvider internalModuleDescriptorProvider, RoutingEntryMatcher routingEntryMatcher,
     UrlPathHelper urlPathHelper, Environment environment) {
-    var okapiAuthorizationService = new OkapiAuthorizationService(objectMapper, urlPathHelper, routingEntryMatcher,
-      internalModuleDescriptorProvider, authtokenClient, properties.getUrl());
+    var okapiAuthorizationService = new OkapiAuthorizationService(properties.getUrl(),
+      objectMapper, authtokenClient, routingEntryMatcher, internalModuleDescriptorProvider);
     okapiAuthorizationService.setEnvironment(environment);
+    okapiAuthorizationService.setUrlPathHelper(urlPathHelper);
     return okapiAuthorizationService;
   }
 

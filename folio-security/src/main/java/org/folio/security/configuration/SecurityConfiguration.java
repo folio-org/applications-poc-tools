@@ -1,5 +1,7 @@
 package org.folio.security.configuration;
 
+import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -28,23 +30,8 @@ import org.springframework.security.web.access.intercept.AuthorizationFilter;
 @Import({KeycloakSecurityConfiguration.class, OkapiSecurityConfiguration.class})
 public class SecurityConfiguration implements WebSecurityCustomizer {
 
+  public static final String ROUTER_PREFIX_PROPERTY = "application.router.path-prefix";
   private final Environment environment;
-
-  /**
-   * Allows unauthorized requests.
-   *
-   * <p>This configuration allows unauthorized requests to:
-   *   <ul>
-   *     <li>Spring-Boot actuator endpoints</li>
-   *   </ul>
-   * </p>
-   *
-   * @param web the instance of {@link WebSecurity} to apply to customizations to
-   */
-  @Override
-  public void customize(WebSecurity web) {
-    web.ignoring().requestMatchers(EndpointRequest.toAnyEndpoint());
-  }
 
   /**
    * Allows unauthorized requests.
@@ -56,9 +43,15 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
    *   </ul>
    * </p>
    *
-   * @param http - {@link HttpSecurity} object
-   * @param authService - {@link AuthorizationService}
+   * @param web the instance of {@link WebSecurity} to apply to customizations to
    */
+  @Override
+  public void customize(WebSecurity web) {
+    web.ignoring()
+      .requestMatchers(EndpointRequest.toAnyEndpoint())
+      .requestMatchers(regexMatcher(HttpMethod.GET, getExcludedRoutesPattern()));
+  }
+
   @Bean
   @ConditionalOnBean(AuthorizationService.class)
   public SecurityFilterChain filterChain(HttpSecurity http, AuthorizationService authService, ObjectMapper mapper)
@@ -66,10 +59,7 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
     return http
       .csrf(AbstractHttpConfigurer::disable)
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-      .authorizeHttpRequests(auth -> auth
-        .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
-        .requestMatchers(HttpMethod.GET, getExcludedRoutesPattern()).permitAll()
-        .anyRequest().authenticated())
+      .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
       .addFilterBefore(new org.folio.security.filter.AuthorizationFilter(authService), AuthorizationFilter.class)
       .addFilterBefore(new ExceptionHandlerFilter(mapper), org.folio.security.filter.AuthorizationFilter.class)
       .build();
@@ -86,11 +76,11 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
   }
 
   private String getExcludedRoutesPattern() {
-    var pathPrefix = environment.getProperty("application.router.path-prefix", "").strip();
+    var pathPrefix = environment.getProperty(ROUTER_PREFIX_PROPERTY, "").strip();
     pathPrefix = StringUtils.removeStart(pathPrefix, "/");
     pathPrefix = StringUtils.removeEnd(pathPrefix, "/");
     pathPrefix = pathPrefix.length() > 1 ? pathPrefix + "/" : pathPrefix;
 
-    return "^(?!/" + pathPrefix + "entitlements/.+/applications).*$";
+    return "^(?!/" + pathPrefix + "entitlements/.*/applications).*$";
   }
 }

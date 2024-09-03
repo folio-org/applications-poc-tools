@@ -1,8 +1,9 @@
 package org.folio.security.integration.authtoken.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.folio.common.utils.OkapiHeaders.SUPERTENANT_ID;
-import static org.folio.security.service.AbstractAuthorizationService.ROUTER_PREFIX_PROPERTY;
+import static org.folio.security.configuration.SecurityConfiguration.ROUTER_PREFIX_PROPERTY;
 import static org.folio.test.TestUtils.OBJECT_MAPPER;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,8 +24,8 @@ import java.util.Optional;
 import java.util.UUID;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
-import org.folio.security.domain.AuthUserPrincipal;
-import org.folio.security.domain.OkapiAccessToken;
+import org.folio.security.domain.model.AuthUserPrincipal;
+import org.folio.security.domain.model.OkapiAccessToken;
 import org.folio.security.exception.ForbiddenException;
 import org.folio.security.exception.NotAuthorizedException;
 import org.folio.security.exception.RoutingEntryMatchingException;
@@ -33,8 +34,11 @@ import org.folio.security.service.InternalModuleDescriptorProvider;
 import org.folio.security.service.RoutingEntryMatcher;
 import org.folio.test.types.UnitTest;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -81,6 +85,7 @@ class OkapiAuthorizationServiceTest {
   @BeforeEach
   void setup() {
     service.setEnvironment(environment);
+    service.setUrlPathHelper(urlPathHelper);
   }
 
   @Test
@@ -102,6 +107,63 @@ class OkapiAuthorizationServiceTest {
     assertThat(auth).isInstanceOf(PreAuthenticatedAuthenticationToken.class);
     assertThat(auth.getPrincipal()).isEqualTo(authUserPrincipal());
     verify(objectMapper).readValue(TOKEN_CONTENT, OkapiAccessToken.class);
+  }
+
+  @Test
+  void authorize_positive_emptyModulePermissions() throws JsonProcessingException {
+    var permissionsRequired = List.of(PERMISSION_1, PERMISSION_2);
+    var routingEntry = new RoutingEntry().path(PATH).methods(List.of(METHOD)).permissionsRequired(permissionsRequired);
+
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("/");
+    when(request.getMethod()).thenReturn(METHOD);
+    when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
+    when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
+
+    var auth = service.authorize(request, TOKEN);
+
+    assertThat(auth).isInstanceOf(PreAuthenticatedAuthenticationToken.class);
+    assertThat(auth.getPrincipal()).isEqualTo(authUserPrincipal());
+    verify(objectMapper).readValue(TOKEN_CONTENT, OkapiAccessToken.class);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "", "token", "token.token.token.token", })
+  @DisplayName("authorize_parameterized_invalidAmountOfSegments")
+  void authorize_oneSegmentInJwt(String token) {
+    var permissionsRequired = List.of(PERMISSION_1, PERMISSION_2);
+    var modulePermissions = List.of(MODULE_PERMISSION_1, MODULE_PERMISSION_2);
+    var routingEntry = new RoutingEntry().path(PATH).methods(List.of(METHOD)).permissionsRequired(permissionsRequired)
+      .modulePermissions(modulePermissions);
+    var moduleDescriptor = new ModuleDescriptor().id(MODULE_ID);
+
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("/");
+    when(request.getMethod()).thenReturn(METHOD);
+    when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
+    when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
+    when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
+
+    assertThatThrownBy(() -> service.authorize(request, token))
+      .isInstanceOf(NotAuthorizedException.class)
+      .hasMessage("Invalid amount of segments in JsonWebToken.");
+  }
+
+  @Test
+  void authorize_failedToReadTokenBody() {
+    var permissionsRequired = List.of(PERMISSION_1, PERMISSION_2);
+    var modulePermissions = List.of(MODULE_PERMISSION_1, MODULE_PERMISSION_2);
+    var routingEntry = new RoutingEntry().path(PATH).methods(List.of(METHOD)).permissionsRequired(permissionsRequired)
+      .modulePermissions(modulePermissions);
+    var moduleDescriptor = new ModuleDescriptor().id(MODULE_ID);
+
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("/");
+    when(request.getMethod()).thenReturn(METHOD);
+    when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
+    when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
+    when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
+
+    assertThatThrownBy(() -> service.authorize(request, "token.token"))
+      .isInstanceOf(NotAuthorizedException.class)
+      .hasMessage("Failed to read JsonWebToken body");
   }
 
   @Test
