@@ -15,10 +15,10 @@ public class LaunchDescriptor {
   private Boolean dockerPull;
   private Object dockerArgs;
   private Integer waitIterations;
-  private List<EnvEntry> env;
+  private List<EnvEntry> env = new ArrayList<>();
 
   @JsonProperty("dockerCMD")
-  private List<String> dockerCommand;
+  private List<String> dockerCommand = new ArrayList<>();
 
   public LaunchDescriptor exec(String exec) {
     this.exec = exec;

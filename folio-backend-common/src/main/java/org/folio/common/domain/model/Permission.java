@@ -8,10 +8,10 @@ import lombok.Data;
 public class Permission {
 
   private String permissionName;
-  private List<String> replaces;
+  private List<String> replaces = new ArrayList<>();
   private String displayName;
   private String description;
-  private List<String> subPermissions;
+  private List<String> subPermissions = new ArrayList<>();
   private Boolean visible;
 
   public Permission permissionName(String permissionName) {

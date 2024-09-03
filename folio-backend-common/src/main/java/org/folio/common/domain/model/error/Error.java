@@ -10,7 +10,7 @@ public class Error {
   private String message;
   private String type;
   private ErrorCode code;
-  private List<Parameter> parameters;
+  private List<Parameter> parameters = new ArrayList<>();
 
   public Error message(String message) {
     this.message = message;

@@ -1,22 +1,28 @@
 package org.folio.common.domain.model;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
+import org.folio.common.utils.SemverUtils;
 
 @Data
-public class ModuleDescriptor {
+public class ModuleDescriptor implements Artifact {
 
   private String id;
-  private String name;
-  private List<String> replaces;
-  private List<String> tags;
-  private List<InterfaceReference> requires;
-  private List<InterfaceDescriptor> provides;
-  private List<InterfaceReference> optional;
-  private List<RoutingEntry> filters;
-  private List<Permission> permissionSets;
-  private List<EnvEntry> env;
+  @JsonProperty("name")
+  private String description;
+  private List<String> replaces = new ArrayList<>();
+  private List<String> tags = new ArrayList<>();
+  private List<InterfaceReference> requires = new ArrayList<>();
+  private List<InterfaceDescriptor> provides = new ArrayList<>();
+  private List<InterfaceReference> optional = new ArrayList<>();
+  private List<RoutingEntry> filters = new ArrayList<>();
+  private List<Permission> permissionSets = new ArrayList<>();
+  private List<EnvEntry> env = new ArrayList<>();
   private UiModuleDescriptor uiDescriptor;
   private LaunchDescriptor launchDescriptor;
 
@@ -41,8 +47,8 @@ public class ModuleDescriptor {
    *
    * @return modified {@link ModuleDescriptor} value
    */
-  public ModuleDescriptor name(String name) {
-    this.name = name;
+  public ModuleDescriptor description(String name) {
+    this.description = name;
     return this;
   }
 
@@ -279,5 +285,17 @@ public class ModuleDescriptor {
   public ModuleDescriptor extensions(AnyDescriptor extensions) {
     this.extensions = extensions;
     return this;
+  }
+
+  @Override
+  @JsonIgnore
+  public String getVersion() {
+    return isNotBlank(id) ? SemverUtils.getVersion(id) : null;
+  }
+
+  @Override
+  @JsonIgnore
+  public String getName() {
+    return isNotBlank(id) ? SemverUtils.getName(id) : null;
   }
 }

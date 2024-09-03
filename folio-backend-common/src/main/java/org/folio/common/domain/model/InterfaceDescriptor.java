@@ -9,7 +9,7 @@ import org.folio.common.utils.InterfaceComparisonUtils;
 
 @Data
 @NoArgsConstructor
-public class InterfaceDescriptor {
+public class InterfaceDescriptor implements WithNameVersion {
 
   public static final String SYSTEM_INTERFACE_TYPE = "system";
   public static final String TIMER_INTERFACE = "_timer";
@@ -17,8 +17,8 @@ public class InterfaceDescriptor {
   private String id;
   private String version;
   private String interfaceType;
-  private List<RoutingEntry> handlers;
-  private List<Permission> permissionSets;
+  private List<RoutingEntry> handlers = new ArrayList<>();
+  private List<Permission> permissionSets = new ArrayList<>();
   private List<String> scope;
 
   /**
@@ -199,6 +199,12 @@ public class InterfaceDescriptor {
    */
   public int compare(InterfaceDescriptor required) {
     return InterfaceComparisonUtils.compare(this.id, this.version, required.id, required.version);
+  }
+
+  @Override
+  @JsonIgnore
+  public String getName() {
+    return id;
   }
 
   /**
