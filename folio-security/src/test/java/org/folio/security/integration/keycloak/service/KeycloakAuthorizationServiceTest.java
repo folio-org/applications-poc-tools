@@ -78,7 +78,7 @@ class KeycloakAuthorizationServiceTest {
 
   @Test
   void authorize_positive_emptyTenantPermissions() {
-    var routingEntry = routingEntry().permissionsRequiredTenant(emptyList());
+    var routingEntry = routingEntry().permissionsRequired(emptyList());
 
     when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
@@ -98,7 +98,7 @@ class KeycloakAuthorizationServiceTest {
 
   @Test
   void authorize_positive_notMatchingTenants(CapturedOutput output) {
-    var routingEntry = routingEntry().permissionsRequiredTenant(emptyList());
+    var routingEntry = routingEntry().permissionsRequired(emptyList());
 
     when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
@@ -120,7 +120,7 @@ class KeycloakAuthorizationServiceTest {
 
   @Test
   void authorize_positive_emptyTenantPermissionsTokenIsNotValid() {
-    var routingEntry = routingEntry().permissionsRequiredTenant(emptyList());
+    var routingEntry = routingEntry().permissionsRequired(emptyList());
     var exception = new NotAuthorizedException("Token expired");
 
     when(keycloakTokenValidator.validateAndDecodeToken(TOKEN)).thenThrow(exception);
@@ -216,7 +216,6 @@ class KeycloakAuthorizationServiceTest {
     return new RoutingEntry()
       .path(PATH)
       .methods(List.of(HTTP_METHOD))
-      .permissionsRequired(List.of("test.permission"))
-      .permissionsRequiredTenant(null);
+      .permissionsRequired(List.of("test.permission"));
   }
 }

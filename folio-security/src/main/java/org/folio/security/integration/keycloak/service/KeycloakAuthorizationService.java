@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.common.domain.model.RoutingEntry;
 import org.folio.security.domain.model.AuthUserPrincipal;
@@ -46,20 +47,19 @@ public class KeycloakAuthorizationService extends AbstractAuthorizationService {
       .orElseThrow(() -> new RoutingEntryMatchingException("Unable to resolve routing entry for path: " + path));
 
     var accessToken = tokenValidator.validateAndDecodeToken(token);
-    return hasPermissionsRequiredTenant(routingEntry)
+    return hasNoPermissionsRequired(routingEntry)
       ? evaluateTenantPermissions(accessToken, request)
       : evaluatePermissions(routingEntry, method, accessToken, token);
   }
 
   /**
-   * Checks if routing entry has empty tenant permissions.
+   * Checks if routing entry has empty required permissions.
    *
    * @param routingEntry - {@link RoutingEntry} object to check
-   * @return true if empty tenant permissions are defined, false - otherwise
+   * @return true if empty permissions are defined, false - otherwise
    */
-  private static boolean hasPermissionsRequiredTenant(RoutingEntry routingEntry) {
-    var permissionsRequiredTenant = routingEntry.getPermissionsRequiredTenant();
-    return permissionsRequiredTenant != null && permissionsRequiredTenant.isEmpty();
+  private static boolean hasNoPermissionsRequired(RoutingEntry routingEntry) {
+    return CollectionUtils.isEmpty(routingEntry.getPermissionsRequired());
   }
 
   private Authentication evaluateTenantPermissions(AccessToken accessToken, HttpServletRequest request) {
