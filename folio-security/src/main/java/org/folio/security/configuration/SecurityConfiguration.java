@@ -1,10 +1,11 @@
 package org.folio.security.configuration;
 
+import static org.apache.commons.lang3.StringUtils.removeEnd;
+import static org.apache.commons.lang3.StringUtils.removeStart;
 import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.folio.security.filter.ExceptionHandlerFilter;
 import org.folio.security.integration.authtoken.configuration.OkapiSecurityConfiguration;
 import org.folio.security.integration.keycloak.configuration.KeycloakSecurityConfiguration;
@@ -77,8 +78,7 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
 
   private String getExcludedRoutesPattern() {
     var pathPrefix = environment.getProperty(ROUTER_PREFIX_PROPERTY, "").strip();
-    pathPrefix = StringUtils.removeStart(pathPrefix, "/");
-    pathPrefix = StringUtils.removeEnd(pathPrefix, "/");
+    pathPrefix = removeEnd(removeStart(pathPrefix, "/"), "/");
     pathPrefix = pathPrefix.length() > 1 ? pathPrefix + "/" : pathPrefix;
 
     return "^(?!/" + pathPrefix + "entitlements/.*/applications).*$";

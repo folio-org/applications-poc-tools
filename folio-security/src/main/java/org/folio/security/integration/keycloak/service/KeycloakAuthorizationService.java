@@ -1,6 +1,8 @@
 package org.folio.security.integration.keycloak.service;
 
 import static java.util.Map.entry;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.folio.common.utils.OkapiHeaders.TENANT;
 import static org.folio.security.integration.keycloak.service.KeycloakTokenValidator.resolveTenant;
 import static org.keycloak.OAuth2Constants.UMA_GRANT_TYPE;
@@ -10,11 +12,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.common.domain.model.RoutingEntry;
 import org.folio.security.domain.model.AuthUserPrincipal;
@@ -47,22 +47,12 @@ public class KeycloakAuthorizationService extends AbstractAuthorizationService {
       .orElseThrow(() -> new RoutingEntryMatchingException("Unable to resolve routing entry for path: " + path));
 
     var accessToken = tokenValidator.validateAndDecodeToken(token);
-    return hasNoPermissionsRequired(routingEntry)
-      ? evaluateTenantPermissions(accessToken, request)
+    return isEmpty(routingEntry.getPermissionsRequired())
+      ? checkTenantMatching(accessToken, request)
       : evaluatePermissions(routingEntry, method, accessToken, token);
   }
 
-  /**
-   * Checks if routing entry has empty required permissions.
-   *
-   * @param routingEntry - {@link RoutingEntry} object to check
-   * @return true if empty permissions are defined, false - otherwise
-   */
-  private static boolean hasNoPermissionsRequired(RoutingEntry routingEntry) {
-    return CollectionUtils.isEmpty(routingEntry.getPermissionsRequired());
-  }
-
-  private Authentication evaluateTenantPermissions(AccessToken accessToken, HttpServletRequest request) {
+  private Authentication checkTenantMatching(AccessToken accessToken, HttpServletRequest request) {
     var headerTenant = request.getHeader(TENANT);
     var resolvedTenant = resolveTenant(accessToken.getIssuer());
     if (!Objects.equals(resolvedTenant, headerTenant)) {
@@ -104,7 +94,7 @@ public class KeycloakAuthorizationService extends AbstractAuthorizationService {
   }
 
   private static UUID getFolioUserId(AccessToken accessToken) {
-    return Optional.ofNullable(accessToken)
+    return ofNullable(accessToken)
       .map(JsonWebToken::getOtherClaims)
       .map(otherClaims -> otherClaims.get("user_id"))
       .filter(String.class::isInstance)
