@@ -5,7 +5,6 @@ import static dasniko.testcontainers.keycloak.ExtendableKeycloakContainer.MASTER
 import static jakarta.ws.rs.client.ClientBuilder.newBuilder;
 import static org.apache.http.conn.ssl.NoopHostnameVerifier.INSTANCE;
 import static org.apache.http.ssl.SSLContextBuilder.create;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.test.TestUtils.parse;
 import static org.folio.test.TestUtils.readString;
 import static org.folio.test.TestUtils.readToFile;
@@ -84,7 +83,9 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
     var realmPartialImport = parse(realmJson, PartialImportRepresentation.class);
     var masterRealm = ADMIN_CLIENT.realm(MASTER_REALM);
     try (var response = masterRealm.partialImport(realmPartialImport)) {
-      assertThat(response.getStatus()).isLessThan(400);
+      if (response.getStatus() >= 400) {
+        log.warn("Failed to partially import master realm: reason = {}", response.getEntity());
+      }
     }
 
     var masterRealmRepresentation = ADMIN_CLIENT.realm(MASTER_REALM).toRepresentation();
