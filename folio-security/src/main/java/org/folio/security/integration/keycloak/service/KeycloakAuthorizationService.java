@@ -1,6 +1,9 @@
 package org.folio.security.integration.keycloak.service;
 
 import static java.util.Map.entry;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.folio.common.utils.OkapiHeaders.TENANT;
 import static org.folio.security.integration.keycloak.service.KeycloakTokenValidator.resolveTenant;
 import static org.keycloak.OAuth2Constants.UMA_GRANT_TYPE;
 
@@ -8,11 +11,13 @@ import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.common.domain.model.RoutingEntry;
-import org.folio.common.utils.OkapiHeaders;
+import org.folio.security.domain.model.AuthUserPrincipal;
 import org.folio.security.exception.ForbiddenException;
 import org.folio.security.exception.NotAuthorizedException;
 import org.folio.security.exception.RoutingEntryMatchingException;
@@ -20,62 +25,54 @@ import org.folio.security.integration.keycloak.client.KeycloakAuthClient;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
 import org.folio.security.service.AbstractAuthorizationService;
 import org.folio.security.service.RoutingEntryMatcher;
+import org.keycloak.representations.AccessToken;
+import org.keycloak.representations.JsonWebToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
-import org.springframework.web.util.UrlPathHelper;
 
 @Log4j2
 @RequiredArgsConstructor
 public class KeycloakAuthorizationService extends AbstractAuthorizationService {
 
-  private final UrlPathHelper urlPathHelper = new UrlPathHelper();
+  private final KeycloakProperties properties;
   private final KeycloakAuthClient keycloakClient;
   private final RoutingEntryMatcher routingEntryMatcher;
   private final KeycloakTokenValidator tokenValidator;
-  private final KeycloakProperties properties;
 
   @Override
   public Authentication authorize(HttpServletRequest request, String token) {
-    var path = updatePath(urlPathHelper.getPathWithinApplication(request));
+    var path = getRequestPath(request);
     var method = request.getMethod();
     var routingEntry = routingEntryMatcher.lookup(method, path)
       .orElseThrow(() -> new RoutingEntryMatchingException("Unable to resolve routing entry for path: " + path));
 
-    return hasPermissionsRequiredTenant(routingEntry)
-      ? evaluateTenantPermissions(request, token)
-      : evaluatePermissions(routingEntry, method, token);
-  }
-
-  private static boolean hasPermissionsRequiredTenant(RoutingEntry routingEntry) {
-    var permissionsRequiredTenant = routingEntry.getPermissionsRequiredTenant();
-    // currently only empty tenant permissions are supported
-    return permissionsRequiredTenant != null && permissionsRequiredTenant.isEmpty();
-  }
-
-  private Authentication evaluateTenantPermissions(HttpServletRequest request, String token) {
-    var headerTenant = request.getHeader(OkapiHeaders.TENANT);
-    if (StringUtils.isBlank(headerTenant)) {
-      throw new IllegalArgumentException("X-Okapi-Tenant header is required");
-    }
     var accessToken = tokenValidator.validateAndDecodeToken(token);
-    var resolvedTenant = resolveTenant(accessToken.getIssuer());
-    if (resolvedTenant.equals(headerTenant)) {
-      return createAuthentication();
-    } else {
-      throw new ForbiddenException("X-Okapi-Tenant header is not the same as resolved tenant");
-    }
+    return isEmpty(routingEntry.getPermissionsRequired())
+      ? checkTenantMatching(accessToken, request)
+      : evaluatePermissions(routingEntry, method, accessToken, token);
   }
 
-  private Authentication evaluatePermissions(RoutingEntry routingEntry, String method, String token) {
+  private Authentication checkTenantMatching(AccessToken accessToken, HttpServletRequest request) {
+    var headerTenant = request.getHeader(TENANT);
+    var resolvedTenant = resolveTenant(accessToken.getIssuer());
+    if (!Objects.equals(resolvedTenant, headerTenant)) {
+      log.debug("Resolved tenant is not the same as x-okapi-tenant: resolvedTenant = {}, x-okapi-tenant = {}",
+        resolvedTenant, headerTenant);
+    }
+
+    return createAuthentication(accessToken);
+  }
+
+  private Authentication evaluatePermissions(RoutingEntry routingEntry, String method, AccessToken jwt, String jwtStr) {
     log.info("Evaluating user permissions to {}", routingEntry);
     var body = prepareRequestBody(routingEntry, method);
     try {
-      keycloakClient.evaluatePermissions(body, "Bearer " + token);
-      return createAuthentication();
+      keycloakClient.evaluatePermissions(body, "Bearer " + jwtStr);
+      return createAuthentication(jwt);
     } catch (FeignException.Forbidden e) {
-      throw new ForbiddenException("Access forbidden");
+      throw new ForbiddenException("Access forbidden", e);
     } catch (FeignException.Unauthorized e) {
-      throw new NotAuthorizedException("Not authorized");
+      throw new NotAuthorizedException("Not authorized", e);
     }
   }
 
@@ -87,7 +84,22 @@ public class KeycloakAuthorizationService extends AbstractAuthorizationService {
       entry("permission", resource + "#" + scope));
   }
 
-  private static PreAuthenticatedAuthenticationToken createAuthentication() {
-    return new PreAuthenticatedAuthenticationToken(null, null, Collections.emptyList());
+  private static PreAuthenticatedAuthenticationToken createAuthentication(AccessToken accessToken) {
+    var authUserPrincipal = new AuthUserPrincipal()
+      .userId(getFolioUserId(accessToken))
+      .authUserId(accessToken.getSubject())
+      .tenant(resolveTenant(accessToken.getIssuer()));
+
+    return new PreAuthenticatedAuthenticationToken(authUserPrincipal, null, Collections.emptyList());
+  }
+
+  private static UUID getFolioUserId(AccessToken accessToken) {
+    return ofNullable(accessToken)
+      .map(JsonWebToken::getOtherClaims)
+      .map(otherClaims -> otherClaims.get("user_id"))
+      .filter(String.class::isInstance)
+      .map(String.class::cast)
+      .map(UUID::fromString)
+      .orElse(null);
   }
 }

@@ -1,8 +1,11 @@
 package org.folio.security.configuration;
 
+import static org.apache.commons.lang3.StringUtils.removeEnd;
+import static org.apache.commons.lang3.StringUtils.removeStart;
 import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.folio.security.filter.ExceptionHandlerFilter;
 import org.folio.security.integration.authtoken.configuration.OkapiSecurityConfiguration;
 import org.folio.security.integration.keycloak.configuration.KeycloakSecurityConfiguration;
@@ -12,6 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -23,16 +27,30 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 
 @EnableWebSecurity
+@RequiredArgsConstructor
 @Import({KeycloakSecurityConfiguration.class, OkapiSecurityConfiguration.class})
 public class SecurityConfiguration implements WebSecurityCustomizer {
 
+  public static final String ROUTER_PREFIX_PROPERTY = "application.router.path-prefix";
+  private final Environment environment;
+
+  /**
+   * Allows unauthorized requests.
+   *
+   * <p>This configuration allows unauthorized requests to:
+   *   <ul>
+   *     <li>Spring-Boot actuator endpoints</li>
+   *     <li>All GET endpoints, except excluded by pattern {@code entitlements/.+/applications}</li>
+   *   </ul>
+   * </p>
+   *
+   * @param web the instance of {@link WebSecurity} to apply to customizations to
+   */
   @Override
   public void customize(WebSecurity web) {
-    // disable security on actuator endpoints
-    web.ignoring().requestMatchers(EndpointRequest.toAnyEndpoint())
-      //temporary solution for phase1
-      // ui should be able to load all information about tenants, entitlements and module descriptors
-      .requestMatchers(regexMatcher(HttpMethod.GET, "^(?!/entitlements/.*/applications).*$"));
+    web.ignoring()
+      .requestMatchers(EndpointRequest.toAnyEndpoint())
+      .requestMatchers(regexMatcher(HttpMethod.GET, getExcludedRoutesPattern()));
   }
 
   @Bean
@@ -56,5 +74,13 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
       .authorizeHttpRequests(auth -> auth.requestMatchers("/**").permitAll())
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .build();
+  }
+
+  private String getExcludedRoutesPattern() {
+    var pathPrefix = environment.getProperty(ROUTER_PREFIX_PROPERTY, "").strip();
+    pathPrefix = removeEnd(removeStart(pathPrefix, "/"), "/");
+    pathPrefix = pathPrefix.length() > 1 ? pathPrefix + "/" : pathPrefix;
+
+    return "^(?!/" + pathPrefix + "entitlements/.*/applications).*$";
   }
 }
