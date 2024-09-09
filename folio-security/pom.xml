@@ -17,7 +17,8 @@
 
     <sonar.exclusions>
       src/main/java/**/configuration/**/*,
-      src/main/java/**/integration/**/model/**/*
+      src/main/java/**/integration/**/model/**/*,
+      src/main/java/**/domain/**/model/**/*
     </sonar.exclusions>
   </properties>
 
