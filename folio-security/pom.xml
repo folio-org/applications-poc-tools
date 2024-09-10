@@ -87,6 +87,17 @@
       <version>${keycloak-admin-client.version}</version>
     </dependency>
 
+    <!-- Fix vulnerability in org.apache.james:apache-mime4j-core
+         https://www.cve.org/CVERecord?id=CVE-2024-21742
+         Remove this dependency when keycloak-admin-client ships with
+         resteasy-multipart-provider >= 6.2.10.Final
+    -->
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-multipart-provider</artifactId>
+      <version>6.2.10.Final</version>
+    </dependency>
+
     <!-- Test dependencies -->
 
     <dependency>
