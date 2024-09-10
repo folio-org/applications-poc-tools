@@ -17,6 +17,12 @@
     <jsonassert.version>1.5.3</jsonassert.version>
     <jjwt.version>0.12.6</jjwt.version>
     <testcontainers-keycloak.version>3.4.0</testcontainers-keycloak.version>
+    <!-- Remove commons-compress dependency when testcontainers ships with commons-compress >= 1.27.1, see
+         https://github.com/testcontainers/testcontainers-java/issues/8338
+         https://www.cve.org/CVERecord?id=CVE-2024-25710
+         https://www.cve.org/CVERecord?id=CVE-2024-26308
+    -->
+    <commons-compress.version>1.27.1</commons-compress.version>
   </properties>
 
   <dependencies>
@@ -92,6 +98,12 @@
       <groupId>org.testcontainers</groupId>
       <artifactId>kafka</artifactId>
       <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>${commons-compress.version}</version>
     </dependency>
 
     <dependency>
