@@ -25,6 +25,7 @@
     <module>folio-integration-kong</module>
     <module>folio-tls-utils</module>
     <module>folio-permission-utils</module>
+    <module>folio-auth-openid</module>
   </modules>
 
   <licenses>
@@ -120,7 +121,7 @@
         <version>${instancio.version}</version>
         <scope>test</scope>
       </dependency>
-      
+
     </dependencies>
   </dependencyManagement>
 
