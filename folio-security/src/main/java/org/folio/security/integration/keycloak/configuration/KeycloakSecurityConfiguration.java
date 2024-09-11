@@ -61,7 +61,7 @@ public class KeycloakSecurityConfiguration {
     OpenidJwtParserProvider openidJwtParserProvider) {
 
     var jwtParserConfiguration = JwtParserConfiguration.builder()
-      .validateUri(false)
+      .validateUri(properties.getJwtCacheConfiguration().isValidateUri())
       .issuerRootUri(keycloakProperties.getUrl())
       .build();
 
@@ -70,7 +70,10 @@ public class KeycloakSecurityConfiguration {
 
   @Bean
   public OpenidJwtParserProvider openidJwtParserProvider() {
-    return new OpenidJwtParserProvider();
+    var jwtCacheConfiguration = properties.getJwtCacheConfiguration();
+    return new OpenidJwtParserProvider(
+      jwtCacheConfiguration.getJwksRefreshInterval(),
+      jwtCacheConfiguration.getForcedJwksRefreshInterval());
   }
 
   @Bean

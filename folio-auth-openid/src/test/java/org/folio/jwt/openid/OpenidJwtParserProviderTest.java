@@ -20,7 +20,7 @@ class OpenidJwtParserProviderTest {
 
   @BeforeEach
   void setUp() {
-    openidJwtParserProvider = new OpenidJwtParserProvider();
+    openidJwtParserProvider = new OpenidJwtParserProvider(60, 60);
   }
 
   @Test
