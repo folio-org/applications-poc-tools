@@ -66,7 +66,7 @@ class JsonWebTokenParserTest {
     var jwt = "DummyToken";
     assertThatThrownBy(() -> jsonWebTokenParser.parse(jwt))
       .isInstanceOf(ParseException.class)
-      .hasMessage("Invalid amount of segments in JsonWebToken.");
+      .hasMessage("Invalid amount of segments in JsonWebToken");
   }
 
   @Test
@@ -74,7 +74,23 @@ class JsonWebTokenParserTest {
     var jwt = "seg1.seg2.seg3.seg4";
     assertThatThrownBy(() -> jsonWebTokenParser.parse(jwt))
       .isInstanceOf(ParseException.class)
-      .hasMessage("Invalid amount of segments in JsonWebToken.");
+      .hasMessage("Invalid amount of segments in JsonWebToken");
+  }
+
+  @Test
+  void parse_negative_invalidTokenBody() {
+    var jwt = "headers.eyJib2R5IjogfQ==.signature";
+    assertThatThrownBy(() -> jsonWebTokenParser.parse(jwt))
+      .isInstanceOf(ParseException.class)
+      .hasMessage("Failed to decode json web token");
+  }
+
+  @Test
+  void parse_negative_issuerNotFound() {
+    var jwt = "headers.eyJrZXkiOiJ2YWx1ZSJ9.signature";
+    assertThatThrownBy(() -> jsonWebTokenParser.parse(jwt))
+      .isInstanceOf(ParseException.class)
+      .hasMessage("Issuer not found in the json web token");
   }
 
   @Test

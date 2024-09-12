@@ -30,6 +30,9 @@ class OpenidJwtParserProviderTest {
     var parser = openidJwtParserProvider.getParser(issuerUri);
     assertThat(parser).isNotNull();
 
+    var cachedParser = openidJwtParserProvider.getParser(issuerUri);
+    assertThat(cachedParser).isEqualTo(parser);
+
     var cache = getCache();
     assertThat(cache).containsKey(issuerUri);
 

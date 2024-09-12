@@ -12,7 +12,7 @@ import org.jose4j.lang.UnresolvableKeyException;
 @RequiredArgsConstructor
 public class JsonWebTokenParser {
 
-  public static final String INVALID_SEGMENTS_JWT_ERROR_MSG = "Invalid amount of segments in JsonWebToken.";
+  public static final String INVALID_SEGMENTS_JWT_ERROR_MSG = "Invalid amount of segments in JsonWebToken";
   private static final String TOKEN_SEPARATOR = "\\.";
   private static final String ISSUER_CLAIM = "iss";
 
