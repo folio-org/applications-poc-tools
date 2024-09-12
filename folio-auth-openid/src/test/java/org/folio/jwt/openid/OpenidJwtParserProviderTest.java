@@ -1,5 +1,6 @@
 package org.folio.jwt.openid;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.smallrye.jwt.auth.principal.JWTParser;
@@ -37,6 +38,19 @@ class OpenidJwtParserProviderTest {
   }
 
   @Test
+  void invalidateCache_positive_invalidateByIssuerUri() {
+    var issuerUri = ISSUER_URI;
+    var parser = openidJwtParserProvider.getParser(issuerUri);
+    assertThat(parser).isNotNull();
+
+    var cache = getCache();
+    assertThat(cache).containsKey(issuerUri);
+
+    openidJwtParserProvider.invalidateCache(issuerUri);
+    assertThat(cache).isEmpty();
+  }
+
+  @Test
   void invalidateCache_positive_tenantName() {
     var parser = openidJwtParserProvider.getParser(ISSUER_URI);
     assertThat(parser).isNotNull();
@@ -56,7 +70,7 @@ class OpenidJwtParserProviderTest {
     var cache = getCache();
     assertThat(cache).containsKey(ISSUER_URI);
 
-    openidJwtParserProvider.invalidateCache(null);
+    openidJwtParserProvider.invalidateCache((List<String>) null);
     assertThat(cache).containsKey(ISSUER_URI);
   }
 
@@ -68,7 +82,7 @@ class OpenidJwtParserProviderTest {
     var cache = getCache();
     assertThat(cache).containsKey(ISSUER_URI);
 
-    openidJwtParserProvider.invalidateCache(null);
+    openidJwtParserProvider.invalidateCache(emptyList());
     assertThat(cache).containsKey(ISSUER_URI);
   }
 

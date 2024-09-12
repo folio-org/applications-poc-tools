@@ -20,7 +20,7 @@ public class KeycloakProperties {
   /**
    * Authentication JWT parser configuration settings.
    */
-  private KeycloakJwtCacheProperties jwtCacheConfiguration;
+  private KeycloakJwtCacheProperties jwtCacheConfiguration = new KeycloakJwtCacheProperties();
 
   /**
    * Impersonation client name.

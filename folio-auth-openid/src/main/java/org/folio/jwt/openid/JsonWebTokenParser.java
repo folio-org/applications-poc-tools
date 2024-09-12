@@ -7,6 +7,7 @@ import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.folio.jwt.openid.configuration.JwtParserConfiguration;
+import org.jose4j.lang.UnresolvableKeyException;
 
 @RequiredArgsConstructor
 public class JsonWebTokenParser {
@@ -34,7 +35,15 @@ public class JsonWebTokenParser {
       throw new ParseException("Invalid JsonWebToken issuer");
     }
 
-    return jwtParser.parse(accessToken);
+    try {
+      return jwtParser.parse(accessToken);
+    } catch (ParseException parseException) {
+      if (shouldInvalidateCache(parseException)) {
+        openidJwtParserProvider.invalidateCache(accessTokenIssuer);
+      }
+
+      throw parseException;
+    }
   }
 
   @SuppressWarnings("squid:S2129")
@@ -68,5 +77,9 @@ public class JsonWebTokenParser {
     if (!issuer.startsWith(properties.getIssuerRootUri())) {
       throw new ParseException("Invalid JsonWebToken issuer");
     }
+  }
+
+  private static boolean shouldInvalidateCache(ParseException parseException) {
+    return parseException.getCause() instanceof UnresolvableKeyException;
   }
 }

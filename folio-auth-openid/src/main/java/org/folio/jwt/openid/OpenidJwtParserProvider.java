@@ -45,6 +45,13 @@ public class OpenidJwtParserProvider {
   }
 
   /**
+   * Invalidates cache entry by key.
+   */
+  public void invalidateCache(String issuerUri) {
+    tokenParsers.remove(issuerUri);
+  }
+
+  /**
    * Invalidates caches entries for the given list of tenants.
    *
    * @param tenants - list of tenants to invalidate cache entries

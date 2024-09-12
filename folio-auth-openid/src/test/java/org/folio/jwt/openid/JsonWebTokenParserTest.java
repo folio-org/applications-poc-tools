@@ -16,6 +16,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.folio.jwt.openid.configuration.JwtParserConfiguration;
 import org.folio.jwt.openid.utils.TestJwtGenerator;
 import org.folio.test.types.UnitTest;
+import org.jose4j.lang.UnresolvableKeyException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -110,5 +111,33 @@ class JsonWebTokenParserTest {
     assertThatThrownBy(() -> jsonWebTokenParser.parse(jwt))
       .isInstanceOf(ParseException.class)
       .hasMessage("Invalid JsonWebToken issuer");
+  }
+
+  @Test
+  void parse_negative_parseExceptionWithoutCause() throws ParseException {
+    var jwt = TestJwtGenerator.generateJwtString(KEYCLOAK_URL, TENANT_NAME, KEYCLOAK_URL, USER_ID);
+    when(jwtParserConfiguration.getIssuerRootUri()).thenReturn(KEYCLOAK_URL);
+    when(jwtParserConfiguration.isValidateUri()).thenReturn(true);
+    when(openidJwtParserProvider.getParser(ISSUER_URL)).thenReturn(jwtParser);
+    when(jwtParser.parse(jwt)).thenThrow(new ParseException("Token is expired"));
+
+    assertThatThrownBy(() -> jsonWebTokenParser.parse(jwt))
+      .isInstanceOf(ParseException.class)
+      .hasMessage("Token is expired");
+  }
+
+  @Test
+  void parse_negative_parseExceptionWithUnresolvableKeyException() throws ParseException {
+    var jwt = TestJwtGenerator.generateJwtString(KEYCLOAK_URL, TENANT_NAME, KEYCLOAK_URL, USER_ID);
+    when(jwtParserConfiguration.getIssuerRootUri()).thenReturn(KEYCLOAK_URL);
+    when(jwtParserConfiguration.isValidateUri()).thenReturn(true);
+    when(openidJwtParserProvider.getParser(ISSUER_URL)).thenReturn(jwtParser);
+    when(jwtParser.parse(jwt)).thenThrow(new ParseException("Invalid token", new UnresolvableKeyException("error")));
+
+    assertThatThrownBy(() -> jsonWebTokenParser.parse(jwt))
+      .isInstanceOf(ParseException.class)
+      .hasMessage("Invalid token");
+
+    verify(openidJwtParserProvider).invalidateCache(ISSUER_URL);
   }
 }
