@@ -3,7 +3,7 @@ package org.folio.jwt.openid;
 import io.smallrye.jwt.auth.principal.DefaultJWTParser;
 import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
 import io.smallrye.jwt.auth.principal.JWTParser;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
@@ -52,11 +52,11 @@ public class OpenidJwtParserProvider {
   }
 
   /**
-   * Invalidates caches entries for the given list of tenants.
+   * Invalidates caches entries for the given collection of tenants.
    *
-   * @param tenants - list of tenants to invalidate cache entries
+   * @param tenants - collection of tenants to be kept in cache
    */
-  public void invalidateCache(List<String> tenants) {
+  public void invalidateCache(Collection<String> tenants) {
     log.info("Invalidating outdated token parsers");
     if (tenants == null || tenants.isEmpty()) {
       tokenParsers.clear();
