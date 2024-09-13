@@ -62,7 +62,7 @@ class OpenidJwtParserProviderTest {
     assertThat(cache).containsKey(ISSUER_URI);
 
     openidJwtParserProvider.invalidateCache(List.of(TENANT_NAME));
-    assertThat(cache).isEmpty();
+    assertThat(cache).containsKey(ISSUER_URI);
   }
 
   @Test
@@ -74,7 +74,7 @@ class OpenidJwtParserProviderTest {
     assertThat(cache).containsKey(ISSUER_URI);
 
     openidJwtParserProvider.invalidateCache((List<String>) null);
-    assertThat(cache).containsKey(ISSUER_URI);
+    assertThat(cache).isEmpty();
   }
 
   @Test
@@ -86,7 +86,7 @@ class OpenidJwtParserProviderTest {
     assertThat(cache).containsKey(ISSUER_URI);
 
     openidJwtParserProvider.invalidateCache(emptyList());
-    assertThat(cache).containsKey(ISSUER_URI);
+    assertThat(cache).isEmpty();
   }
 
   @SuppressWarnings("unchecked")

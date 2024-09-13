@@ -57,13 +57,14 @@ public class OpenidJwtParserProvider {
    * @param tenants - list of tenants to invalidate cache entries
    */
   public void invalidateCache(List<String> tenants) {
+    log.info("Invalidating outdated token parsers");
     if (tenants == null || tenants.isEmpty()) {
+      tokenParsers.clear();
       return;
     }
 
-    log.info("Invalidating outdated token parsers");
     tokenParsers.keySet().stream()
-      .filter(issuer -> tenants.contains(resolveTenant(issuer)))
+      .filter(issuer -> !tenants.contains(resolveTenant(issuer)))
       .forEach(tokenParsers::remove);
   }
 
