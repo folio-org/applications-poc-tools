@@ -98,7 +98,7 @@ class OpenidJwtParserProviderTest {
     assertThat(cache).containsKey(ISSUER_URI);
 
     openidJwtParserProvider.invalidateCache(List.of("other_tenant_id"));
-    assertThat(cache).containsKey(ISSUER_URI);
+    assertThat(cache).isEmpty();
   }
 
   @SuppressWarnings("unchecked")
