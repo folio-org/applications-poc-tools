@@ -89,6 +89,18 @@ class OpenidJwtParserProviderTest {
     assertThat(cache).isEmpty();
   }
 
+  @Test
+  void invalidateCache_positive_otherTenantId() {
+    var parser = openidJwtParserProvider.getParser(ISSUER_URI);
+    assertThat(parser).isNotNull();
+
+    var cache = getCache();
+    assertThat(cache).containsKey(ISSUER_URI);
+
+    openidJwtParserProvider.invalidateCache(List.of("other_tenant_id"));
+    assertThat(cache).containsKey(ISSUER_URI);
+  }
+
   @SuppressWarnings("unchecked")
   private Map<String, JWTParser> getCache() {
     return (Map<String, JWTParser>) ReflectionTestUtils.getField(openidJwtParserProvider, "tokenParsers");
