@@ -12,12 +12,15 @@ import static org.mockito.Mockito.when;
 
 import feign.FeignException.Forbidden;
 import feign.FeignException.Unauthorized;
+import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.folio.common.domain.model.RoutingEntry;
+import org.folio.jwt.openid.JsonWebTokenParser;
 import org.folio.security.domain.model.AuthUserPrincipal;
 import org.folio.security.exception.ForbiddenException;
 import org.folio.security.exception.NotAuthorizedException;
@@ -31,7 +34,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.keycloak.representations.AccessToken;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -58,9 +60,9 @@ class KeycloakAuthorizationServiceTest {
   @Mock private KeycloakProperties properties;
   @Mock private KeycloakAuthClient keycloakClient;
   @Mock private RoutingEntryMatcher routingEntryMatcher;
-  @Mock private KeycloakTokenValidator keycloakTokenValidator;
+  @Mock private JsonWebTokenParser jsonWebTokenParser;
 
-  @Mock private AccessToken accessToken;
+  @Mock private JsonWebToken accessToken;
   @Mock private TokenResponse tokenResponse;
   @Mock private HttpServletRequest httpServletRequest;
 
@@ -73,22 +75,22 @@ class KeycloakAuthorizationServiceTest {
   @AfterEach
   void tearDown() {
     verifyNoMoreInteractions(environment, urlPathHelper, properties, keycloakClient,
-      routingEntryMatcher, keycloakTokenValidator, accessToken);
+      routingEntryMatcher, jsonWebTokenParser, accessToken);
   }
 
   @Test
-  void authorize_positive_emptyTenantPermissions() {
+  void authorize_positive_emptyTenantPermissions() throws ParseException {
     var routingEntry = routingEntry().permissionsRequired(emptyList());
 
     when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
     when(httpServletRequest.getHeader(TENANT)).thenReturn(TENANT_ID);
     when(routingEntryMatcher.lookup(HTTP_METHOD, PATH)).thenReturn(Optional.of(routingEntry));
-    when(keycloakTokenValidator.validateAndDecodeToken(TOKEN)).thenReturn(accessToken);
+    when(jsonWebTokenParser.parse(TOKEN)).thenReturn(accessToken);
     when(accessToken.getSubject()).thenReturn(AUTH_USER_ID.toString());
     when(accessToken.getIssuer()).thenReturn("https://keycloak/realms/" + TENANT_ID);
     when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("");
-    when(accessToken.getOtherClaims()).thenReturn(Map.of("user_id", FOLIO_USER_ID.toString()));
+    when(accessToken.getClaim("user_id")).thenReturn(FOLIO_USER_ID.toString());
 
     var result = keycloakAuthorizationService.authorize(httpServletRequest, TOKEN);
 
@@ -97,18 +99,18 @@ class KeycloakAuthorizationServiceTest {
   }
 
   @Test
-  void authorize_positive_notMatchingTenants(CapturedOutput output) {
+  void authorize_positive_notMatchingTenants(CapturedOutput output) throws ParseException {
     var routingEntry = routingEntry().permissionsRequired(emptyList());
 
     when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
     when(httpServletRequest.getHeader(TENANT)).thenReturn("other_tenant");
     when(routingEntryMatcher.lookup(HTTP_METHOD, PATH)).thenReturn(Optional.of(routingEntry));
-    when(keycloakTokenValidator.validateAndDecodeToken(TOKEN)).thenReturn(accessToken);
+    when(jsonWebTokenParser.parse(TOKEN)).thenReturn(accessToken);
     when(accessToken.getSubject()).thenReturn(AUTH_USER_ID.toString());
     when(accessToken.getIssuer()).thenReturn("https://keycloak/realms/" + TENANT_ID);
     when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("");
-    when(accessToken.getOtherClaims()).thenReturn(Map.of("user_id", FOLIO_USER_ID.toString()));
+    when(accessToken.getClaim("user_id")).thenReturn(FOLIO_USER_ID.toString());
 
     var result = keycloakAuthorizationService.authorize(httpServletRequest, TOKEN);
 
@@ -119,11 +121,11 @@ class KeycloakAuthorizationServiceTest {
   }
 
   @Test
-  void authorize_positive_emptyTenantPermissionsTokenIsNotValid() {
+  void authorize_positive_emptyTenantPermissionsTokenIsNotValid() throws ParseException {
     var routingEntry = routingEntry().permissionsRequired(emptyList());
-    var exception = new NotAuthorizedException("Token expired");
+    var exception = new ParseException("Token expired");
 
-    when(keycloakTokenValidator.validateAndDecodeToken(TOKEN)).thenThrow(exception);
+    when(jsonWebTokenParser.parse(TOKEN)).thenThrow(exception);
     when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
     when(routingEntryMatcher.lookup(HTTP_METHOD, PATH)).thenReturn(Optional.of(routingEntry));
@@ -131,22 +133,22 @@ class KeycloakAuthorizationServiceTest {
 
     assertThatThrownBy(() -> keycloakAuthorizationService.authorize(httpServletRequest, TOKEN))
       .isInstanceOf(NotAuthorizedException.class)
-      .hasMessage("Token expired");
+      .hasMessage("Not authorized");
   }
 
   @Test
-  void authorize_positive_tenantPermissionsNotDefined(CapturedOutput capturedOutput) {
+  void authorize_positive_tenantPermissionsNotDefined(CapturedOutput capturedOutput) throws ParseException {
     var routingEntry = routingEntry();
 
     when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
     when(properties.getClient()).thenReturn(keycloakClientProperties());
     when(routingEntryMatcher.lookup(HTTP_METHOD, PATH)).thenReturn(Optional.of(routingEntry));
-    when(keycloakTokenValidator.validateAndDecodeToken(TOKEN)).thenReturn(accessToken);
+    when(jsonWebTokenParser.parse(TOKEN)).thenReturn(accessToken);
     when(accessToken.getSubject()).thenReturn(AUTH_USER_ID.toString());
     when(accessToken.getIssuer()).thenReturn("https://keycloak/realms/" + TENANT_ID);
     when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("");
-    when(accessToken.getOtherClaims()).thenReturn(Map.of("user_id", FOLIO_USER_ID.toString()));
+    when(accessToken.getClaim("user_id")).thenReturn(FOLIO_USER_ID.toString());
     when(keycloakClient.evaluatePermissions(authRequestParameters(), "Bearer " + TOKEN)).thenReturn(tokenResponse);
 
     var result = keycloakAuthorizationService.authorize(httpServletRequest, TOKEN);
@@ -158,7 +160,7 @@ class KeycloakAuthorizationServiceTest {
   }
 
   @Test
-  void authorize_positive_notAuthorized() {
+  void authorize_positive_notAuthorized() throws ParseException {
     var routingEntry = routingEntry();
 
     when(properties.getClient()).thenReturn(keycloakClientProperties());
@@ -166,7 +168,7 @@ class KeycloakAuthorizationServiceTest {
     when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
     when(routingEntryMatcher.lookup(HTTP_METHOD, PATH)).thenReturn(Optional.of(routingEntry));
-    when(keycloakTokenValidator.validateAndDecodeToken(TOKEN)).thenReturn(accessToken);
+    when(jsonWebTokenParser.parse(TOKEN)).thenReturn(accessToken);
     when(keycloakClient.evaluatePermissions(authRequestParameters(), "Bearer " + TOKEN)).thenThrow(Unauthorized.class);
 
     assertThatThrownBy(() -> keycloakAuthorizationService.authorize(httpServletRequest, TOKEN))
@@ -175,7 +177,7 @@ class KeycloakAuthorizationServiceTest {
   }
 
   @Test
-  void authorize_positive_forbiddenException() {
+  void authorize_positive_forbiddenException() throws ParseException {
     var routingEntry = routingEntry();
 
     when(properties.getClient()).thenReturn(keycloakClientProperties());
@@ -184,7 +186,7 @@ class KeycloakAuthorizationServiceTest {
     when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
     when(routingEntryMatcher.lookup(HTTP_METHOD, PATH)).thenReturn(Optional.of(routingEntry));
-    when(keycloakTokenValidator.validateAndDecodeToken(TOKEN)).thenReturn(accessToken);
+    when(jsonWebTokenParser.parse(TOKEN)).thenReturn(accessToken);
     when(keycloakClient.evaluatePermissions(authRequestParameters(), "Bearer " + TOKEN)).thenThrow(Forbidden.class);
 
     assertThatThrownBy(() -> keycloakAuthorizationService.authorize(httpServletRequest, TOKEN))
