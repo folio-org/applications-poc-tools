@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.3.3</version>
+    <version>3.3.4</version>
     <relativePath />
   </parent>
 
@@ -38,12 +38,12 @@
   <properties>
     <java.version>17</java.version>
     <lombok.version>1.18.34</lombok.version>
-    <spring-boot.version>3.3.3</spring-boot.version>
+    <spring-boot.version>3.3.4</spring-boot.version>
     <apache-commons-collections4.version>4.4</apache-commons-collections4.version>
-    <spring-kafka.version>3.2.3</spring-kafka.version>
+    <spring-kafka.version>3.2.4</spring-kafka.version>
     <spring-boot-starter-validation.version>3.0.4</spring-boot-starter-validation.version>
     <apache-commons-lang3.version>3.17.0</apache-commons-lang3.version>
-    <feign-okhttp.version>13.3</feign-okhttp.version>
+    <feign-okhttp.version>13.4</feign-okhttp.version>
 
     <!-- Test dependencies versions -->
     <wiremock.version>2.35.2</wiremock.version>
