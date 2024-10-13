@@ -43,7 +43,7 @@
     <spring-kafka.version>3.2.4</spring-kafka.version>
     <spring-boot-starter-validation.version>3.0.4</spring-boot-starter-validation.version>
     <apache-commons-lang3.version>3.17.0</apache-commons-lang3.version>
-    <feign-okhttp.version>13.4</feign-okhttp.version>
+    <feign-okhttp.version>13.5</feign-okhttp.version>
 
     <!-- Test dependencies versions -->
     <wiremock.version>2.35.2</wiremock.version>
