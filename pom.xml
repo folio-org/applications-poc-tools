@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.3.4</version>
+    <version>3.3.5</version>
     <relativePath />
   </parent>
 
@@ -38,7 +38,7 @@
   <properties>
     <java.version>17</java.version>
     <lombok.version>1.18.34</lombok.version>
-    <spring-boot.version>3.3.4</spring-boot.version>
+    <spring-boot.version>3.3.5</spring-boot.version>
     <apache-commons-collections4.version>4.4</apache-commons-collections4.version>
     <spring-kafka.version>3.2.4</spring-kafka.version>
     <spring-boot-starter-validation.version>3.0.4</spring-boot-starter-validation.version>
@@ -47,13 +47,13 @@
 
     <!-- Test dependencies versions -->
     <wiremock.version>2.35.2</wiremock.version>
-    <testcontainer.version>1.20.2</testcontainer.version>
+    <testcontainer.version>1.20.3</testcontainer.version>
     <instancio.version>5.0.2</instancio.version>
 
     <!-- Plugins versions -->
     <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
-    <maven-checkstyle-plugin.version>3.5.0</maven-checkstyle-plugin.version>
+    <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
     <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
     <folio-java-checkstyle.version>1.0.1</folio-java-checkstyle.version>
@@ -161,7 +161,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>10.18.2</version>
+              <version>10.20.0</version>
             </dependency>
             <dependency>
               <groupId>org.folio</groupId>
