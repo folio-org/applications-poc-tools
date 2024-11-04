@@ -29,6 +29,7 @@ public @interface WireMockStub {
    * <p>This attribute may <strong>not</strong> be used in conjunction with
    * {@link #value}, but it may be used instead of {@link #value}.</p> <br/>
    * <h3>Path Resource Semantics</h3>
+   *
    * <p>Each path will be interpreted as a Spring</p>
    * {@link org.springframework.core.io.Resource Resource}. A plain path &mdash; for example, {@code "stub.json"}
    * &mdash; will be treated as a classpath resource that is <em>relative</em> to the package in which the test class is
