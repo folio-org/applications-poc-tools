@@ -456,7 +456,7 @@ class KongGatewayServiceTest {
       var mockRoutes =
         KongResultList.<Route>builder().data(List.of(new Route().id("R1"), new Route().id("R2"))).build();
       var count = new AtomicInteger(0);
-      when(kongAdminClient.getServiceRoutes(MOD_ID, 0)).thenAnswer(
+      when(kongAdminClient.getServiceRoutes(MOD_ID, null)).thenAnswer(
         inv -> count.getAndIncrement() > 0 ? new KongResultList<Route>() : mockRoutes);
       kongGatewayService.deleteServiceRoutes(MOD_ID);
       verify(kongAdminClient, times(1)).deleteRoute(MOD_ID, "R1");
@@ -466,7 +466,7 @@ class KongGatewayServiceTest {
     @Test
     void negative_deleteServiceRoutes_error() {
       var cause = new RuntimeException("Test");
-      when(kongAdminClient.getServiceRoutes(MOD_ID, 0)).thenThrow(cause);
+      when(kongAdminClient.getServiceRoutes(MOD_ID, null)).thenThrow(cause);
       assertThatThrownBy(() -> kongGatewayService.deleteServiceRoutes(MOD_ID)).isInstanceOf(
         KongIntegrationException.class).hasCause(cause)
         .hasMessage("Failed to delete all routes for service " + MOD_ID);
