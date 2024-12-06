@@ -89,7 +89,7 @@ public interface KongAdminClient {
   @GetMapping("/services/{serviceId}/routes")
   KongResultList<Route> getServiceRoutes(
     @RequestParam("serviceId") String serviceId,
-    @RequestParam(value = "offset", required = false) String offset);
+    @RequestParam(value = "offset", required = false) Integer offset);
 
   /**
    * Result list object wrapper for get by tag endpoints.

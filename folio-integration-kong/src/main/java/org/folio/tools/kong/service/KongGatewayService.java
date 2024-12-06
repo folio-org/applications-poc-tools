@@ -130,7 +130,7 @@ public class KongGatewayService {
     try {
       KongResultList<Route> routes;
       do {
-        routes = kongAdminClient.getServiceRoutes(serviceNameOrId, "0");
+        routes = kongAdminClient.getServiceRoutes(serviceNameOrId, 0);
         routes.forEach(route -> kongAdminClient.deleteRoute(serviceNameOrId, route.getId()));
       } while (routes.getData() != null && !routes.getData().isEmpty());
     } catch (Exception e) {
