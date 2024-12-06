@@ -5,6 +5,7 @@ import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import java.util.Iterator;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.folio.tools.kong.model.Route;
@@ -69,14 +70,25 @@ public interface KongAdminClient {
   void deleteRoute(@PathVariable("serviceId") String serviceId, @PathVariable("routeIdOrName") String routeIdOrName);
 
   /**
-   * Deletes a route by id for {@code serviceName} in Kong gateway.
+   * Get routes by tags.
    *
    * @param tags - list of tags to search for
-   * @return created {@link Route} object
+   * @return List of {@link Route} objects and offset
    */
   @GetMapping("/routes")
   KongResultList<Route> getRoutesByTag(
     @RequestParam("tags") String tags,
+    @RequestParam(value = "offset", required = false) String offset);
+
+  /**
+   * Get routes of a service.
+   *
+   * @param serviceId - Kong service ID or name
+   * @return List of {@link Route} objects and offset
+   */
+  @GetMapping("/services/{serviceId}/routes")
+  KongResultList<Route> getServiceRoutes(
+    @RequestParam("serviceId") String serviceId,
     @RequestParam(value = "offset", required = false) String offset);
 
   /**
@@ -87,6 +99,7 @@ public interface KongAdminClient {
   @Data
   @NoArgsConstructor
   @AllArgsConstructor
+  @Builder
   class KongResultList<T> implements Iterable<T> {
 
     /**

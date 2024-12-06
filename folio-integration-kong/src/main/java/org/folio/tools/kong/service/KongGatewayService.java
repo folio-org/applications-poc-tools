@@ -40,6 +40,7 @@ import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
 import org.folio.common.domain.model.error.Parameter;
 import org.folio.tools.kong.client.KongAdminClient;
+import org.folio.tools.kong.client.KongAdminClient.KongResultList;
 import org.folio.tools.kong.exception.KongIntegrationException;
 import org.folio.tools.kong.model.Route;
 import org.folio.tools.kong.model.Service;
@@ -122,6 +123,20 @@ public class KongGatewayService {
       log.warn("Failed to delete Kong service: {}", serviceNameOrId, e);
       var parameters = List.of(new Parameter().key("cause").value(e.getMessage()));
       throw new KongIntegrationException("Failed to delete Kong service: " + serviceNameOrId, parameters);
+    }
+  }
+
+  public void deleteServiceRoutes(String serviceNameOrId) {
+    try {
+      KongResultList<Route> routes;
+      do {
+        routes = kongAdminClient.getServiceRoutes(serviceNameOrId, "0");
+        routes.forEach(route -> kongAdminClient.deleteRoute(serviceNameOrId, route.getId()));
+      } while (routes.getData() != null && !routes.getData().isEmpty());
+    } catch (Exception e) {
+      log.warn("Failed to delete all routes for Kong service: {}", serviceNameOrId, e);
+      var parameters = List.of(new Parameter().key("cause").value(e.getMessage()));
+      throw new KongIntegrationException("Failed to delete all routes for service " + serviceNameOrId, parameters, e);
     }
   }
 
