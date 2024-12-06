@@ -462,6 +462,15 @@ class KongGatewayServiceTest {
       verify(kongAdminClient, times(1)).deleteRoute(MOD_ID, "R1");
       verify(kongAdminClient, times(1)).deleteRoute(MOD_ID, "R2");
     }
+
+    @Test
+    void negative_deleteServiceRoutes_error() {
+      var cause = new RuntimeException("Test");
+      when(kongAdminClient.getServiceRoutes(MOD_ID, "0")).thenThrow(cause);
+      assertThatThrownBy(() -> kongGatewayService.deleteServiceRoutes(MOD_ID)).isInstanceOf(
+        KongIntegrationException.class).hasCause(cause)
+        .hasMessage("Failed to delete all routes for service " + MOD_ID);
+    }
   }
 
   static class TestValues {
