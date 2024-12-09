@@ -21,4 +21,16 @@ public class KongIntegrationException extends RuntimeException {
     super(message);
     this.errors = errors;
   }
+
+  /**
+   * Creates a new {@link KongIntegrationException} with corresponding error message.
+   *
+   * @param message - error message as {@link String} object
+   * @param errors - {@link List} with error {@link Parameter} objects
+   * @param cause - the cause
+   */
+  public KongIntegrationException(String message, List<Parameter> errors, Throwable cause) {
+    super(message, cause);
+    this.errors = errors;
+  }
 }

@@ -30,6 +30,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -448,6 +450,27 @@ class KongGatewayServiceTest {
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors())
           .isEqualTo(List.of(new Parameter().key("cause").value(errorMessage))));
     }
+
+    @Test
+    void positive_deleteServiceRoutes() {
+      var mockRoutes =
+        KongResultList.<Route>builder().data(List.of(new Route().id("R1"), new Route().id("R2"))).build();
+      var count = new AtomicInteger(0);
+      when(kongAdminClient.getServiceRoutes(MOD_ID, null)).thenAnswer(
+        inv -> count.getAndIncrement() > 0 ? new KongResultList<Route>() : mockRoutes);
+      kongGatewayService.deleteServiceRoutes(MOD_ID);
+      verify(kongAdminClient, times(1)).deleteRoute(MOD_ID, "R1");
+      verify(kongAdminClient, times(1)).deleteRoute(MOD_ID, "R2");
+    }
+
+    @Test
+    void negative_deleteServiceRoutes_error() {
+      var cause = new RuntimeException("Test");
+      when(kongAdminClient.getServiceRoutes(MOD_ID, null)).thenThrow(cause);
+      assertThatThrownBy(() -> kongGatewayService.deleteServiceRoutes(MOD_ID)).isInstanceOf(
+        KongIntegrationException.class).hasCause(cause)
+        .hasMessage("Failed to delete all routes for service " + MOD_ID);
+    }
   }
 
   static class TestValues {
@@ -532,7 +555,7 @@ class KongGatewayServiceTest {
             new RoutingEntry().methods(List.of("POST")).pathPattern("/test/timer2")
           ))
       );
-      
+
       md.setProvides(provides);
 
       return md;
