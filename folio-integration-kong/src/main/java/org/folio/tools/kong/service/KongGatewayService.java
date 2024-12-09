@@ -20,11 +20,13 @@ import static org.folio.tools.kong.model.expression.RouteExpressions.httpPath;
 import static org.folio.tools.kong.utls.RoutingEntryUtils.getMethods;
 
 import feign.FeignException;
+import feign.FeignException.NotFound;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -133,6 +135,8 @@ public class KongGatewayService {
         routes = kongAdminClient.getServiceRoutes(serviceNameOrId, null);
         routes.forEach(route -> kongAdminClient.deleteRoute(serviceNameOrId, route.getId()));
       } while (routes.getData() != null && !routes.getData().isEmpty());
+    } catch (NotFound nf) {
+      throw new NoSuchElementException("No such service: " + serviceNameOrId);
     } catch (Exception e) {
       log.warn("Failed to delete all routes for Kong service: {}", serviceNameOrId, e);
       var parameters = List.of(new Parameter().key("cause").value(e.getMessage()));
