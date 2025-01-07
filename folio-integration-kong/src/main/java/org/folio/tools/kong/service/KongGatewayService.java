@@ -309,7 +309,7 @@ public class KongGatewayService {
   }
 
   private static RouteExpression getHeadersExpression(String moduleId, boolean isMultiple) {
-      return isMultiple ? httpHeader(MODULE_ID).equalsTo(moduleId) : null;
+    return isMultiple ? httpHeader(MODULE_ID).equalsTo(moduleId) : null;
   }
 
   /**
