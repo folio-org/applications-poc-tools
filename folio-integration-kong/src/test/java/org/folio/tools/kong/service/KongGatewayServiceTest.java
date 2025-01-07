@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -479,7 +478,7 @@ class KongGatewayServiceTest {
         .priority(priority)
         .expression(expression)
         .name(sha1Hex(routeName))
-        .tags(Stream.of(moduleId, interfaceId).filter(Objects::nonNull).collect(toList()));
+        .tags(Stream.of(moduleId, interfaceId).filter(Objects::nonNull).toList());
     }
 
     static ModuleDescriptor moduleDescriptor() {
