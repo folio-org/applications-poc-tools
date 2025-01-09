@@ -11,7 +11,6 @@ import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.folio.common.utils.CollectionUtils.mapItems;
 import static org.folio.common.utils.CollectionUtils.toStream;
 import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
-import static org.folio.common.utils.OkapiHeaders.TENANT;
 import static org.folio.tools.kong.model.expression.RouteExpressions.combineUsingAnd;
 import static org.folio.tools.kong.model.expression.RouteExpressions.combineUsingOr;
 import static org.folio.tools.kong.model.expression.RouteExpressions.httpHeader;
@@ -29,7 +28,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -59,36 +58,33 @@ public class KongGatewayService {
   private final KongAdminClient kongAdminClient;
 
   /**
-   * Adds tenant routes for API Gateway.
+   * Adds routes for API Gateway.
    *
-   * @param tenant - tenant name as {@link String}, nullable
    * @param moduleDescriptors - {@link List} with {@link ModuleDescriptor} objects to be processed
    * @throws KongIntegrationException if any of route create requests failed
    */
-  public void addRoutes(String tenant, Collection<ModuleDescriptor> moduleDescriptors) {
-    performOperation(tenant, moduleDescriptors, "create", (t, md) -> addRoutesForModule(md, t));
+  public void addRoutes(Collection<ModuleDescriptor> moduleDescriptors) {
+    performOperation(moduleDescriptors, "create", this::addRoutesForModule);
   }
 
   /**
-   * Updates tenant routes for API Gateway.
+   * Updates routes for API Gateway.
    *
-   * @param tenant - tenant name as {@link String}, nullable
    * @param moduleDescriptors - {@link List} with {@link ModuleDescriptor} objects to be processed
    * @throws KongIntegrationException if any of route update requests failed
    */
-  public void updateRoutes(String tenant, Collection<ModuleDescriptor> moduleDescriptors) {
-    performOperation(tenant, moduleDescriptors, "update", (t, md) -> updateRoutesForModule(md, t));
+  public void updateRoutes(Collection<ModuleDescriptor> moduleDescriptors) {
+    performOperation(moduleDescriptors, "update", this::updateRoutesForModule);
   }
 
   /**
-   * Removes routes for tenant from API Gateway.
+   * Removes routes from API Gateway.
    *
-   * @param tenant - tenant name as {@link String}, nullable
    * @param moduleDescriptors - {@link List} with {@link ModuleDescriptor} objects to be processed
    * @throws KongIntegrationException if any of route delete requests failed
    */
-  public void removeRoutes(String tenant, Collection<ModuleDescriptor> moduleDescriptors) {
-    performOperation(tenant, moduleDescriptors, "remove", (t, md) -> removeKongRoutes(t, md.getId()));
+  public void removeRoutes(Collection<ModuleDescriptor> moduleDescriptors) {
+    performOperation(moduleDescriptors, "remove", md -> removeKongRoutes(md.getId()));
   }
 
   /**
@@ -150,11 +146,11 @@ public class KongGatewayService {
       : String.format("%s://%s:%s", service.getProtocol(), service.getHost(), service.getPort());
   }
 
-  private void performOperation(String tenant, Collection<ModuleDescriptor> moduleDescriptors, String operation,
-    BiFunction<String, ModuleDescriptor, Collection<Parameter>> moduleOperation) {
+  private void performOperation(Collection<ModuleDescriptor> moduleDescriptors, String operation,
+    Function<ModuleDescriptor, Collection<Parameter>> moduleOperation) {
     var allErrors = new ArrayList<Parameter>();
     for (var moduleDescriptor : emptyIfNull(moduleDescriptors)) {
-      allErrors.addAll(moduleOperation.apply(tenant, moduleDescriptor));
+      allErrors.addAll(moduleOperation.apply(moduleDescriptor));
     }
 
     if (isNotEmpty(allErrors)) {
@@ -162,14 +158,14 @@ public class KongGatewayService {
     }
   }
 
-  private List<Parameter> updateRoutesForModule(ModuleDescriptor moduleDescriptor, String tenant) {
+  private List<Parameter> updateRoutesForModule(ModuleDescriptor moduleDescriptor) {
     var moduleId = moduleDescriptor.getId();
     var serviceId = getExistingServiceId(moduleId);
-    var existingRouteNames = getKongRoutes(tenant, moduleId).stream()
+    var existingRouteNames = getKongRoutes(moduleId).stream()
       .map(Route::getName)
       .collect(toCollection(LinkedHashSet::new));
 
-    var routes = prepareRoutes(moduleDescriptor, moduleId, tenant);
+    var routes = prepareRoutes(moduleDescriptor, moduleId);
     var newRoutesCreationErrors = toStream(routes)
       .filter(not(pair -> existingRouteNames.contains(pair.getLeft().getName())))
       .map(pair -> createKongRoute(serviceId, pair.getLeft(), pair.getRight()))
@@ -192,33 +188,33 @@ public class KongGatewayService {
     return resultErrorParameters;
   }
 
-  private List<Parameter> addRoutesForModule(ModuleDescriptor moduleDescriptor, String tenant) {
+  private List<Parameter> addRoutesForModule(ModuleDescriptor moduleDescriptor) {
     var moduleId = moduleDescriptor.getId();
     var serviceId = getExistingServiceId(moduleId);
-    return prepareRoutes(moduleDescriptor, moduleId, tenant).stream()
+    return prepareRoutes(moduleDescriptor, moduleId).stream()
       .map(kongRoutePair -> createKongRoute(serviceId, kongRoutePair.getLeft(), kongRoutePair.getRight()))
       .flatMap(Optional::stream)
       .toList();
   }
 
-  private List<Pair<Route, RoutingEntry>> prepareRoutes(ModuleDescriptor desc, String moduleId, String tenant) {
+  private List<Pair<Route, RoutingEntry>> prepareRoutes(ModuleDescriptor desc, String moduleId) {
     return toStream(desc.getProvides())
-      .map(interfaceDescriptor -> prepareRoutes(interfaceDescriptor, moduleId, tenant))
+      .map(interfaceDescriptor -> prepareRoutes(interfaceDescriptor, moduleId))
       .flatMap(Collection::stream)
       .toList();
   }
 
-  private List<Pair<Route, RoutingEntry>> prepareRoutes(InterfaceDescriptor desc, String moduleId, String tenant) {
+  private List<Pair<Route, RoutingEntry>> prepareRoutes(InterfaceDescriptor desc, String moduleId) {
     var interfaceId = desc.getId() + "-" + desc.getVersion();
     if (desc.isSystem() && !desc.isTimer()) {
-      log.debug("System interface is ignored: tenant={}, moduleId={}, interfaceId={}]", tenant, moduleId, interfaceId);
+      log.debug("System interface is ignored: moduleId={}, interfaceId={}]", moduleId, interfaceId);
       return emptyList();
     }
 
     var interfaceType = desc.getInterfaceType();
     var isMultiple = StringUtils.equals(interfaceType, MULTIPLE_INTERFACE_TYPE);
     return toStream(desc.getHandlers())
-      .map(routingEntry -> getRoute(tenant, moduleId, interfaceId, routingEntry, isMultiple)
+      .map(routingEntry -> getRoute(moduleId, interfaceId, routingEntry, isMultiple)
         .map(route -> Pair.of(route, routingEntry)))
       .flatMap(Optional::stream)
       .toList();
@@ -242,13 +238,13 @@ public class KongGatewayService {
     }
   }
 
-  private List<Route> getKongRoutes(String tenantName, String moduleId) {
+  private List<Route> getKongRoutes(String moduleId) {
     var routes = new ArrayList<Route>();
     var errorParameters = new ArrayList<Parameter>();
     String offset = null;
     do {
       try {
-        var routePage = kongAdminClient.getRoutesByTag(getTagsToSearch(tenantName, moduleId), offset);
+        var routePage = kongAdminClient.getRoutesByTag(getTagsToSearch(moduleId), offset);
         routes.addAll(routePage.getData());
         offset = routePage.getOffset();
       } catch (Exception exception) {
@@ -264,9 +260,9 @@ public class KongGatewayService {
     return routes;
   }
 
-  private List<Parameter> removeKongRoutes(String tenant, String moduleId) {
+  private List<Parameter> removeKongRoutes(String moduleId) {
     var serviceId = getExistingServiceId(moduleId);
-    return getKongRoutes(tenant, moduleId).stream()
+    return getKongRoutes(moduleId).stream()
       .map(kongRoute -> deleteRoute(serviceId, kongRoute.getId()))
       .flatMap(Optional::stream)
       .toList();
@@ -282,45 +278,38 @@ public class KongGatewayService {
   }
 
   @SuppressWarnings("java:S4790")
-  private static Optional<Route> getRoute(
-    String tenant, String moduleId, String interfaceId, RoutingEntry re, boolean isMultiple) {
+  private static Optional<Route> getRoute(String moduleId, String interfaceId, RoutingEntry re, boolean isMultiple) {
 
     var staticPath = re.getStaticPath();
     var httpMethods = getMethods(re);
     if (StringUtils.isEmpty(staticPath) || CollectionUtils.isEmpty(httpMethods)) {
-      log.debug("Route cannot be created: moduleId={}, tenant={}, interfaceId={}, routingEntry={}",
-        () -> moduleId, () -> tenant, () -> interfaceId, () -> asString(re));
+      log.debug("Route cannot be created: moduleId={}, interfaceId={}, routingEntry={}",
+        () -> moduleId, () -> interfaceId, () -> asString(re));
       return Optional.empty();
     }
 
     var kongPathPair = updatePathPatternForKongGateway(staticPath);
     var path = kongPathPair.getLeft();
 
-    var routeName = Stream.of(path, String.join(",", httpMethods), tenant, moduleId, interfaceId)
+    var routeName = Stream.of(path, String.join(",", httpMethods), moduleId, interfaceId)
       .filter(StringUtils::isNotBlank)
       .collect(joining("|"));
 
     var pathExpression = path.endsWith("$") ? httpPath().regexMatching(path) : httpPath().equalsTo(path);
     var methodsExpression = combineUsingOr(mapItems(httpMethods, method -> httpMethod().equalsTo(method)));
-    var headersExpression = getHeadersExpression(tenant, moduleId, isMultiple);
+    var headersExpression = getHeadersExpression(moduleId, isMultiple);
     return Optional.of(
       new Route()
         .priority(kongPathPair.getRight())
         .name(sha1Hex(routeName))
         .expression(combineUsingAnd(getNonNullValues(pathExpression, methodsExpression, headersExpression)))
-        .tags(getNonNullValues(tenant, moduleId, interfaceId))
+        .tags(getNonNullValues(moduleId, interfaceId))
         .stripPath(false)
     );
   }
 
-  private static RouteExpression getHeadersExpression(String tenantId, String moduleId, boolean isMultiple) {
-    if (tenantId == null) {
-      return isMultiple ? httpHeader(MODULE_ID).equalsTo(moduleId) : null;
-    }
-
-    return isMultiple
-      ? combineUsingAnd(httpHeader(TENANT).equalsTo(tenantId), httpHeader(MODULE_ID).equalsTo(moduleId))
-      : httpHeader(TENANT).equalsTo(tenantId);
+  private static RouteExpression getHeadersExpression(String moduleId, boolean isMultiple) {
+    return isMultiple ? httpHeader(MODULE_ID).equalsTo(moduleId) : null;
   }
 
   /**
