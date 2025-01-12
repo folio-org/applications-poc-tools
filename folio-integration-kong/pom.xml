@@ -12,7 +12,7 @@
 
   <properties>
     <spring-cloud-starter-openfeign.version>4.2.0</spring-cloud-starter-openfeign.version>
-    <commons-codec.version>1.17.1</commons-codec.version>
+    <commons-codec.version>1.17.2</commons-codec.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
 
     <sonar.exclusions>
