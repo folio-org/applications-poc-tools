@@ -72,7 +72,7 @@ class KongModuleRegistrarTest {
       .readTimeout(readTimeout)
       .retries(retries);
     verify(kongGatewayService).upsertService(expectedService);
-    verify(kongGatewayService).updateRoutes(null, List.of(moduleDescriptor));
+    verify(kongGatewayService).updateRoutes(List.of(moduleDescriptor));
   }
 
   @Test
@@ -87,6 +87,6 @@ class KongModuleRegistrarTest {
       .hasMessage("Failed to load module descriptor");
 
     verify(kongGatewayService, never()).upsertService(any());
-    verify(kongGatewayService, never()).updateRoutes(any(), any());
+    verify(kongGatewayService, never()).updateRoutes(any());
   }
 }
