@@ -38,7 +38,7 @@ public class KongModuleRegistrar {
         .writeTimeout(properties.getWriteTimeout())
         .retries(properties.getRetries())
     );
-    kongGatewayService.updateRoutes(null, singletonList(moduleDescriptor));
+    kongGatewayService.updateRoutes(singletonList(moduleDescriptor));
   }
 
   private ModuleDescriptor getModuleDescriptor() {

@@ -8,16 +8,13 @@ import static java.lang.String.join;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.folio.common.domain.model.InterfaceDescriptor.SYSTEM_INTERFACE_TYPE;
 import static org.folio.common.domain.model.InterfaceDescriptor.TIMER_INTERFACE;
 import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
-import static org.folio.common.utils.OkapiHeaders.TENANT;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.kongService;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithMultipleInterface1;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithMultipleInterface2;
@@ -76,11 +73,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class KongGatewayServiceTest {
 
-  private static final String TENANT_NAME = "testtenant";
   private static final String MOD_ID = "test-module-0.0.1";
   private static final String SERVICE_ID = UUID.randomUUID().toString();
   private static final String SERVICE_URL = "https://mod-foo:443";
-  private static final String ROUTE_TAGS = TENANT_NAME + "," + MOD_ID;
+  private static final String ROUTE_TAGS = MOD_ID;
 
   @InjectMocks private KongGatewayService kongGatewayService;
   @Mock private KongAdminClient kongAdminClient;
@@ -106,7 +102,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
       when(kongAdminClient.upsertRoute(eq(serviceId), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
 
-      kongGatewayService.addRoutes(TENANT_NAME, singletonList(moduleDescriptor()));
+      kongGatewayService.addRoutes(singletonList(moduleDescriptor()));
 
       assertThat(routeCaptor.getAllValues()).hasSize(5).isEqualTo(List.of(
         route(List.of("GET"), "^/entities/([^/]+)$", "test1-2.0"),
@@ -127,7 +123,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getService(barModuleId)).thenReturn(new Service().id(barModuleUuid).name(barModuleId));
       when(kongAdminClient.upsertRoute(anyString(), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
 
-      kongGatewayService.addRoutes(TENANT_NAME, List.of(mdWithMultipleInterface1(), mdWithMultipleInterface2()));
+      kongGatewayService.addRoutes(List.of(mdWithMultipleInterface1(), mdWithMultipleInterface2()));
 
       assertThat(routeCaptor.getAllValues()).hasSize(4).isEqualTo(List.of(
         route(List.of("GET"), "/baz/entities", 1, "baz-multiple-1.0", fooModuleId, multipleTypeHeaders(fooModuleId)),
@@ -137,31 +133,12 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    void positive_interfaceTypeMultipleWhenTenantIsNotDefined() {
-      var fooModuleId = "mod-foo-1.0.0";
-      var fooModuleUuid = UUID.randomUUID().toString();
-      var barModuleId = "mod-bar-1.0.0";
-      var barModuleUuid = UUID.randomUUID().toString();
-      when(kongAdminClient.getService(fooModuleId)).thenReturn(new Service().id(fooModuleUuid).name(fooModuleId));
-      when(kongAdminClient.getService(barModuleId)).thenReturn(new Service().id(barModuleUuid).name(barModuleId));
-      when(kongAdminClient.upsertRoute(anyString(), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
-
-      kongGatewayService.addRoutes(null, List.of(mdWithMultipleInterface1(), mdWithMultipleInterface2()));
-
-      assertThat(routeCaptor.getAllValues()).hasSize(4).isEqualTo(List.of(
-        route(List.of("GET"), "/baz/entities", 1, "baz-multiple-1.0", fooModuleId, Map.of(MODULE_ID, fooModuleId)),
-        route(List.of("POST"), "/foo/entities", 1, "foo-1.0", fooModuleId, emptyMap()),
-        route(List.of("GET"), "/baz/entities", 1, "baz-multiple-1.0", barModuleId, Map.of(MODULE_ID, barModuleId)),
-        route(List.of("POST"), "/bar/entities", 1, "bar-1.0", barModuleId, emptyMap())));
-    }
-
-    @Test
     void positive_timerInterface() {
       var serviceId = UUID.randomUUID().toString();
       when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
       when(kongAdminClient.upsertRoute(eq(serviceId), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
 
-      kongGatewayService.addRoutes(TENANT_NAME, singletonList(mdWithTimerInterface()));
+      kongGatewayService.addRoutes(singletonList(mdWithTimerInterface()));
 
       assertThat(routeCaptor.getAllValues()).hasSize(7).isEqualTo(List.of(
         route(List.of("GET"), "^/entities/([^/]+)$", "test1-2.0"),
@@ -190,7 +167,7 @@ class KongGatewayServiceTest {
       var moduleDescriptor = new ModuleDescriptor().id(MOD_ID).provides(List.of(interfaceDesc));
 
       var moduleDescriptors = List.of(moduleDescriptor);
-      assertThatThrownBy(() -> kongGatewayService.addRoutes(TENANT_NAME, moduleDescriptors))
+      assertThatThrownBy(() -> kongGatewayService.addRoutes(moduleDescriptors))
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to create routes")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(
@@ -205,7 +182,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getService(MOD_ID)).thenThrow(new NotFound("Not found", request, null, emptyMap()));
 
       var moduleDescriptors = List.of(moduleDescriptor());
-      assertThatThrownBy(() -> kongGatewayService.addRoutes(TENANT_NAME, moduleDescriptors))
+      assertThatThrownBy(() -> kongGatewayService.addRoutes(moduleDescriptors))
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to find Kong service for module: test-module-0.0.1")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
@@ -226,7 +203,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null)).thenReturn(routesByTag);
 
-      kongGatewayService.removeRoutes(TENANT_NAME, List.of(moduleDescriptor()));
+      kongGatewayService.removeRoutes(List.of(moduleDescriptor()));
 
       verify(kongAdminClient).deleteRoute(SERVICE_ID, "routeId");
     }
@@ -242,7 +219,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null)).thenReturn(routesByTag1);
       when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, "test-offset")).thenReturn(routesByTag2);
 
-      kongGatewayService.removeRoutes(TENANT_NAME, List.of(moduleDescriptor()));
+      kongGatewayService.removeRoutes(List.of(moduleDescriptor()));
 
       verify(kongAdminClient).deleteRoute(SERVICE_ID, "routeId1");
       verify(kongAdminClient).deleteRoute(SERVICE_ID, "routeId2");
@@ -250,7 +227,7 @@ class KongGatewayServiceTest {
 
     @Test
     void negative_failedToFindRoutes() {
-      var url = format("/routes?tags=%s,%s", TENANT_NAME, MOD_ID);
+      var url = format("/routes?tags=%s", MOD_ID);
       var request = create(PUT, url, emptyMap(), null, (RequestTemplate) null);
       var internalServerError = new InternalServerError("Unknown error", request, null, emptyMap());
 
@@ -258,7 +235,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null)).thenThrow(internalServerError);
 
       var moduleDescriptors = List.of(moduleDescriptor());
-      assertThatThrownBy(() -> kongGatewayService.removeRoutes(TENANT_NAME, moduleDescriptors))
+      assertThatThrownBy(() -> kongGatewayService.removeRoutes(moduleDescriptors))
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to load routes")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
@@ -272,7 +249,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getService(MOD_ID)).thenThrow(notFoundError);
 
       var moduleDescriptors = List.of(moduleDescriptor());
-      assertThatThrownBy(() -> kongGatewayService.removeRoutes(TENANT_NAME, moduleDescriptors))
+      assertThatThrownBy(() -> kongGatewayService.removeRoutes(moduleDescriptors))
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to find Kong service for module: test-module-0.0.1")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
@@ -286,13 +263,13 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null)).thenReturn(routesByTag);
 
-      var url = format("/routes?tags=%s,%s", TENANT_NAME, MOD_ID);
+      var url = format("/routes?tags=%s", MOD_ID);
       var request = create(PUT, url, emptyMap(), null, (RequestTemplate) null);
       var internalServerError = new InternalServerError("Failed to create route", request, null, emptyMap());
       doThrow(internalServerError).when(kongAdminClient).deleteRoute(SERVICE_ID, "routeId");
 
       var moduleDescriptors = List.of(moduleDescriptor());
-      assertThatThrownBy(() -> kongGatewayService.removeRoutes(TENANT_NAME, moduleDescriptors))
+      assertThatThrownBy(() -> kongGatewayService.removeRoutes(moduleDescriptors))
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to remove routes")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
@@ -317,7 +294,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, existingRoutes));
 
-      kongGatewayService.updateRoutes(null, List.of(moduleDescriptor()));
+      kongGatewayService.updateRoutes(List.of(moduleDescriptor()));
 
       verifyNoMoreInteractions(kongAdminClient);
     }
@@ -328,7 +305,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, emptyList()));
       when(kongAdminClient.upsertRoute(anyString(), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
 
-      kongGatewayService.updateRoutes(null, List.of(moduleDescriptor()));
+      kongGatewayService.updateRoutes(List.of(moduleDescriptor()));
 
       assertThat(routeCaptor.getAllValues()).hasSize(2).isEqualTo(List.of(
         route(List.of("POST"), "/entities", 1, INTERFACE_ID, MOD_ID, emptyMap()),
@@ -345,7 +322,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, existingRoutes));
       when(kongAdminClient.upsertRoute(anyString(), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
 
-      kongGatewayService.updateRoutes(null, List.of(moduleDescriptor()));
+      kongGatewayService.updateRoutes(List.of(moduleDescriptor()));
 
       assertThat(routeCaptor.getAllValues()).hasSize(1).isEqualTo(List.of(
         route(List.of("GET"), "^/entities/([^/]+)$", 0, INTERFACE_ID, MOD_ID, emptyMap())));
@@ -358,7 +335,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getService(MOD_ID)).thenThrow(new NotFound("Not found", request, null, emptyMap()));
 
       var moduleDescriptors = List.of(moduleDescriptor());
-      assertThatThrownBy(() -> kongGatewayService.addRoutes(TENANT_NAME, moduleDescriptors))
+      assertThatThrownBy(() -> kongGatewayService.addRoutes(moduleDescriptors))
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to find Kong service for module: test-module-0.0.1")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
@@ -476,11 +453,11 @@ class KongGatewayServiceTest {
   static class TestValues {
 
     static Route route(List<String> methods, String path, String interfaceId) {
-      return route(methods, path, 0, interfaceId, MOD_ID, singletonMap(TENANT, TENANT_NAME));
+      return route(methods, path, 0, interfaceId, MOD_ID, Map.of());
     }
 
     static Route route(List<String> methods, String path, int priority, String interfaceId, String moduleId) {
-      return route(methods, path, priority, interfaceId, moduleId, singletonMap(TENANT, TENANT_NAME));
+      return route(methods, path, priority, interfaceId, moduleId, Map.of());
     }
 
     static Route route(List<String> methods, String path, int priority, String interfaceId,
@@ -492,8 +469,7 @@ class KongGatewayServiceTest {
         .filter(StringUtils::isNotBlank)
         .collect(joining(" && ", "(", ")"));
 
-      var tenantName = headers.get(TENANT);
-      var routeName = Stream.of(path, join(",", methods), tenantName, moduleId, interfaceId)
+      var routeName = Stream.of(path, join(",", methods), moduleId, interfaceId)
         .filter(StringUtils::isNotBlank)
         .collect(joining("|"));
 
@@ -502,7 +478,7 @@ class KongGatewayServiceTest {
         .priority(priority)
         .expression(expression)
         .name(sha1Hex(routeName))
-        .tags(Stream.of(tenantName, moduleId, interfaceId).filter(Objects::nonNull).collect(toList()));
+        .tags(Stream.of(moduleId, interfaceId).filter(Objects::nonNull).toList());
     }
 
     static ModuleDescriptor moduleDescriptor() {
@@ -563,7 +539,6 @@ class KongGatewayServiceTest {
 
     static Map<String, String> multipleTypeHeaders(String moduleId) {
       var headers = new LinkedHashMap<String, String>();
-      headers.put(TENANT, TENANT_NAME);
       headers.put(MODULE_ID, moduleId);
       return headers;
     }
