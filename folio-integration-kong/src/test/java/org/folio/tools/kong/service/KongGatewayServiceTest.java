@@ -119,7 +119,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void positive_tenantRoutes() {
       var serviceId = UUID.randomUUID().toString();
       when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
@@ -156,7 +156,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void positive_interfaceTypeMultipleForTenantRoutes() {
       var fooModuleId = "mod-foo-1.0.0";
       var fooModuleUuid = UUID.randomUUID().toString();
@@ -195,7 +195,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void positive_tenantTimerInterface() {
       var serviceId = UUID.randomUUID().toString();
       when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
@@ -240,7 +240,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void negative_failedToUpsertTenantRoutes() {
       var serviceId = UUID.randomUUID().toString();
       var kongRoute = route(List.of("GET"), "^/entities/([^/]+)$", "test-1.0", TENANT_NAME);
@@ -281,7 +281,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void negative_serviceNotFoundForTenantRoutes() {
       var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
       when(kongAdminClient.getService(MOD_ID)).thenThrow(new NotFound("Not found", request, null, emptyMap()));
@@ -314,7 +314,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void positive_tenantRoutes() {
       var kongRoute = new Route().id("routeId").service(Identifier.of(SERVICE_ID));
       var routesByTag = new KongResultList<>(null, List.of(kongRoute));
@@ -344,7 +344,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void positive_twoPagesOfTenantRoutes() {
       var kongRoute1 = new Route().id("routeId1").service(Identifier.of(SERVICE_ID));
       var kongRoute2 = new Route().id("routeId2").service(Identifier.of(SERVICE_ID));
@@ -379,7 +379,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void negative_failedToFindRoutesTenantRoutes() {
       var url = format("/routes?tags=%s,%s", TENANT_NAME, MOD_ID);
       var request = create(PUT, url, emptyMap(), null, (RequestTemplate) null);
@@ -411,7 +411,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void negative_serviceNotFoundForTenantRoutes() {
       var request = create(PUT, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
       var notFoundError = new NotFound("Not Found", request, null, emptyMap());
@@ -446,7 +446,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void negative_failedToDeleteTenantRoutes() {
       var kongRoute = new Route().id("routeId").service(Identifier.of(SERVICE_ID));
       var routesByTag = new KongResultList<>(null, List.of(kongRoute));
@@ -490,7 +490,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void positive_allTenantRoutesExists() {
       var existingRoutes = List.of(
         route(List.of("POST"), "/entities", 1, INTERFACE_ID, MOD_ID, TENANT_NAME),
@@ -519,7 +519,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void positive_noTenantRoutesFound() {
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(TENANT_ROUTE_TAGS, null)).thenReturn(new KongResultList<>(null, emptyList()));
@@ -550,7 +550,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void positive_deprecatedTenantRoutesFound() {
       var deprecatedRoute = route(List.of("PUT"), "^/entities/([^/]+)$", 0, INTERFACE_ID, MOD_ID, TENANT_NAME);
       var routeToKeep = route(List.of("POST"), "/entities", 1, INTERFACE_ID, MOD_ID, TENANT_NAME);
@@ -585,7 +585,7 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    @Deprecated
+    @Deprecated(since = "2.3.0", forRemoval = true)
     void positive_serviceNotFoundForTenantRoutes() {
       var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
       when(kongAdminClient.getService(MOD_ID)).thenThrow(new NotFound("Not found", request, null, emptyMap()));

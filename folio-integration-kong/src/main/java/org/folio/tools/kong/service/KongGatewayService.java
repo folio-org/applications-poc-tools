@@ -75,8 +75,9 @@ public class KongGatewayService {
    * @param tenant - tenant name as {@link String}, nullable
    * @param moduleDescriptors - {@link List} with {@link ModuleDescriptor} objects to be processed
    * @throws KongIntegrationException if any of route create requests failed
+   * @deprecated use {@link #addRoutes(Collection)} instead
    */
-  @Deprecated
+  @Deprecated(since = "2.3.0", forRemoval = true)
   public void addRoutes(String tenant, Collection<ModuleDescriptor> moduleDescriptors) {
     performOperation(tenant, moduleDescriptors, "create", (t, md) -> addTenantRoutesForModule(md, t));
   }
@@ -97,8 +98,9 @@ public class KongGatewayService {
    * @param tenant - tenant name as {@link String}, nullable
    * @param moduleDescriptors - {@link List} with {@link ModuleDescriptor} objects to be processed
    * @throws KongIntegrationException if any of route update requests failed
+   * @deprecated use {@link #updateRoutes(Collection)} instead
    */
-  @Deprecated
+  @Deprecated(since = "2.3.0", forRemoval = true)
   public void updateRoutes(String tenant, Collection<ModuleDescriptor> moduleDescriptors) {
     performOperation(tenant, moduleDescriptors, "update", (t, md) -> updateTenantRoutesForModule(md, t));
   }
@@ -119,8 +121,9 @@ public class KongGatewayService {
    * @param tenant - tenant name as {@link String}, nullable
    * @param moduleDescriptors - {@link List} with {@link ModuleDescriptor} objects to be processed
    * @throws KongIntegrationException if any of route delete requests failed
+   * @deprecated use {@link #removeRoutes(Collection)} instead
    */
-  @Deprecated
+  @Deprecated(since = "2.3.0", forRemoval = true)
   public void removeRoutes(String tenant, Collection<ModuleDescriptor> moduleDescriptors) {
     performOperation(tenant, moduleDescriptors, "remove", (t, md) -> removeKongTenantRoutes(t, md.getId()));
   }
