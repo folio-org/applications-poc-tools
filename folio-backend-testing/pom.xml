@@ -16,7 +16,8 @@
     <sonar.exclusions>src/main/**/*</sonar.exclusions>
     <jsonassert.version>1.5.3</jsonassert.version>
     <jjwt.version>0.12.6</jjwt.version>
-    <testcontainers-keycloak.version>3.4.0</testcontainers-keycloak.version>
+    <testcontainers-keycloak.version>3.5.1</testcontainers-keycloak.version>
+    <keycloak-admin-client.version>26.0.4</keycloak-admin-client.version>
   </properties>
 
   <dependencies>
@@ -98,6 +99,13 @@
       <groupId>com.github.dasniko</groupId>
       <artifactId>testcontainers-keycloak</artifactId>
       <version>${testcontainers-keycloak.version}</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-admin-client</artifactId>
+      <version>${keycloak-admin-client.version}</version>
       <scope>compile</scope>
     </dependency>
 
