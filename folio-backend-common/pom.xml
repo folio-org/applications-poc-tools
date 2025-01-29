@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.folio</groupId>
     <artifactId>applications-poc-tools</artifactId>
-    <version>2.1.0</version>
+    <version>2.1.1-SNAPSHOT</version>
   </parent>
 
   <name>folio-backend-common</name>
@@ -93,7 +93,7 @@
       <artifactId>instancio-junit</artifactId>
       <scope>test</scope>
     </dependency>
-    
+
   </dependencies>
 
 </project>
