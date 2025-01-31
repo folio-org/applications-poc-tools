@@ -61,6 +61,8 @@ public class SsmClientProvider {
       builder.httpClient(ApacheHttpClient.builder()
         .tlsTrustManagersProvider(() -> getTrustManager(properties)).build());
       builder.fipsEnabled(true);
+    } else {
+      builder.httpClient(ApacheHttpClient.create());
     }
     if (nonNull(properties.getUseIam()) && properties.getUseIam()) {
       log.debug("Using IAM");
