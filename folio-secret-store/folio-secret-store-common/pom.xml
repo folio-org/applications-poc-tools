@@ -15,7 +15,7 @@
 
   <properties>
     <vault.version>5.1.0</vault.version>
-    <aws.version>2.30.11</aws.version>
+    <aws.version>2.30.16</aws.version>
     <apache-commons-text.version>1.13.0</apache-commons-text.version>
     <bc-fips>2.1.0</bc-fips>
   </properties>
