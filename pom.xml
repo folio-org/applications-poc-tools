@@ -12,7 +12,7 @@
   <name>applications-poc-tools</name>
   <groupId>org.folio</groupId>
   <artifactId>applications-poc-tools</artifactId>
-  <version>2.3.0-SNAPSHOT</version>
+  <version>2.4.0-SNAPSHOT</version>
   <description>Library with general purpose classes to help with FOLIO backend development and testing</description>
   <packaging>pom</packaging>
 
