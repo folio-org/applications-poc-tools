@@ -17,6 +17,7 @@ import java.util.Properties;
 import lombok.extern.log4j.Log4j2;
 import org.folio.tools.store.SecureStore;
 import org.folio.tools.store.exception.NotFoundException;
+import org.folio.tools.store.exception.UncheckedVaultException;
 import org.folio.tools.store.properties.VaultConfigProperties;
 
 @Log4j2
@@ -133,7 +134,7 @@ public final class VaultStore implements SecureStore {
       }
       return ret;
     } catch (VaultException e) {
-      throw new NotFoundException(e);
+      throw new UncheckedVaultException(e);
     }
   }
 
@@ -143,7 +144,7 @@ public final class VaultStore implements SecureStore {
       var secretPath = addRootPath(path);
       mergeSecrets(secretPath, secretName, value);
     } catch (VaultException e) {
-      throw new RuntimeException("Failed to save secret for " + secretName, e);
+      throw new UncheckedVaultException("Failed to save secret for " + secretName, e);
     }
   }
 
