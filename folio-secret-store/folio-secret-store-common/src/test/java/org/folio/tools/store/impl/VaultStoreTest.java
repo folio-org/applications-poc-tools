@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Properties;
 import org.folio.test.types.UnitTest;
 import org.folio.tools.store.exception.NotFoundException;
+import org.folio.tools.store.exception.UncheckedVaultException;
 import org.folio.tools.store.properties.VaultConfigProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -86,9 +87,10 @@ class VaultStoreTest {
     var logical = mock(Logical.class);
 
     when(vault.logical()).thenReturn(logical);
-    when(logical.read(addRootTo("abcdef1234/diku"))).thenThrow(VaultException.class);
+    when(logical.read(addRootTo("abcdef1234/diku"))).thenThrow(new VaultException("vault's fault"));
 
-    assertThrows(NotFoundException.class, () -> secureStore.get(clientId, "diku", "diku"));
+    var e = assertThrows(UncheckedVaultException.class, () -> secureStore.get(clientId, "diku", "diku"));
+    assertEquals("vault's fault", e.getCause().getMessage());
   }
 
   @ParameterizedTest
@@ -228,7 +230,7 @@ class VaultStoreTest {
     when(vault.logical()).thenReturn(logical);
     when(logical.write(any(), any())).thenThrow(new VaultException("Unexpected error"));
 
-    var ex = assertThrows(RuntimeException.class, () -> secureStore.set(key, "Pa$$w0rd"));
+    var ex = assertThrows(UncheckedVaultException.class, () -> secureStore.set(key, "Pa$$w0rd"));
     assertEquals("Failed to save secret for secretKey", ex.getMessage());
   }
 

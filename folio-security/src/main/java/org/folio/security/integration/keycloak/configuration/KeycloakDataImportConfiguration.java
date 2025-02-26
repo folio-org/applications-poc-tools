@@ -58,10 +58,12 @@ public class KeycloakDataImportConfiguration {
     var admin = properties.getAdmin();
     String clientId = admin.getClientId();
     String secret = null;
+    var key = KeycloakSecretUtils.globalStoreKey(clientId);
     try {
-      secret = secureStore.get(KeycloakSecretUtils.globalStoreKey(clientId));
+      secret = secureStore.get(key);
     } catch (NotFoundException e) {
-      log.warn("Secret for 'admin' client is not defined in the secret store: clientId = {}", clientId);
+      log.warn("Secret for key '{}' for 'admin' client is not defined in the secret store: clientId = {}",
+          key, clientId);
     }
     return secret;
   }
