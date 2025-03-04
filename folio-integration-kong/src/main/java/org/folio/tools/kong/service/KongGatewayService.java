@@ -206,7 +206,7 @@ public class KongGatewayService {
 
   private List<Pair<Route, RoutingEntry>> prepareRoutes(InterfaceDescriptor desc, String moduleId) {
     var interfaceId = desc.getId() + "-" + desc.getVersion();
-    if (desc.isSystem() && !desc.isTimer()) {
+    if (desc.isSystem()) {
       log.debug("System interface is ignored: moduleId={}, interfaceId={}]", moduleId, interfaceId);
       return emptyList();
     }

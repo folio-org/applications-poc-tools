@@ -17,6 +17,7 @@ import static org.folio.common.domain.model.InterfaceDescriptor.SYSTEM_INTERFACE
 import static org.folio.common.domain.model.InterfaceDescriptor.TIMER_INTERFACE;
 import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
 import static org.folio.common.utils.OkapiHeaders.TENANT;
+import static org.folio.common.utils.UuidUtils.randomId;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.kongService;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithMultipleInterface1;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithMultipleInterface2;
@@ -76,7 +77,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class KongGatewayServiceTest {
 
   private static final String MOD_ID = "test-module-0.0.1";
-  private static final String SERVICE_ID = UUID.randomUUID().toString();
+  private static final String SERVICE_ID = randomId();
   private static final String SERVICE_URL = "https://mod-foo:443";
   private static final String ROUTE_TAGS = MOD_ID;
 
@@ -135,22 +136,20 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    void positive_timerInterface() {
+    void positive_timerInterfaceIgnored() {
       var serviceId = UUID.randomUUID().toString();
       when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
       when(kongAdminClient.upsertRoute(eq(serviceId), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
 
       kongGatewayService.addRoutes(singletonList(mdWithTimerInterface()));
 
-      assertThat(routeCaptor.getAllValues()).hasSize(7).isEqualTo(List.of(
+      assertThat(routeCaptor.getAllValues()).hasSize(5).isEqualTo(List.of(
         route(List.of("GET"), "^/entities/([^/]+)$", "test1-2.0"),
         route(List.of("PUT"), "^/entities/([^/]+)/sub-entities$", "test1-2.0"),
         route(List.of("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE"),
           "^/entities/sub-entities(.*)$", 0, "test1-2.0", MOD_ID),
         route(List.of("PUT"), "/tests/1", 1, "test1-2.0", MOD_ID),
-        route(List.of("GET"), "/test2-entities", 1, "test2-1.0", MOD_ID),
-        route(List.of("POST"), "/test/timer1", 1, "_timer-1.0", MOD_ID),
-        route(List.of("POST"), "/test/timer2", 1, "_timer-1.0", MOD_ID)));
+        route(List.of("GET"), "/test2-entities", 1, "test2-1.0", MOD_ID)));
     }
 
     @Test
@@ -447,7 +446,7 @@ class KongGatewayServiceTest {
       var cause = new RuntimeException("Test");
       when(kongAdminClient.getServiceRoutes(MOD_ID, null)).thenThrow(cause);
       assertThatThrownBy(() -> kongGatewayService.deleteServiceRoutes(MOD_ID)).isInstanceOf(
-        KongIntegrationException.class).hasCause(cause)
+          KongIntegrationException.class).hasCause(cause)
         .hasMessage("Failed to delete all routes for service " + MOD_ID);
     }
   }
