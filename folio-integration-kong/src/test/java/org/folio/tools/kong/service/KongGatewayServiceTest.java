@@ -1,56 +1,40 @@
 package org.folio.tools.kong.service;
 
+import feign.FeignException.InternalServerError;
+import feign.FeignException.NotFound;
 import static feign.Request.HttpMethod.GET;
 import static feign.Request.HttpMethod.PUT;
 import static feign.Request.create;
+import feign.RequestTemplate;
 import static java.lang.String.format;
 import static java.lang.String.join;
+import java.util.ArrayList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
-import static java.util.stream.Collectors.joining;
-import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.folio.common.domain.model.InterfaceDescriptor.SYSTEM_INTERFACE_TYPE;
-import static org.folio.common.domain.model.InterfaceDescriptor.TIMER_INTERFACE;
-import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
-import static org.folio.common.utils.OkapiHeaders.TENANT;
-import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.kongService;
-import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithMultipleInterface1;
-import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithMultipleInterface2;
-import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithTimerInterface;
-import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.moduleDescriptor;
-import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.multipleTypeHeaders;
-import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.route;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
-import feign.FeignException.InternalServerError;
-import feign.FeignException.NotFound;
-import feign.RequestTemplate;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import static java.util.stream.Collectors.joining;
 import java.util.stream.Stream;
+import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.folio.common.domain.model.InterfaceDescriptor;
+import static org.folio.common.domain.model.InterfaceDescriptor.SYSTEM_INTERFACE_TYPE;
+import static org.folio.common.domain.model.InterfaceDescriptor.TIMER_INTERFACE;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
 import org.folio.common.domain.model.error.Parameter;
+import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
+import static org.folio.common.utils.OkapiHeaders.TENANT;
+import static org.folio.common.utils.UuidUtils.randomId;
 import org.folio.test.types.UnitTest;
 import org.folio.tools.kong.client.KongAdminClient;
 import org.folio.tools.kong.client.KongAdminClient.KongResultList;
@@ -58,6 +42,13 @@ import org.folio.tools.kong.exception.KongIntegrationException;
 import org.folio.tools.kong.model.Identifier;
 import org.folio.tools.kong.model.Route;
 import org.folio.tools.kong.model.Service;
+import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.kongService;
+import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithMultipleInterface1;
+import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithMultipleInterface2;
+import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithTimerInterface;
+import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.moduleDescriptor;
+import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.multipleTypeHeaders;
+import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.route;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -66,9 +57,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @UnitTest
@@ -76,7 +76,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class KongGatewayServiceTest {
 
   private static final String MOD_ID = "test-module-0.0.1";
-  private static final String SERVICE_ID = UUID.randomUUID().toString();
+  private static final String SERVICE_ID = randomId();
   private static final String SERVICE_URL = "https://mod-foo:443";
   private static final String ROUTE_TAGS = MOD_ID;
 
@@ -135,22 +135,20 @@ class KongGatewayServiceTest {
     }
 
     @Test
-    void positive_timerInterface() {
+    void positive_timerInterfaceIgnored() {
       var serviceId = UUID.randomUUID().toString();
       when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
       when(kongAdminClient.upsertRoute(eq(serviceId), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
 
       kongGatewayService.addRoutes(singletonList(mdWithTimerInterface()));
 
-      assertThat(routeCaptor.getAllValues()).hasSize(7).isEqualTo(List.of(
+      assertThat(routeCaptor.getAllValues()).hasSize(5).isEqualTo(List.of(
         route(List.of("GET"), "^/entities/([^/]+)$", "test1-2.0"),
         route(List.of("PUT"), "^/entities/([^/]+)/sub-entities$", "test1-2.0"),
         route(List.of("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE"),
           "^/entities/sub-entities(.*)$", 0, "test1-2.0", MOD_ID),
         route(List.of("PUT"), "/tests/1", 1, "test1-2.0", MOD_ID),
-        route(List.of("GET"), "/test2-entities", 1, "test2-1.0", MOD_ID),
-        route(List.of("POST"), "/test/timer1", 1, "_timer-1.0", MOD_ID),
-        route(List.of("POST"), "/test/timer2", 1, "_timer-1.0", MOD_ID)));
+        route(List.of("GET"), "/test2-entities", 1, "test2-1.0", MOD_ID)));
     }
 
     @Test
