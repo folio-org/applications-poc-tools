@@ -47,7 +47,7 @@
 
     <!-- Test dependencies versions -->
     <wiremock.version>2.35.2</wiremock.version>
-    <testcontainer.version>1.20.5</testcontainer.version>
+    <testcontainer.version>1.20.6</testcontainer.version>
     <instancio.version>5.4.0</instancio.version>
 
     <!-- Plugins versions -->
@@ -161,7 +161,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>10.21.3</version>
+              <version>10.21.4</version>
             </dependency>
             <dependency>
               <groupId>org.folio</groupId>
