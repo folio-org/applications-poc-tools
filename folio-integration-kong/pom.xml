@@ -11,7 +11,7 @@
   <artifactId>folio-integration-kong</artifactId>
 
   <properties>
-    <spring-cloud-starter-openfeign.version>4.2.0</spring-cloud-starter-openfeign.version>
+    <spring-cloud-starter-openfeign.version>4.2.1</spring-cloud-starter-openfeign.version>
     <!-- remove commons-io dependency when spring-cloud-starter-openfeign ships with a
          non-vulnerable commons-io version (>= 2.14.0), CVE-2024-47554 -->
     <commons-io.version>2.18.0</commons-io.version>
