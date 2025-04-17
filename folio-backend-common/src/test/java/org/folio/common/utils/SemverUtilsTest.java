@@ -1,43 +1,66 @@
 package org.folio.common.utils;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.folio.common.utils.SemverUtils.getName;
+import static org.folio.common.utils.SemverUtils.getVersion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.of;
 
 import java.util.stream.Stream;
 import org.folio.test.types.UnitTest;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 @UnitTest
 class SemverUtilsTest {
 
   @ParameterizedTest
   @MethodSource("applicationVersions")
-  void getApplicationVersion_validInput_test(String applicationId, String expectedVersion) {
-    String actualVersion = SemverUtils.getVersion(applicationId);
+  void getVersion_positive(String applicationId, String expectedVersion) {
+    String actualVersion = getVersion(applicationId);
     assertEquals(expectedVersion, actualVersion);
   }
 
   @ParameterizedTest
   @MethodSource("applicationNames")
-  void getApplicationName_validInput_test(String applicationId, String expectedName) {
-    String actualName = SemverUtils.getName(applicationId);
+  void getName_positive(String applicationId, String expectedName) {
+    String actualName = getName(applicationId);
     assertEquals(expectedName, actualName);
   }
 
-  @Test
-  void getApplicationVersion_emptyOrNullInput_test() {
-    assertThrows(IllegalArgumentException.class, () -> SemverUtils.getVersion(null));
-    assertThrows(IllegalArgumentException.class, () -> SemverUtils.getVersion(""));
+  @ParameterizedTest
+  @NullAndEmptySource
+  void getVersion_negative_emptyOrNullInput(String applicationId) {
+    assertThatThrownBy(() -> getVersion(applicationId))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Source cannot be blank");
   }
 
-  @Test
-  void getApplicationName_emptyOrNullInput_test() {
-    assertThrows(IllegalArgumentException.class, () -> SemverUtils.getName(null));
-    assertThrows(IllegalArgumentException.class, () -> SemverUtils.getName(""));
+  @ParameterizedTest
+  @NullAndEmptySource
+  void getName_negative_emptyOrNullInput(String applicationId) {
+    assertThatThrownBy(() -> getName(applicationId))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Source cannot be blank");
+  }
+
+  @ParameterizedTest
+  @MethodSource("applicationVersionsInvalid")
+  void getVersion_negative_invalidVersion(String applicationId) {
+    assertThatThrownBy(() -> getVersion(applicationId))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Invalid semantic version: source = " + applicationId);
+  }
+
+  @ParameterizedTest
+  @MethodSource("applicationVersionsInvalid")
+  void getName_negative_invalidVersion(String applicationId) {
+    assertThatThrownBy(() -> getName(applicationId))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Invalid semantic version: source = " + applicationId);
   }
 
   @ParameterizedTest
@@ -79,6 +102,19 @@ class SemverUtilsTest {
       of("App-1.2.3-release+metadata", "App"),
       of("AppName-0.0.1", "AppName"),
       of("AppName-0.0.1+build", "AppName")
+    );
+  }
+
+  private static Stream<String> applicationVersionsInvalid() {
+    return Stream.of(
+      "App-", // Missing version
+      "App-1.0", // Incomplete version
+      "App-1.0.0.0", // Too many version parts
+      "App-1..0", // Invalid format
+      "App-1.0.0-", // Trailing hyphen
+      "App-1.0.0+meta data", // Invalid metadata format
+      "App-1.0.0-release@", // Invalid character in pre-release
+      "App-abc.def.ghi" // Non-numeric version
     );
   }
 

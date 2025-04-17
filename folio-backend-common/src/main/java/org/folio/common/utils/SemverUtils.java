@@ -1,8 +1,6 @@
 package org.folio.common.utils;
 
 import static org.apache.commons.lang3.RegExUtils.removeAll;
-import static org.apache.commons.lang3.StringUtils.chop;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.removeStart;
 import static org.folio.common.utils.CollectionUtils.toStream;
@@ -17,12 +15,11 @@ import org.semver4j.Semver;
 public class SemverUtils {
 
   private static final Pattern VERSION_PATTERN = Pattern.compile(
-    "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)"
+    "-(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)"
       + "(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)" //NOSONAR
       + "(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?" //NOSONAR
       + "(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$");
   private static final String VERSION_DELIMITER = "-";
-  private static final String ERROR_MSG = "Source cannot be blank";
 
   /**
    * Returns application/module version from application/module id.
@@ -31,10 +28,8 @@ public class SemverUtils {
    * @return application/module's version
    */
   public static String getVersion(String sourceId) {
-    if (isBlank(sourceId)) {
-      throw new IllegalArgumentException(ERROR_MSG);
-    }
-    return removeStart(sourceId, getName(sourceId) + VERSION_DELIMITER);
+    var name = getName(sourceId);
+    return removeStart(sourceId, name + VERSION_DELIMITER);
   }
 
   /**
@@ -45,9 +40,16 @@ public class SemverUtils {
    */
   public static String getName(String sourceId) {
     if (isEmpty(sourceId)) {
-      throw new IllegalArgumentException(ERROR_MSG);
+      throw new IllegalArgumentException("Source cannot be blank");
     }
-    return chop(removeAll(sourceId, VERSION_PATTERN));
+
+    var name = removeAll(sourceId, VERSION_PATTERN);
+    var version = removeStart(sourceId, name + VERSION_DELIMITER);
+    if (!Semver.isValid(version)) {
+      throw new IllegalArgumentException("Invalid semantic version: source = " + sourceId);
+    }
+
+    return name;
   }
 
   /**
