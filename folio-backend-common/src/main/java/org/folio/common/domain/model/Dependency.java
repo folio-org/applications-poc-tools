@@ -15,6 +15,7 @@ public class Dependency implements WithNameVersion {
 
   private String name;
   private String version;
+  private Boolean optional = false;
 
   public Dependency name(String name) {
     this.name = name;
