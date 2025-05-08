@@ -4,7 +4,6 @@ import static java.util.Map.entry;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.folio.common.utils.OkapiHeaders.TENANT;
-import static org.folio.security.integration.keycloak.service.KeycloakTokenValidator.resolveTenant;
 import static org.keycloak.OAuth2Constants.UMA_GRANT_TYPE;
 
 import feign.FeignException;
@@ -106,5 +105,9 @@ public class KeycloakAuthorizationService extends AbstractAuthorizationService {
       .map(String.class::cast)
       .map(UUID::fromString)
       .orElse(null);
+  }
+
+  private static String resolveTenant(String tokenIssuer) {
+    return tokenIssuer.substring(tokenIssuer.lastIndexOf('/') + 1);
   }
 }
