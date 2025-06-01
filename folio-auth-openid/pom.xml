@@ -10,7 +10,7 @@
   <artifactId>folio-auth-openid</artifactId>
 
   <properties>
-    <io.smallrye-jwt.version>4.6.1</io.smallrye-jwt.version>
+    <io.smallrye-jwt.version>4.6.2</io.smallrye-jwt.version>
 
     <sonar.exclusions>
       src/main/java/**/configuration/**/*
