@@ -164,6 +164,7 @@ class AwsStoreTest {
   }
 
   @Test
+  @SuppressWarnings("java:S2699")
   void delete_negative_notFound() {
     var key = "key";
     when(ssmClientProvider.get()).thenReturn(ssmClient);
@@ -171,7 +172,7 @@ class AwsStoreTest {
     doThrow(ParameterNotFoundException.builder().message("not found").build())
       .when(ssmClient).deleteParameter((DeleteParameterRequest) any());
 
-    awsStore.delete(key); // Should not throw
+    awsStore.delete(key); // Should not throw Not Found
   }
 
   @Test
