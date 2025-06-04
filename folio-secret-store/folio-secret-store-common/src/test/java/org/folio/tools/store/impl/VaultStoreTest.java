@@ -247,7 +247,6 @@ class VaultStoreTest {
 
   @Test
   void delete_positive_secretNotPresent() throws VaultException {
-    var key = "folio_secretKey";
     var path = "folio";
     var logical = mock(Logical.class);
     var logicalResponse = mock(LogicalResponse.class);
@@ -255,6 +254,7 @@ class VaultStoreTest {
     when(logical.read(addRootTo(path))).thenReturn(logicalResponse);
     when(logicalResponse.getData()).thenReturn(Map.of("otherSecret", "otherValue"));
 
+    var key = "folio_secretKey";
     secureStore.delete(key);
 
     verify(logical, never()).write(eq(addRootTo(path)), any());
