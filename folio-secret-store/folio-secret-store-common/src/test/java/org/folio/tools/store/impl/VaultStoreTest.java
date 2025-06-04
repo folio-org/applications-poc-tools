@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -97,6 +98,18 @@ class VaultStoreTest {
 
     var ex = assertThrows(SecretNotFoundException.class, () -> secureStore.get(key));
     assertEquals("Attribute: secretKey not set for folio", ex.getMessage());
+  }
+
+  @Test
+  void getKey_negative_vaultException() throws VaultException {
+    var key = "folio_secretKey";
+    var path = "folio";
+    var logical = mock(Logical.class);
+    when(vault.logical()).thenReturn(logical);
+    when(logical.read(addRootTo(path))).thenThrow(new VaultException("Vault unavailable"));
+
+    var ex = assertThrows(SecureStoreServiceException.class, () -> secureStore.get(key));
+    assertTrue(ex.getMessage().contains("Failed to get secret: key = folio/secretKey, error = Vault unavailable"));
   }
 
   @ParameterizedTest
@@ -190,6 +203,76 @@ class VaultStoreTest {
 
     var ex = assertThrows(SecureStoreServiceException.class, () -> secureStore.set(key, "Pa$$w0rd"));
     assertEquals("Failed to save secret: key = folio/secretKey, error = Unexpected error", ex.getMessage());
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "folio_secretKey,folio,secretKey",
+    "folio_diku_secretKey,folio/diku,secretKey",
+    "folio_diku_dikuLib_secretKey,folio/diku/dikuLib,secretKey",
+  })
+  void delete_positive(String key, String secretPath, String secretName) throws Exception {
+    var password = "Pa$$w0rd";
+    var existingSecrets = new HashMap<String, String>();
+    existingSecrets.put(secretName, password);
+    existingSecrets.put("otherSecret", "otherValue");
+
+    var logical = mock(Logical.class);
+    var logicalResponse = mock(LogicalResponse.class);
+    when(vault.logical()).thenReturn(logical);
+    when(logical.read(addRootTo(secretPath))).thenReturn(logicalResponse);
+    when(logicalResponse.getData()).thenReturn(existingSecrets);
+
+    var expectedData = new HashMap<>(existingSecrets);
+    expectedData.remove(secretName);
+
+    secureStore.delete(key);
+
+    verify(logical).write(eq(addRootTo(secretPath)),
+      argThat((Map<String, Object> data) -> data.equals(expectedData)));
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  void delete_negative_emptyKey(String key) {
+    var exc = assertThrows(IllegalArgumentException.class, () -> secureStore.delete(key));
+    assertEquals("Key cannot be blank", exc.getMessage());
+  }
+
+  @Test
+  void delete_negative_shortKey() {
+    var exc = assertThrows(IllegalArgumentException.class, () -> secureStore.delete("folio"));
+    assertEquals("Key should consist of at least two parts separated by '_'", exc.getMessage());
+  }
+
+  @Test
+  void delete_positive_secretNotPresent() throws VaultException {
+    var key = "folio_secretKey";
+    var path = "folio";
+    var logical = mock(Logical.class);
+    var logicalResponse = mock(LogicalResponse.class);
+    when(vault.logical()).thenReturn(logical);
+    when(logical.read(addRootTo(path))).thenReturn(logicalResponse);
+    when(logicalResponse.getData()).thenReturn(Map.of("otherSecret", "otherValue"));
+
+    secureStore.delete(key);
+
+    verify(logical, never()).write(eq(addRootTo(path)), any());
+  }
+
+  @Test
+  void delete_negative_vaultException() throws VaultException {
+    var key = "folio_secretKey";
+    var path = "folio";
+    var logical = mock(Logical.class);
+    var logicalResponse = mock(LogicalResponse.class);
+    when(vault.logical()).thenReturn(logical);
+    when(logical.read(addRootTo(path))).thenReturn(logicalResponse);
+    when(logicalResponse.getData()).thenReturn(Map.of("secretKey", "Pa$$w0rd"));
+    when(logical.write(any(), any())).thenThrow(new VaultException("Unexpected error"));
+
+    var ex = assertThrows(SecureStoreServiceException.class, () -> secureStore.delete(key));
+    assertEquals("Failed to delete secret: key = folio/secretKey, error = Unexpected error", ex.getMessage());
   }
 
   @Test

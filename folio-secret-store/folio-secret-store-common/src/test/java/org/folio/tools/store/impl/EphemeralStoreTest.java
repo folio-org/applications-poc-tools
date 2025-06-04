@@ -73,6 +73,18 @@ class EphemeralStoreTest {
   }
 
   @Test
+  void set_positive_nullValueDeletesKey() {
+    var key = "foo";
+    var value = "bar";
+    ephemeralStore.set(key, value);
+    assertEquals(value, ephemeralStore.get(key));
+
+    ephemeralStore.set(key, null);
+    // After setting null, the key should be deleted
+    assertThrows(SecretNotFoundException.class, () -> ephemeralStore.get(key));
+  }
+
+  @Test
   void set_negative() {
     var key = "foo";
     var value = "bar";
@@ -114,5 +126,31 @@ class EphemeralStoreTest {
     assertThrows(SecretNotFoundException.class, () -> store.get("dot_foo"));
     assertThrows(SecretNotFoundException.class, () -> store.get("dat_foo"));
     assertThrows(SecretNotFoundException.class, () -> store.get("done_foo"));
+  }
+
+  @Test
+  void delete_positive() {
+    var key = "foo";
+    var value = "bar";
+    ephemeralStore.set(key, value);
+
+    ephemeralStore.delete(key);
+
+    assertThrows(SecretNotFoundException.class, () -> ephemeralStore.get(key));
+  }
+
+  @Test
+  void delete_negative_keyNotPresent() {
+    var key = "not_existing_key";
+    // Should not throw any exception
+    ephemeralStore.delete(key);
+    // Still not present
+    assertThrows(SecretNotFoundException.class, () -> ephemeralStore.get(key));
+  }
+
+  @Test
+  void delete_negative_invalidKey() {
+    assertThrows(IllegalArgumentException.class, () -> ephemeralStore.delete(""));
+    assertThrows(IllegalArgumentException.class, () -> ephemeralStore.delete(null));
   }
 }
