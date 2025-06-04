@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Map;
 import java.util.Properties;
 import org.folio.test.types.UnitTest;
-import org.folio.tools.store.exception.NotFoundException;
+import org.folio.tools.store.exception.SecretNotFoundException;
 import org.folio.tools.store.properties.EphemeralConfigProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +39,7 @@ class EphemeralStoreTest {
   void get_negative_notFound() {
     var key = "baz";
 
-    assertThrows(NotFoundException.class, () -> ephemeralStore.get(key));
+    assertThrows(SecretNotFoundException.class, () -> ephemeralStore.get(key));
   }
 
   @Test
@@ -79,7 +79,7 @@ class EphemeralStoreTest {
 
     ephemeralStore.set(key, value);
 
-    assertThrows(NotFoundException.class, () -> ephemeralStore.get("baz"));
+    assertThrows(SecretNotFoundException.class, () -> ephemeralStore.get("baz"));
   }
 
   @Test
@@ -93,10 +93,10 @@ class EphemeralStoreTest {
 
     var store = new EphemeralStore(props);
 
-    assertEquals("dit_password", store.get(null, "dit", "dit"));
-    assertEquals("dot_password", store.get(null, "dot", "dot"));
-    assertEquals("dat_password", store.get(null, "dat", "dat"));
-    assertEquals("", store.get(null, "done", "done"));
+    assertEquals("dit_password", store.get("dit_dit"));
+    assertEquals("dot_password", store.get("dot_dot"));
+    assertEquals("dat_password", store.get("dat_dat"));
+    assertEquals("", store.get("done_done"));
   }
 
   @Test
@@ -110,9 +110,9 @@ class EphemeralStoreTest {
 
     var store = new EphemeralStore(props);
 
-    assertThrows(NotFoundException.class, () -> store.get(null, "dit", "foo"));
-    assertThrows(NotFoundException.class, () -> store.get(null, "dot", "foo"));
-    assertThrows(NotFoundException.class, () -> store.get(null, "dat", "foo"));
-    assertThrows(NotFoundException.class, () -> store.get(null, "done", "foo"));
+    assertThrows(SecretNotFoundException.class, () -> store.get("dit_foo"));
+    assertThrows(SecretNotFoundException.class, () -> store.get("dot_foo"));
+    assertThrows(SecretNotFoundException.class, () -> store.get("dat_foo"));
+    assertThrows(SecretNotFoundException.class, () -> store.get("done_foo"));
   }
 }

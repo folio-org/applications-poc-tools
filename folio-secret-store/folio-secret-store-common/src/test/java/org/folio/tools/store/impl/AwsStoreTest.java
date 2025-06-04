@@ -13,7 +13,7 @@ import static software.amazon.awssdk.services.ssm.model.ParameterType.SECURE_STR
 import java.security.Security;
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 import org.folio.test.types.UnitTest;
-import org.folio.tools.store.exception.NotFoundException;
+import org.folio.tools.store.exception.SecretNotFoundException;
 import org.folio.tools.store.properties.AwsConfigProperties;
 import org.folio.tools.store.utils.SsmClientProvider;
 import org.junit.jupiter.api.Test;
@@ -65,9 +65,9 @@ class AwsStoreTest {
     var key = "my_key";
 
     when(ssmClientProvider.get()).thenReturn(ssmClient);
-    when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(NotFoundException.class);
+    when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(SecretNotFoundException.class);
 
-    assertThrows(NotFoundException.class, () -> awsStore.get(key));
+    assertThrows(SecretNotFoundException.class, () -> awsStore.get(key));
   }
 
   @Test
@@ -89,40 +89,11 @@ class AwsStoreTest {
     var key = "my_key";
 
     when(ssmClientProvider.get()).thenReturn(ssmClient);
-    when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(NotFoundException.class);
+    when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(SecretNotFoundException.class);
 
     var result = awsStore.lookup(key);
 
     assertTrue(result.isEmpty());
-  }
-
-  @Test
-  void getWithParameters_negative_notFound() {
-    var clientId = "ditdatdot";
-    var tenant = "foo";
-    var user = "bar";
-
-    when(ssmClientProvider.get()).thenReturn(ssmClient);
-    when(ssmClient.getParameter(any(GetParameterRequest.class))).thenThrow(RuntimeException.class);
-
-    assertThrows(NotFoundException.class, () -> awsStore.get(clientId, tenant, user));
-  }
-
-  @Test
-  void getWithParameters_positive() {
-    var clientId = "ditdatdot";
-    var tenant = "foo";
-    var user = "bar";
-    var val = "letmein";
-    var key = String.format("%s_%s_%s", clientId, tenant, user);
-
-    var req = GetParameterRequest.builder().name(key).withDecryption(true).build();
-    var resp = GetParameterResponse.builder().parameter(Parameter.builder().name(key).value(val).build()).build();
-    when(ssmClientProvider.get()).thenReturn(ssmClient);
-    when(ssmClient.getParameter(req)).thenReturn(resp);
-
-    var actual = awsStore.get(clientId, tenant, user);
-    assertEquals(val, actual);
   }
 
   @Test

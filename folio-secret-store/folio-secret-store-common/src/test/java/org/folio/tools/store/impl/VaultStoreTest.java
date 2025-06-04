@@ -22,8 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import org.folio.test.types.UnitTest;
-import org.folio.tools.store.exception.NotFoundException;
-import org.folio.tools.store.exception.UncheckedVaultException;
+import org.folio.tools.store.exception.SecretNotFoundException;
+import org.folio.tools.store.exception.SecureStoreServiceException;
 import org.folio.tools.store.properties.VaultConfigProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,48 +51,6 @@ class VaultStoreTest {
   @InjectMocks
   private VaultStore secureStore = VaultStore.create(CONFIG);
 
-  @Test
-  void getWithParameters_positive() throws Exception {
-    var tenant = "diku";
-
-    var logical = mock(Logical.class);
-    var logicalResponse = mock(LogicalResponse.class);
-    when(vault.logical()).thenReturn(logical);
-    when(logical.read(addRootTo("abcdef1234/diku"))).thenReturn(logicalResponse);
-    when(logicalResponse.getData()).thenReturn(Map.of(tenant, "Pa$$w0rd"));
-
-    var password = "Pa$$w0rd";
-    var clientId = "abcdef1234";
-    assertEquals(password, secureStore.get(clientId, tenant, "diku"));
-  }
-
-  @Test
-  void getWithParameters_negative_notFoundValueByKey() throws Exception {
-    var clientId = "abcdef1234";
-    var tenant = "diku";
-
-    var logical = mock(Logical.class);
-    var logicalResponse = mock(LogicalResponse.class);
-    when(vault.logical()).thenReturn(logical);
-    when(logical.read(addRootTo(clientId + "/" + tenant))).thenReturn(logicalResponse);
-    when(logicalResponse.getData()).thenReturn(Map.of());
-
-    assertThrows(NotFoundException.class, () -> secureStore.get(clientId, "diku", "diku"));
-  }
-
-  @Test
-  void getWithParameters_negative_notFound() throws VaultException {
-    var clientId = "abcdef1234";
-
-    var logical = mock(Logical.class);
-
-    when(vault.logical()).thenReturn(logical);
-    when(logical.read(addRootTo("abcdef1234/diku"))).thenThrow(new VaultException("vault's fault"));
-
-    var e = assertThrows(UncheckedVaultException.class, () -> secureStore.get(clientId, "diku", "diku"));
-    assertEquals("vault's fault", e.getCause().getMessage());
-  }
-
   @ParameterizedTest
   @CsvSource({
     "folio_secretKey,folio,secretKey",
@@ -117,7 +75,7 @@ class VaultStoreTest {
   @NullAndEmptySource
   void getKey_negative_emptyKey(String key) {
     var exc = assertThrows(IllegalArgumentException.class, () -> secureStore.get(key));
-    assertEquals("Key is empty", exc.getMessage());
+    assertEquals("Key cannot be blank", exc.getMessage());
   }
 
   @Test
@@ -137,7 +95,7 @@ class VaultStoreTest {
     when(logical.read(addRootTo(path))).thenReturn(logicalResponse);
     when(logicalResponse.getData()).thenReturn(Map.of());
 
-    var ex = assertThrows(NotFoundException.class, () -> secureStore.get(key));
+    var ex = assertThrows(SecretNotFoundException.class, () -> secureStore.get(key));
     assertEquals("Attribute: secretKey not set for folio", ex.getMessage());
   }
 
@@ -208,7 +166,7 @@ class VaultStoreTest {
   @NullAndEmptySource
   void set_negative_emptyKey(String key) {
     var exc = assertThrows(IllegalArgumentException.class, () -> secureStore.set(key, "Pa$$w0rd"));
-    assertEquals("Key is empty", exc.getMessage());
+    assertEquals("Key cannot be blank", exc.getMessage());
   }
 
   @Test
@@ -230,8 +188,8 @@ class VaultStoreTest {
     when(vault.logical()).thenReturn(logical);
     when(logical.write(any(), any())).thenThrow(new VaultException("Unexpected error"));
 
-    var ex = assertThrows(UncheckedVaultException.class, () -> secureStore.set(key, "Pa$$w0rd"));
-    assertEquals("Failed to save secret for secretKey", ex.getMessage());
+    var ex = assertThrows(SecureStoreServiceException.class, () -> secureStore.set(key, "Pa$$w0rd"));
+    assertEquals("Failed to save secret: key = folio/secretKey, error = Unexpected error", ex.getMessage());
   }
 
   @Test
