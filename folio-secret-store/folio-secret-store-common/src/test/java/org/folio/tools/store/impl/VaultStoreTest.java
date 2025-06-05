@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,8 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import org.folio.test.types.UnitTest;
-import org.folio.tools.store.exception.NotFoundException;
-import org.folio.tools.store.exception.UncheckedVaultException;
+import org.folio.tools.store.exception.SecretNotFoundException;
+import org.folio.tools.store.exception.SecureStoreServiceException;
 import org.folio.tools.store.properties.VaultConfigProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,48 +52,6 @@ class VaultStoreTest {
   @InjectMocks
   private VaultStore secureStore = VaultStore.create(CONFIG);
 
-  @Test
-  void getWithParameters_positive() throws Exception {
-    var tenant = "diku";
-
-    var logical = mock(Logical.class);
-    var logicalResponse = mock(LogicalResponse.class);
-    when(vault.logical()).thenReturn(logical);
-    when(logical.read(addRootTo("abcdef1234/diku"))).thenReturn(logicalResponse);
-    when(logicalResponse.getData()).thenReturn(Map.of(tenant, "Pa$$w0rd"));
-
-    var password = "Pa$$w0rd";
-    var clientId = "abcdef1234";
-    assertEquals(password, secureStore.get(clientId, tenant, "diku"));
-  }
-
-  @Test
-  void getWithParameters_negative_notFoundValueByKey() throws Exception {
-    var clientId = "abcdef1234";
-    var tenant = "diku";
-
-    var logical = mock(Logical.class);
-    var logicalResponse = mock(LogicalResponse.class);
-    when(vault.logical()).thenReturn(logical);
-    when(logical.read(addRootTo(clientId + "/" + tenant))).thenReturn(logicalResponse);
-    when(logicalResponse.getData()).thenReturn(Map.of());
-
-    assertThrows(NotFoundException.class, () -> secureStore.get(clientId, "diku", "diku"));
-  }
-
-  @Test
-  void getWithParameters_negative_notFound() throws VaultException {
-    var clientId = "abcdef1234";
-
-    var logical = mock(Logical.class);
-
-    when(vault.logical()).thenReturn(logical);
-    when(logical.read(addRootTo("abcdef1234/diku"))).thenThrow(new VaultException("vault's fault"));
-
-    var e = assertThrows(UncheckedVaultException.class, () -> secureStore.get(clientId, "diku", "diku"));
-    assertEquals("vault's fault", e.getCause().getMessage());
-  }
-
   @ParameterizedTest
   @CsvSource({
     "folio_secretKey,folio,secretKey",
@@ -117,7 +76,7 @@ class VaultStoreTest {
   @NullAndEmptySource
   void getKey_negative_emptyKey(String key) {
     var exc = assertThrows(IllegalArgumentException.class, () -> secureStore.get(key));
-    assertEquals("Key is empty", exc.getMessage());
+    assertEquals("Key cannot be blank", exc.getMessage());
   }
 
   @Test
@@ -137,8 +96,20 @@ class VaultStoreTest {
     when(logical.read(addRootTo(path))).thenReturn(logicalResponse);
     when(logicalResponse.getData()).thenReturn(Map.of());
 
-    var ex = assertThrows(NotFoundException.class, () -> secureStore.get(key));
+    var ex = assertThrows(SecretNotFoundException.class, () -> secureStore.get(key));
     assertEquals("Attribute: secretKey not set for folio", ex.getMessage());
+  }
+
+  @Test
+  void getKey_negative_vaultException() throws VaultException {
+    var key = "folio_secretKey";
+    var path = "folio";
+    var logical = mock(Logical.class);
+    when(vault.logical()).thenReturn(logical);
+    when(logical.read(addRootTo(path))).thenThrow(new VaultException("Vault unavailable"));
+
+    var ex = assertThrows(SecureStoreServiceException.class, () -> secureStore.get(key));
+    assertTrue(ex.getMessage().contains("Failed to get secret: key = folio/secretKey, error = Vault unavailable"));
   }
 
   @ParameterizedTest
@@ -208,7 +179,7 @@ class VaultStoreTest {
   @NullAndEmptySource
   void set_negative_emptyKey(String key) {
     var exc = assertThrows(IllegalArgumentException.class, () -> secureStore.set(key, "Pa$$w0rd"));
-    assertEquals("Key is empty", exc.getMessage());
+    assertEquals("Key cannot be blank", exc.getMessage());
   }
 
   @Test
@@ -230,8 +201,78 @@ class VaultStoreTest {
     when(vault.logical()).thenReturn(logical);
     when(logical.write(any(), any())).thenThrow(new VaultException("Unexpected error"));
 
-    var ex = assertThrows(UncheckedVaultException.class, () -> secureStore.set(key, "Pa$$w0rd"));
-    assertEquals("Failed to save secret for secretKey", ex.getMessage());
+    var ex = assertThrows(SecureStoreServiceException.class, () -> secureStore.set(key, "Pa$$w0rd"));
+    assertEquals("Failed to save secret: key = folio/secretKey, error = Unexpected error", ex.getMessage());
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "folio_secretKey,folio,secretKey",
+    "folio_diku_secretKey,folio/diku,secretKey",
+    "folio_diku_dikuLib_secretKey,folio/diku/dikuLib,secretKey",
+  })
+  void delete_positive(String key, String secretPath, String secretName) throws Exception {
+    var password = "Pa$$w0rd";
+    var existingSecrets = new HashMap<String, String>();
+    existingSecrets.put(secretName, password);
+    existingSecrets.put("otherSecret", "otherValue");
+
+    var logical = mock(Logical.class);
+    var logicalResponse = mock(LogicalResponse.class);
+    when(vault.logical()).thenReturn(logical);
+    when(logical.read(addRootTo(secretPath))).thenReturn(logicalResponse);
+    when(logicalResponse.getData()).thenReturn(existingSecrets);
+
+    var expectedData = new HashMap<>(existingSecrets);
+    expectedData.remove(secretName);
+
+    secureStore.delete(key);
+
+    verify(logical).write(eq(addRootTo(secretPath)),
+      argThat((Map<String, Object> data) -> data.equals(expectedData)));
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  void delete_negative_emptyKey(String key) {
+    var exc = assertThrows(IllegalArgumentException.class, () -> secureStore.delete(key));
+    assertEquals("Key cannot be blank", exc.getMessage());
+  }
+
+  @Test
+  void delete_negative_shortKey() {
+    var exc = assertThrows(IllegalArgumentException.class, () -> secureStore.delete("folio"));
+    assertEquals("Key should consist of at least two parts separated by '_'", exc.getMessage());
+  }
+
+  @Test
+  void delete_positive_secretNotPresent() throws VaultException {
+    var path = "folio";
+    var logical = mock(Logical.class);
+    var logicalResponse = mock(LogicalResponse.class);
+    when(vault.logical()).thenReturn(logical);
+    when(logical.read(addRootTo(path))).thenReturn(logicalResponse);
+    when(logicalResponse.getData()).thenReturn(Map.of("otherSecret", "otherValue"));
+
+    var key = "folio_secretKey";
+    secureStore.delete(key);
+
+    verify(logical, never()).write(eq(addRootTo(path)), any());
+  }
+
+  @Test
+  void delete_negative_vaultException() throws VaultException {
+    var key = "folio_secretKey";
+    var path = "folio";
+    var logical = mock(Logical.class);
+    var logicalResponse = mock(LogicalResponse.class);
+    when(vault.logical()).thenReturn(logical);
+    when(logical.read(addRootTo(path))).thenReturn(logicalResponse);
+    when(logicalResponse.getData()).thenReturn(Map.of("secretKey", "Pa$$w0rd"));
+    when(logical.write(any(), any())).thenThrow(new VaultException("Unexpected error"));
+
+    var ex = assertThrows(SecureStoreServiceException.class, () -> secureStore.delete(key));
+    assertEquals("Failed to delete secret: key = folio/secretKey, error = Unexpected error", ex.getMessage());
   }
 
   @Test

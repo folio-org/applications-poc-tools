@@ -12,7 +12,7 @@ public class SecretGenerator {
   private static final RandomStringGenerator RANDOM_STRING_GENERATOR = new RandomStringGenerator.Builder()
     .withinRange('0', 'z')
     .filteredBy(LETTERS, DIGITS)
-    .build();
+    .get();
 
   public static String generateSecret(int length) {
     return RANDOM_STRING_GENERATOR.generate(length);

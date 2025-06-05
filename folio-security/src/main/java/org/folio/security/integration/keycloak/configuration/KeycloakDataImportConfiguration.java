@@ -11,7 +11,7 @@ import org.folio.security.integration.keycloak.service.KeycloakModuleDescriptorM
 import org.folio.security.integration.keycloak.service.SecureStoreKeyProvider;
 import org.folio.security.service.InternalModuleDescriptorProvider;
 import org.folio.tools.store.SecureStore;
-import org.folio.tools.store.exception.NotFoundException;
+import org.folio.tools.store.exception.SecretNotFoundException;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -62,7 +62,7 @@ public class KeycloakDataImportConfiguration {
     var key = secureStoreKeyProvider.globalStoreKey(clientId);
     try {
       secret = secureStore.get(key);
-    } catch (NotFoundException e) {
+    } catch (SecretNotFoundException e) {
       log.warn("Secret for key '{}' for 'admin' client is not defined in the secret store: clientId = {}",
           key, clientId);
     }

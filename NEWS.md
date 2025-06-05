@@ -1,3 +1,8 @@
+## Version `v3.0.6` (13.10.2025)
+* Support "delete" operation in secure store (FSSP-1)
+
+---
+
 ## Version `v3.0.5` (25.09.2025)
 * Add wildcard to route's tenant header regex (APPPOCTOOL-64)
 * Use SECURE\_STORE\_ENV, not ENV, for secure store key; drop KeycloakSecretUtils (APPPOCTOOL-63)
