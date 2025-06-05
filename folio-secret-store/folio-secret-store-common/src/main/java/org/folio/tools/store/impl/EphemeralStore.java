@@ -2,17 +2,17 @@ package org.folio.tools.store.impl;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static org.folio.tools.store.impl.Validation.validateKey;
 import static software.amazon.awssdk.utils.CollectionUtils.isNotEmpty;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.util.Strings;
 import org.folio.tools.store.SecureStore;
-import org.folio.tools.store.exception.NotFoundException;
+import org.folio.tools.store.exception.SecretNotFoundException;
 import org.folio.tools.store.properties.EphemeralConfigProperties;
 
 @Log4j2
@@ -22,11 +22,12 @@ public final class EphemeralStore implements SecureStore {
   public static final String PROP_TENANTS = "tenants";
   public static final Pattern COMMA = Pattern.compile("\\s*[,]\\s*");
 
-  private Map<String, String> store = new ConcurrentHashMap<>();
+  private final Map<String, String> store;
 
   public EphemeralStore(Properties properties) {
     log.info("Initializing...");
 
+    store = new ConcurrentHashMap<>();
     populateStoreFromProperties(properties);
 
     if (store.isEmpty()) {
@@ -43,33 +44,31 @@ public final class EphemeralStore implements SecureStore {
   }
 
   @Override
-  public String get(String clientId, String tenant, String username) {
-    // NOTE: ignore clientId
-    String key = getKey(tenant, username);
-    String ret = store.get(key);
-    if (ret == null) {
-      throw new NotFoundException("Nothing associated w/ key: " + key);
-    }
-    return ret;
-  }
-
-  @Override
   public String get(String key) {
+    validateKey(key);
+
     var value = store.get(key);
     if (isNull(value)) {
-      throw new NotFoundException("Nothing associated w/ key: " + key);
+      throw new SecretNotFoundException("Nothing associated w/ key: " + key);
     }
     return value;
   }
 
   @Override
-  public Optional<String> lookup(String key) {
-    return Optional.ofNullable(store.get(key));
+  public void set(String key, String value) {
+    validateKey(key);
+    // allow null values for backward compatibility, otherwise delete method should be used to remove a key
+    if (value == null) {
+      delete(key);
+    } else {
+      store.put(key, value);
+    }
   }
 
   @Override
-  public void set(String key, String value) {
-    store.put(key, value);
+  public void delete(String key) {
+    validateKey(key);
+    store.remove(key);
   }
 
   public static EphemeralStore create(EphemeralConfigProperties properties) {

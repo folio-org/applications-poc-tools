@@ -110,7 +110,7 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
     return new KeycloakContainer(KEYCLOAK_IMAGE)
       .withFeaturesEnabled("scripts", "token-exchange", "admin-fine-grained-authz")
       .withAdminUsername("keycloak-test-admin")
-      .withAdminPassword(RandomStringUtils.random(20, true, true))
+      .withAdminPassword(RandomStringUtils.secure().next(20, true, true))
       .withProviderLibsFrom(List.of(readToFile("keycloak/folio-scripts.jar", "folio-scripts", ".jar")))
       .useTlsKeystore(SSL_KEYSTORE_PATH, SSL_KEYSTORE_PASSWORD);
   }
