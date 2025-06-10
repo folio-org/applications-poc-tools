@@ -16,7 +16,7 @@
     <sonar.exclusions>
       src/main/java/**/domain/model/**/*
     </sonar.exclusions>
-    <semver4j.version>5.7.0</semver4j.version>
+    <semver4j.version>5.7.1</semver4j.version>
   </properties>
 
   <dependencies>
