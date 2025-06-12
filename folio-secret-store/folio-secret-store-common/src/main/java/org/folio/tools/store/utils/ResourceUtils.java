@@ -27,7 +27,7 @@ public class ResourceUtils {
       String description = "Class path resource [" + path + "]";
       ClassLoader cl = TlsUtils.class.getClassLoader();
 
-      URL url = (cl != null ? cl.getResource(path) : ClassLoader.getSystemResource(path));
+      URL url = cl != null ? cl.getResource(path) : ClassLoader.getSystemResource(path);
       if (url == null) {
         throw new FileNotFoundException(description
           + " cannot be resolved to absolute file path because it does not exist");
@@ -37,7 +37,7 @@ public class ResourceUtils {
     }
 
     try {
-      return getFile(toURL(resourceLocation));
+      return getFile(toUrl(resourceLocation));
     } catch (MalformedURLException ex) {
       return new File(resourceLocation);
     }
@@ -51,30 +51,29 @@ public class ResourceUtils {
     requireNonNull(resourceUrl, "Resource URL must not be null");
 
     if (!URL_PROTOCOL_FILE.equals(resourceUrl.getProtocol())) {
-      throw new FileNotFoundException(
-        description + " cannot be resolved to absolute file path " +
-          "because it does not reside in the file system: " + resourceUrl);
+      throw new FileNotFoundException(description + " cannot be resolved to absolute file path "
+        + "because it does not reside in the file system: " + resourceUrl);
     }
     try {
-      return new File(toURI(resourceUrl).getSchemeSpecificPart());
+      return new File(toUri(resourceUrl).getSchemeSpecificPart());
     } catch (URISyntaxException ex) {
       return new File(resourceUrl.getFile());
     }
   }
 
-  private static URL toURL(String location) throws MalformedURLException {
+  private static URL toUrl(String location) throws MalformedURLException {
     try {
-      return toURI(location).toURL();
+      return toUri(location).toURL();
     } catch (URISyntaxException | IllegalArgumentException ex) {
       return new URL(location);
     }
   }
 
-  private static URI toURI(URL url) throws URISyntaxException {
-    return toURI(url.toString());
+  private static URI toUri(URL url) throws URISyntaxException {
+    return toUri(url.toString());
   }
 
-  private static URI toURI(String location) throws URISyntaxException {
+  private static URI toUri(String location) throws URISyntaxException {
     return new URI(StringUtils.replace(location, " ", "%20"));
   }
 }

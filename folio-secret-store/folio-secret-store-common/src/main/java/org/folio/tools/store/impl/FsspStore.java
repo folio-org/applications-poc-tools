@@ -8,6 +8,7 @@ import static org.apache.http.HttpHeaders.ACCEPT;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import static org.folio.tools.store.impl.Validation.validateKey;
 import static org.folio.tools.store.impl.Validation.validateValue;
+import static org.folio.tools.store.utils.TlsUtils.IS_HOSTNAME_VERIFICATION_DISABLED;
 import static org.folio.tools.store.utils.TlsUtils.buildSslContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +18,7 @@ import java.net.URISyntaxException;
 import java.util.Properties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.http.HttpEntity;
@@ -27,6 +29,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
@@ -41,9 +44,6 @@ public class FsspStore implements SecureStore {
 
   public static final String TYPE = "Fssp";
 
-  private static final int DEFAULT_REQUEST_CONNECT_TIMEOUT = 10000;
-  private static final int DEFAULT_REQUEST_SOCKET_TIMEOUT = 5000;
-
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final HttpClientBuilder httpClientBuilder;
@@ -52,7 +52,7 @@ public class FsspStore implements SecureStore {
   public FsspStore(FsspConfigProperties properties) {
     requireNonNull(properties, "Properties cannot be null");
     try {
-      this.httpClientBuilder = createHttpCLientBuilder(properties);
+      this.httpClientBuilder = HttpClientBuilderFactory.create(properties);
       this.secretUri = buildUri(properties);
     } catch (Exception e) {
       log.error("Failed to initialize: ", e);
@@ -111,32 +111,6 @@ public class FsspStore implements SecureStore {
 
   private static String buildUri(FsspConfigProperties properties) throws URISyntaxException {
     return new URI(removeEnd(properties.getAddress(), "/") + wrapIfMissing(properties.getSecretPath(), "/")).toString();
-  }
-
-  private static TlsProperties toTlsProperties(FsspConfigProperties properties) {
-    return TlsProperties.builder()
-      .enabled(properties.getEnableSsl())
-      .trustStorePath(properties.getTrustStorePath())
-      .trustStoreType(properties.getTrustStoreFileType())
-      .trustStorePassword(properties.getTrustStorePassword())
-      .build();
-  }
-
-  private static HttpClientBuilder createHttpCLientBuilder(FsspConfigProperties properties) {
-    var builder = HttpClientBuilder.create();
-
-    RequestConfig requestConfig = RequestConfig.custom()
-      .setConnectTimeout(DEFAULT_REQUEST_CONNECT_TIMEOUT)
-      .setSocketTimeout(DEFAULT_REQUEST_SOCKET_TIMEOUT)
-      .build();
-    builder.setDefaultRequestConfig(requestConfig);
-
-    if (BooleanUtils.isTrue(properties.getEnableSsl())) {
-      var sslContext = buildSslContext(toTlsProperties(properties));
-      builder.setSSLContext(sslContext);
-    }
-
-    return builder;
   }
 
   private static ResponseHandler<String> handleGet(String key) {
@@ -200,9 +174,50 @@ public class FsspStore implements SecureStore {
 
   @Data
   @AllArgsConstructor(staticName = "of")
-  private static class SecureStoreEntry {
+  private static final class SecureStoreEntry {
 
     private String key;
     private String value;
+  }
+
+  @NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
+  private static final class HttpClientBuilderFactory {
+
+    private static final int DEFAULT_REQUEST_CONNECT_TIMEOUT = 10000;
+    private static final int DEFAULT_REQUEST_SOCKET_TIMEOUT = 5000;
+
+    public static HttpClientBuilder create(FsspConfigProperties properties) {
+      return createHttpClientBuilder(properties);
+    }
+
+    private static HttpClientBuilder createHttpClientBuilder(FsspConfigProperties properties) {
+      var builder = HttpClientBuilder.create();
+
+      RequestConfig requestConfig = RequestConfig.custom()
+        .setConnectTimeout(DEFAULT_REQUEST_CONNECT_TIMEOUT)
+        .setSocketTimeout(DEFAULT_REQUEST_SOCKET_TIMEOUT)
+        .build();
+      builder.setDefaultRequestConfig(requestConfig);
+
+      if (BooleanUtils.isTrue(properties.getEnableSsl())) {
+        var sslContext = buildSslContext(toTlsProperties(properties));
+        builder.setSSLContext(sslContext);
+
+        if (IS_HOSTNAME_VERIFICATION_DISABLED) {
+          builder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
+        }
+      }
+
+      return builder;
+    }
+
+    private static TlsProperties toTlsProperties(FsspConfigProperties properties) {
+      return TlsProperties.builder()
+        .enabled(properties.getEnableSsl())
+        .trustStorePath(properties.getTrustStorePath())
+        .trustStoreType(properties.getTrustStoreFileType())
+        .trustStorePassword(properties.getTrustStorePassword())
+        .build();
+    }
   }
 }

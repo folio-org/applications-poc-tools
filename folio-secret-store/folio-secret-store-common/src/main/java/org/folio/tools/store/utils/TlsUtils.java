@@ -2,6 +2,7 @@ package org.folio.tools.store.utils;
 
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.SystemProperties.getJdkInternalHttpClientDisableHostNameVerification;
 import static org.folio.tools.store.utils.ResourceUtils.getFile;
 
 import java.io.FileInputStream;
@@ -22,6 +23,9 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @UtilityClass
 public class TlsUtils {
+
+  public static final boolean IS_HOSTNAME_VERIFICATION_DISABLED = // enabled by default
+    hostnameVerificationDisabledValue();
 
   public static SSLContext buildSslContext(TlsProperties tls) {
     requireNonNull(tls.getTrustStorePath(), "Trust store path is not defined");
@@ -67,5 +71,13 @@ public class TlsUtils {
     sslContext.init(null, new TrustManager[] {trustManager}, null);
     log.debug("SSL context initialized: protocol = {}", sslContext.getProtocol());
     return sslContext;
+  }
+
+  private static boolean hostnameVerificationDisabledValue() {
+    String prop = getJdkInternalHttpClientDisableHostNameVerification();
+    if (prop == null) {
+      return false;
+    }
+    return Boolean.parseBoolean(prop);
   }
 }

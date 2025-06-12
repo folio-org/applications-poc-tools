@@ -33,18 +33,30 @@ public class FsspConfigProperties {
   /**
    * The root path for secrets.
    */
+  @Builder.Default
   private String secretPath = DEFAULT_SECRET_PATH;
 
   /**
    * Whether to use SSL.
    */
+  @Builder.Default
   private Boolean enableSsl = DEFAULT_ENABLE_SSL;
 
+  /**
+   * The path to the trust store file.
+   */
   private String trustStorePath;
 
+  /**
+   * The password for the trust store file.
+   */
   private String trustStorePassword;
 
-  private String trustStoreFileType;
+  /**
+   * The type of the trust store file (e.g., "jks", "pem").
+   */
+  @Builder.Default
+  private String trustStoreFileType = DEFAULT_TRUSTSTORE_FILE_TYPE;
 
   public static FsspConfigProperties from(Properties properties) {
     return builder()
