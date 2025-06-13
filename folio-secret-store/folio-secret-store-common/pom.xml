@@ -18,6 +18,11 @@
     <aws.version>2.31.59</aws.version>
     <apache-commons-text.version>1.13.1</apache-commons-text.version>
     <bc-fips>2.1.0</bc-fips>
+
+    <sonar.exclusions>
+      src/main/java/**/utils/ResourceUtils.java,
+      src/main/java/**/utils/TlsUtils.java
+    </sonar.exclusions>
   </properties>
 
   <dependencies>
