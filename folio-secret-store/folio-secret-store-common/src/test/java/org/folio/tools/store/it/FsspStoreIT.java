@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.folio.test.extensions.LogTestMethod;
 import org.folio.test.extensions.impl.WireMockAdminClient;
 import org.folio.test.extensions.impl.WireMockExtension;
-import org.folio.test.types.UnitTest;
+import org.folio.test.types.IntegrationTest;
 import org.folio.tools.store.exception.SecretNotFoundException;
 import org.folio.tools.store.exception.SecureStoreServiceException;
 import org.folio.tools.store.impl.FsspStore;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@UnitTest // temporary mark it as unit test to include coverage in the report analyzed by SonarQube
+@IntegrationTest
 @LogTestMethod
 @ExtendWith(WireMockExtension.class)
 class FsspStoreIT {

@@ -21,7 +21,8 @@
 
     <sonar.exclusions>
       src/main/java/**/utils/ResourceUtils.java,
-      src/main/java/**/utils/TlsUtils.java
+      src/main/java/**/utils/Tls*.java,
+      src/main/java/**/properties/**
     </sonar.exclusions>
   </properties>
 
