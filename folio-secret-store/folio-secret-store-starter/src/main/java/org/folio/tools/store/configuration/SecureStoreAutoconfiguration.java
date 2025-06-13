@@ -3,9 +3,11 @@ package org.folio.tools.store.configuration;
 import org.folio.tools.store.SecureStore;
 import org.folio.tools.store.impl.AwsStore;
 import org.folio.tools.store.impl.EphemeralStore;
+import org.folio.tools.store.impl.FsspStore;
 import org.folio.tools.store.impl.VaultStore;
 import org.folio.tools.store.properties.AwsProperties;
 import org.folio.tools.store.properties.EphemeralProperties;
+import org.folio.tools.store.properties.FsspProperties;
 import org.folio.tools.store.properties.VaultProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -52,5 +54,18 @@ public class SecureStoreAutoconfiguration {
   @ConfigurationProperties(prefix = "application.secret-store.vault")
   public VaultProperties vaultProperties() {
     return new VaultProperties();
+  }
+
+  @Bean
+  @ConditionalOnProperty(name = "application.secret-store.type", havingValue = "FSSP")
+  public SecureStore fsspStore(FsspProperties properties) {
+    return new FsspStore(properties);
+  }
+
+  @Bean
+  @ConditionalOnProperty(name = "application.secret-store.type", havingValue = "FSSP")
+  @ConfigurationProperties(prefix = "application.secret-store.fssp")
+  public FsspProperties fsspProperties() {
+    return new FsspProperties();
   }
 }

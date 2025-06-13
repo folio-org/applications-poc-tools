@@ -26,6 +26,15 @@ using AWS.  `src/main/resources/vault.properties`
 
 e.g. Key=`ab73kbw90e/diku`, Field=`diku`
 
+#### FsspStore ####
+
+Retrieves credentials by key from a Folio Secure Store Proxy (FSSP). Configuration is typically provided in a properties
+file or via environment variables.
+
+**Key:** `<key>`
+
+Example: Key=`service-key`
+
 ## Configuration
 
 To use secrete stores, you must add dependencies to your pom.xml file:
@@ -70,6 +79,17 @@ To use secrete stores, you must add dependencies to your pom.xml file:
 | ssl.keystore.jks.path   | string | The path to a JKS keystore file containing a client cert and private key.            |
 | ssl.keystore.password   | string | The password used to access the JKS keystore (optional).                             |
 
+### FsspStore
+
+| Property name           | type    | Property value                                                                                 |
+|------------------------|---------|----------------------------------------------------------------------------------------------|
+| address                | string  | The address of Folio Secure Store Proxy (FSSP).                                               |
+| secretPath             | string  | The root path for secrets. Default: "secure-store/entries"                                   |
+| enableSsl              | boolean | Whether to use SSL. Default: false                                                            |
+| trustStorePath         | string  | The path to the trust store file.                                                             |
+| trustStorePassword     | string  | The password for the trust store file.                                                        |
+| trustStoreFileType     | string  | The type of the trust store file (e.g., "jks", "pem"). Default: "jks"                    |
+
 ## Autoconfiguration
 
 To simplify integration with the secret stores, the `folio-secret-store-starter` module provides autoconfiguration.
@@ -108,4 +128,11 @@ application:
       keystore-password: optionalsecret
       keystore-file-path: /src/main/resources/keystore.jks
       truststore-file-path: /src/main/resources/truststore.jks
+    fssp:
+      address: http://localhost:8400
+      secret-path: /secure-store/entries
+      enable-ssl: true
+      trust-store-path: /src/main/resources/truststore.jks
+      trust-store-password: secretpassword
+      trust-store-file-type: jks
 ```
