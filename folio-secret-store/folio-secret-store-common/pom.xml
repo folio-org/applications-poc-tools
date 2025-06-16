@@ -18,6 +18,14 @@
     <aws.version>2.31.63</aws.version>
     <apache-commons-text.version>1.13.1</apache-commons-text.version>
     <bc-fips>2.1.0</bc-fips>
+
+    <sonar.exclusions>
+      src/main/java/**/utils/ResourceUtils.java,
+      src/main/java/**/utils/Tls*.java,
+      src/main/java/**/properties/**,
+      <!-- temporarily exclude Fssp related until integration tests are included in the analysis -->
+      src/main/java/**/Fssp*.java
+    </sonar.exclusions>
   </properties>
 
   <dependencies>
@@ -49,6 +57,13 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>apache-client</artifactId>
       <version>${aws.version}</version>
+      <exclusions>
+        <!-- to avoid conflicts with log4j provided by spring-boot-starter-log4j2 -->
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -58,13 +73,18 @@
     </dependency>
 
     <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-backend-testing</artifactId>
       <version>${project.parent.version}</version>
       <scope>test</scope>
     </dependency>
 
-    <!-- Test dependencies -->
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bc-fips</artifactId>
