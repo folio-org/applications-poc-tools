@@ -19,7 +19,7 @@ class SecureStoreFactoryTest {
   @Test
   void getSecureStoreKnownTypes()
     throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
-    Class<?>[] stores = new Class<?>[] {AwsStore.class, EphemeralStore.class, VaultStore.class};
+    Class<?>[] stores = new Class<?>[] {AwsStore.class, EphemeralStore.class, VaultStore.class, FsspStore.class};
 
     SecureStore actual;
 
@@ -40,6 +40,8 @@ class SecureStoreFactoryTest {
         if (clazz.equals(VaultStore.class)) {
           assertThat(t.getClass(), equalTo(NullPointerException.class));
         } else if (clazz.equals(AwsStore.class)) {
+          assertThat(t.getClass(), equalTo(NullPointerException.class));
+        } else if (clazz.equals(FsspStore.class)) {
           assertThat(t.getClass(), equalTo(NullPointerException.class));
         } else {
           fail(String.format("Unexpected Exception thrown for class: %s %s", clazz.getName(), t.getMessage()));
