@@ -6,3 +6,4 @@
 * TESTCONTAINERS\_POSTGRES\_IMAGE; PostgreSQL 16 ((APPPOCTOOL-56)[https://folio-org.atlassian.net/browse/APPPOCTOOL-56])
 * Support "delete" operation in secure store (FSSP-1)
 * SecretStore implementation for folio-secure-store-proxy (APPPOCTOOL-59)
+* Fix JWT token decoding
