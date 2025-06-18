@@ -22,9 +22,7 @@
     <sonar.exclusions>
       src/main/java/**/utils/ResourceUtils.java,
       src/main/java/**/utils/Tls*.java,
-      src/main/java/**/properties/**,
-      <!-- temporarily exclude Fssp related until integration tests are included in the analysis -->
-      src/main/java/**/Fssp*.java
+      src/main/java/**/properties/**
     </sonar.exclusions>
   </properties>
 
