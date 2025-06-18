@@ -55,7 +55,7 @@ public class JsonWebTokenParser {
 
     JsonNode jsonWebTokenTree;
     try {
-      var decodedToken = new String(Base64.getDecoder().decode(split[1]));
+      var decodedToken = new String(Base64.getUrlDecoder().decode(split[1]));
       jsonWebTokenTree = objectMapper.readTree(decodedToken);
     } catch (Exception exception) {
       throw new ParseException("Failed to decode json web token", exception);
