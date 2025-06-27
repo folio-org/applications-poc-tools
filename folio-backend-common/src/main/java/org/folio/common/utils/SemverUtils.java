@@ -77,7 +77,7 @@ public class SemverUtils {
       throw new IllegalArgumentException("Invalid semantic version: " + version);
     }
 
-    return semver.satisfies(rangeOrVersion);
+    return semver.satisfies(rangeOrVersion, true);
   }
 
   /**
