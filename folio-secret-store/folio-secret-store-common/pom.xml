@@ -15,16 +15,14 @@
 
   <properties>
     <vault.version>5.1.0</vault.version>
-    <aws.version>2.31.63</aws.version>
+    <aws.version>2.31.68</aws.version>
     <apache-commons-text.version>1.13.1</apache-commons-text.version>
     <bc-fips>2.1.0</bc-fips>
 
     <sonar.exclusions>
       src/main/java/**/utils/ResourceUtils.java,
       src/main/java/**/utils/Tls*.java,
-      src/main/java/**/properties/**,
-      <!-- temporarily exclude Fssp related until integration tests are included in the analysis -->
-      src/main/java/**/Fssp*.java
+      src/main/java/**/properties/**
     </sonar.exclusions>
   </properties>
 
