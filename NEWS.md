@@ -7,3 +7,4 @@
 * Support "delete" operation in secure store (FSSP-1)
 * SecretStore implementation for folio-secure-store-proxy (APPPOCTOOL-59)
 * Fix JWT token decoding
+* Fix: `.collection.post` is DATA not PROCEDURAL
