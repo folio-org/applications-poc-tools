@@ -36,7 +36,7 @@ public class PermissionUtils {
     entry(MANAGE, List.of("all", "manage", "allops")));
 
   private static final List<String> DATA_KEYWORD_IDENTIFIERS = List.of("item", "collection", "items");
-  private static final Set<String> DATA_SUFFIXES = Set.of(".item.post");
+  private static final Set<String> DATA_SUFFIXES = Set.of(".item.post", ".collection.post");
   private static final List<String> SETTINGS_KEYWORDS = List.of("module", "settings");
   private static final Collection<String> PROCEDURAL_KEYWORDS = Set.of(
     "post", "download", "export", "assign", "restore", "approve", "reopen", "start", "unopen", "validate",

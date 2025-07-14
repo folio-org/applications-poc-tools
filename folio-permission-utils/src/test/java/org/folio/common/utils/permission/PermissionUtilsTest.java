@@ -34,6 +34,7 @@ class PermissionUtilsTest {
     "owners_collection.view, Owners Collection, DATA, VIEW",
     "perms.all, Perms, DATA, MANAGE",
     "ui-plugin-find-agreement.search, UI-Plugin-Find-Agreement, DATA, VIEW",
+    "roles.collection.post, Roles Collection, DATA, CREATE",
 
     //matched procedural permissions
     "search_index_inventory_reindex.execute, Search Index Inventory Reindex, PROCEDURAL, EXECUTE",
