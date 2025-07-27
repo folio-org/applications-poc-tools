@@ -15,7 +15,7 @@
     <!-- remove commons-io dependency when spring-cloud-starter-openfeign ships with a
          non-vulnerable commons-io version (>= 2.14.0), CVE-2024-47554 -->
     <commons-io.version>2.20.0</commons-io.version>
-    <commons-codec.version>1.18.0</commons-codec.version>
+    <commons-codec.version>1.19.0</commons-codec.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
 
     <sonar.exclusions>
