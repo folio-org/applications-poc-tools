@@ -15,7 +15,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
-    <assertj-core.version>3.27.3</assertj-core.version>
+    <assertj-core.version>3.27.4</assertj-core.version>
 
     <sonar.exclusions>
       src/main/java/**/model/**/*
