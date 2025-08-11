@@ -267,7 +267,9 @@ class KafkaAdminServiceTest {
     try (var ignored = mockStatic(AdminClient.class, invocation -> kafkaClient)) {
       when(kafkaClient.listTopics()).thenReturn(listTopicsResult);
       when(listTopicsResult.names()).thenReturn(kf);
-      assertThatThrownBy(() -> kafkaAdminService.findTopics(List.of("topicA")))
+
+      var topicsToFind = List.of("topicA");
+      assertThatThrownBy(() -> kafkaAdminService.findTopics(topicsToFind))
         .isInstanceOf(KafkaException.class)
         .hasMessageContaining("Failed to find topics by name");
     }
