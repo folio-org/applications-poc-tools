@@ -18,10 +18,13 @@ import org.apache.kafka.clients.admin.DeleteTopicsResult;
 import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.KafkaFuture;
+import org.apache.kafka.common.internals.KafkaFutureImpl;
 import org.folio.common.configuration.properties.FolioEnvironment;
 import org.folio.integration.kafka.KafkaAdminServiceTest.TestContextConfiguration;
 import org.folio.test.types.UnitTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -165,6 +168,109 @@ class KafkaAdminServiceTest {
         .hasMessage("Failed to delete topics: [test.topic]");
     }
 
+    verify(kafkaClient).listTopics();
+  }
+
+  @Test
+  void findTopics_positive_someExist() {
+    var requestedTopics = List.of("topicA", "topicB", "topicC");
+    var existingTopics = Set.of("topicA", "topicC", "topicD");
+    var future = KafkaFuture.completedFuture(existingTopics);
+    var listTopicsResult = mock(ListTopicsResult.class);
+    when(listTopicsResult.names()).thenReturn(future);
+
+    var kafkaClient = mock(AdminClient.class);
+    try (var ignored = mockStatic(AdminClient.class, invocation -> kafkaClient)) {
+      when(kafkaClient.listTopics()).thenReturn(listTopicsResult);
+      var found = kafkaAdminService.findTopics(requestedTopics);
+      assertThat(found).containsExactlyInAnyOrder("topicA", "topicC");
+    }
+    verify(kafkaClient).listTopics();
+  }
+
+  @Test
+  void findTopics_positive_allExist() {
+    var requestedTopics = List.of("topicA", "topicB");
+    var existingTopics = Set.of("topicA", "topicB");
+    var future = KafkaFuture.completedFuture(existingTopics);
+    var listTopicsResult = mock(ListTopicsResult.class);
+    when(listTopicsResult.names()).thenReturn(future);
+
+    var kafkaClient = mock(AdminClient.class);
+    try (var ignored = mockStatic(AdminClient.class, invocation -> kafkaClient)) {
+      when(kafkaClient.listTopics()).thenReturn(listTopicsResult);
+      var found = kafkaAdminService.findTopics(requestedTopics);
+      assertThat(found).containsExactlyInAnyOrderElementsOf(requestedTopics);
+    }
+    verify(kafkaClient).listTopics();
+  }
+
+  @Test
+  void findTopics_positive_noneExist() {
+    var requestedTopics = List.of("topicA", "topicB");
+    var existingTopics = Set.of("topicC", "topicD");
+    var future = KafkaFuture.completedFuture(existingTopics);
+    var listTopicsResult = mock(ListTopicsResult.class);
+    when(listTopicsResult.names()).thenReturn(future);
+
+    var kafkaClient = mock(AdminClient.class);
+    try (var ignored = mockStatic(AdminClient.class, invocation -> kafkaClient)) {
+      when(kafkaClient.listTopics()).thenReturn(listTopicsResult);
+      var found = kafkaAdminService.findTopics(requestedTopics);
+      assertThat(found).isEmpty();
+    }
+    verify(kafkaClient).listTopics();
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  void findTopics_positive_emptyInput(List<String> topics) {
+    var kafkaClient = mock(AdminClient.class);
+    try (var ignored = mockStatic(AdminClient.class, invocation -> kafkaClient)) {
+      var found = kafkaAdminService.findTopics(topics);
+      assertThat(found).isEmpty();
+    }
+  }
+
+  @Test
+  void findTopics_positive_listTopicsIsNull() {
+    var kafkaClient = mock(AdminClient.class);
+    try (var ignored = mockStatic(AdminClient.class, invocation -> kafkaClient)) {
+      when(kafkaClient.listTopics()).thenReturn(null);
+      var found = kafkaAdminService.findTopics(List.of("topicA"));
+      assertThat(found).isEmpty();
+    }
+    verify(kafkaClient).listTopics();
+  }
+
+  @Test
+  void findTopics_positive_listTopicNamesIsNull() {
+    var listTopicsResult = mock(ListTopicsResult.class);
+    when(listTopicsResult.names()).thenReturn(null);
+    var kafkaClient = mock(AdminClient.class);
+    try (var ignored = mockStatic(AdminClient.class, invocation -> kafkaClient)) {
+      when(kafkaClient.listTopics()).thenReturn(listTopicsResult);
+      var found = kafkaAdminService.findTopics(List.of("topicA"));
+      assertThat(found).isEmpty();
+    }
+    verify(kafkaClient).listTopics();
+  }
+
+  @Test
+  void findTopics_negative_shouldHandleException() {
+    var listTopicsResult = mock(ListTopicsResult.class);
+    var kf = new KafkaFutureImpl<Set<String>>();
+    kf.completeExceptionally(new RuntimeException("Kafka error"));
+
+    when(listTopicsResult.names()).thenReturn(KafkaFuture.completedFuture(Set.of("topicA")));
+    var kafkaClient = mock(AdminClient.class);
+    try (var ignored = mockStatic(AdminClient.class, invocation -> kafkaClient)) {
+      when(kafkaClient.listTopics()).thenReturn(listTopicsResult);
+      when(listTopicsResult.names()).thenReturn(kf);
+      assertThatThrownBy(() -> kafkaAdminService.findTopics(List.of("topicA")))
+        .isInstanceOf(KafkaException.class)
+        .hasMessageContaining("Failed to find topics by name");
+    }
     verify(kafkaClient).listTopics();
   }
 
