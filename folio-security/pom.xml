@@ -43,6 +43,12 @@
 
     <dependency>
       <groupId>org.folio</groupId>
+      <artifactId>folio-secret-store-common</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.folio</groupId>
       <artifactId>folio-secret-store-starter</artifactId>
       <version>${project.parent.version}</version>
     </dependency>
