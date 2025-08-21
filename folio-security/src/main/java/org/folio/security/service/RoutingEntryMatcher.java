@@ -20,6 +20,7 @@ public class RoutingEntryMatcher {
 
   private final InternalModuleDescriptorProvider descriptorProvider;
 
+  @SuppressWarnings("checkstyle:MethodLength")
   public Optional<RoutingEntry> lookup(String method, String path) {
     var descriptor = descriptorProvider.getModuleDescriptor();
     var map = getAllRoutingEntries(descriptor);
@@ -93,7 +94,7 @@ public class RoutingEntryMatcher {
    * This method has been copied from okapi, so 'Cognitive Complexity of methods should not be too high' sonarcloud
    * issues suppressed for now.
    */
-  @SuppressWarnings("java:S3776")
+  @SuppressWarnings({"java:S3776", "checkstyle:MethodLength"})
   private static boolean fastMatch(String pathPattern, int patternIndex, String path, int uriIndex, int pathLength) {
     while (patternIndex < pathPattern.length()) {
       var patternChar = pathPattern.charAt(patternIndex);

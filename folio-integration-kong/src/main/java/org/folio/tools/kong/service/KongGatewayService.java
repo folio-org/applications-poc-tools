@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -166,26 +167,36 @@ public class KongGatewayService {
       .collect(toCollection(LinkedHashSet::new));
 
     var routes = prepareRoutes(moduleDescriptor, moduleId);
-    var newRoutesCreationErrors = toStream(routes)
-      .filter(not(pair -> existingRouteNames.contains(pair.getLeft().getName())))
-      .map(pair -> createKongRoute(serviceId, pair.getLeft(), pair.getRight()))
-      .flatMap(Optional::stream)
-      .toList();
+    var newRoutesCreationErrors = createNewKongRoutes(routes, existingRouteNames, serviceId);
 
     var routeNames = routes.stream()
       .map(pair -> pair.getLeft().getName())
       .collect(toSet());
 
-    var deprecatedRoutesDeletionErrors = toStream(existingRouteNames)
-      .filter(not(routeNames::contains))
-      .map(routeName -> deleteRoute(serviceId, routeName))
-      .flatMap(Optional::stream)
-      .toList();
+    var deprecatedRoutesDeletionErrors = deleteDeprecatedKongRoutes(existingRouteNames, routeNames, serviceId);
 
     var resultErrorParameters = new ArrayList<>(newRoutesCreationErrors);
     resultErrorParameters.addAll(deprecatedRoutesDeletionErrors);
 
     return resultErrorParameters;
+  }
+
+  private List<Parameter> createNewKongRoutes(List<Pair<Route, RoutingEntry>> routes,
+    LinkedHashSet<String> existingRouteNames, String serviceId) {
+    return toStream(routes)
+      .filter(not(pair -> existingRouteNames.contains(pair.getLeft().getName())))
+      .map(pair -> createKongRoute(serviceId, pair.getLeft(), pair.getRight()))
+      .flatMap(Optional::stream)
+      .toList();
+  }
+
+  private List<Parameter> deleteDeprecatedKongRoutes(LinkedHashSet<String> existingRouteNames, Set<String> routeNames,
+    String serviceId) {
+    return toStream(existingRouteNames)
+      .filter(not(routeNames::contains))
+      .map(routeName -> deleteRoute(serviceId, routeName))
+      .flatMap(Optional::stream)
+      .toList();
   }
 
   private List<Parameter> addRoutesForModule(ModuleDescriptor moduleDescriptor) {
@@ -291,9 +302,7 @@ public class KongGatewayService {
     var kongPathPair = updatePathPatternForKongGateway(staticPath);
     var path = kongPathPair.getLeft();
 
-    var routeName = Stream.of(path, String.join(",", httpMethods), moduleId, interfaceId)
-      .filter(StringUtils::isNotBlank)
-      .collect(joining("|"));
+    var routeName = buildRouteName(moduleId, interfaceId, path, httpMethods);
 
     var pathExpression = path.endsWith("$") ? httpPath().regexMatching(path) : httpPath().equalsTo(path);
     var methodsExpression = combineUsingOr(mapItems(httpMethods, method -> httpMethod().equalsTo(method)));
@@ -306,6 +315,12 @@ public class KongGatewayService {
         .tags(getNonNullValues(moduleId, interfaceId))
         .stripPath(false)
     );
+  }
+
+  private static String buildRouteName(String moduleId, String interfaceId, String path, List<String> httpMethods) {
+    return Stream.of(path, String.join(",", httpMethods), moduleId, interfaceId)
+      .filter(StringUtils::isNotBlank)
+      .collect(joining("|"));
   }
 
   private static RouteExpression getHeadersExpression(String moduleId, boolean isMultiple) {
