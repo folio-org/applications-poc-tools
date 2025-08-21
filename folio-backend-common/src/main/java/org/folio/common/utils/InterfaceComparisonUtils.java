@@ -32,6 +32,7 @@ public class InterfaceComparisonUtils {
    * @param version2 - second interface version
    * @return integer value as a comparison result
    */
+  @SuppressWarnings("checkstyle:MethodLength")
   public static int compare(String id1, String version1, String id2, String version2) {
     if (!Objects.equals(id1, id2)) {
       return Integer.MAX_VALUE;
