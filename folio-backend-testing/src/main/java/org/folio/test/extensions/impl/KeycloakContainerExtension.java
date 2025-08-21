@@ -28,7 +28,7 @@ import org.keycloak.representations.idm.PartialImportRepresentation;
 @Log4j2
 public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
-  private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:26.3.2";
+  private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:26.3.3";
   private static final String REALM_JSON = "json/keycloak/master-realm.json";
   private static final String IMPORTED_CLIENT_ID = "folio-backend-admin-client";
   private static final String IMPORTED_CLIENT_SECRET = "supersecret";
