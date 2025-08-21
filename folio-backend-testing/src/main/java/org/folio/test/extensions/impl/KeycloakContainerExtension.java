@@ -108,7 +108,7 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   @SuppressWarnings("resource")
   private static KeycloakContainer keycloakContainer() {
     return new KeycloakContainer(KEYCLOAK_IMAGE)
-      .withFeaturesEnabled("scripts", "token-exchange", "admin-fine-grained-authz")
+      .withFeaturesEnabled("scripts:v1", "token-exchange:v1", "admin-fine-grained-authz:v1")
       .withAdminUsername("keycloak-test-admin")
       .withAdminPassword(RandomStringUtils.secure().next(20, true, true))
       .withProviderLibsFrom(List.of(readToFile("keycloak/folio-scripts.jar", "folio-scripts", ".jar")))
