@@ -24,6 +24,6 @@ public class KeycloakStoreKeyProvider {
       throw new IllegalArgumentException("Client id cannot be empty");
     }
 
-    return String.format("%s_%s_%s", secureStoreProperties.getSecureStoreEnvironment(), tenant, clientId);
+    return String.format("%s_%s_%s", secureStoreProperties.getEnvironment(), tenant, clientId);
   }
 }
