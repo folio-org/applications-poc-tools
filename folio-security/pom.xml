@@ -12,7 +12,7 @@
 
   <properties>
     <spring-cloud-bom.version>2025.0.0</spring-cloud-bom.version>
-    <keycloak-admin-client.version>26.0.4</keycloak-admin-client.version>
+    <keycloak-admin-client.version>26.0.6</keycloak-admin-client.version>
     <jwks-rsa.version>0.23.0</jwks-rsa.version>
 
     <sonar.exclusions>

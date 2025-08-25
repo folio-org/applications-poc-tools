@@ -17,7 +17,7 @@
     <jsonassert.version>1.5.3</jsonassert.version>
     <jjwt.version>0.13.0</jjwt.version>
     <testcontainers-keycloak.version>3.8.0</testcontainers-keycloak.version>
-    <keycloak-admin-client.version>26.0.4</keycloak-admin-client.version>
+    <keycloak-admin-client.version>26.0.6</keycloak-admin-client.version>
   </properties>
 
   <dependencies>
