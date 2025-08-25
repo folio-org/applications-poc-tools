@@ -204,8 +204,8 @@
             <failOnViolation>true</failOnViolation>
             <logViolationsToConsole>true</logViolationsToConsole>
             <configLocation>folio-checkstyle/checkstyle.xml</configLocation>
-            <propertiesLocation>${maven.multiModuleProjectDirectory}/checkstyle/checkstyle-checker.properties</propertiesLocation>
-            <suppressionsLocation>${maven.multiModuleProjectDirectory}/checkstyle/checkstyle-suppressions.xml</suppressionsLocation>
+            <propertiesLocation>${session.executionRootDirectory}/checkstyle/checkstyle-checker.properties</propertiesLocation>
+            <suppressionsLocation>${session.executionRootDirectory}/checkstyle/checkstyle-suppressions.xml</suppressionsLocation>
             <cacheFile>${basedir}/target/cachefile</cacheFile>
           </configuration>
         </plugin>
