@@ -11,9 +11,9 @@
   <artifactId>folio-security</artifactId>
 
   <properties>
-    <spring-cloud-bom.version>2024.0.0</spring-cloud-bom.version>
-    <keycloak-admin-client.version>26.0.4</keycloak-admin-client.version>
-    <jwks-rsa.version>0.22.1</jwks-rsa.version>
+    <spring-cloud-bom.version>2025.0.0</spring-cloud-bom.version>
+    <keycloak-admin-client.version>26.0.6</keycloak-admin-client.version>
+    <jwks-rsa.version>0.23.0</jwks-rsa.version>
 
     <sonar.exclusions>
       src/main/java/**/configuration/**/*,
@@ -38,6 +38,12 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-auth-openid</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-secret-store-common</artifactId>
       <version>${project.parent.version}</version>
     </dependency>
 
@@ -101,7 +107,7 @@
     <dependency>
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-multipart-provider</artifactId>
-      <version>6.2.11.Final</version>
+      <version>6.2.12.Final</version>
     </dependency>
 
     <!-- Test dependencies -->
