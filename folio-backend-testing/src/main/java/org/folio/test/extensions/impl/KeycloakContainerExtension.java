@@ -28,7 +28,7 @@ import org.keycloak.representations.idm.PartialImportRepresentation;
 @Log4j2
 public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
-  private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:26.1.0";
+  private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:26.3.3";
   private static final String REALM_JSON = "json/keycloak/master-realm.json";
   private static final String IMPORTED_CLIENT_ID = "folio-backend-admin-client";
   private static final String IMPORTED_CLIENT_SECRET = "supersecret";
@@ -108,7 +108,7 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   @SuppressWarnings("resource")
   private static KeycloakContainer keycloakContainer() {
     return new KeycloakContainer(KEYCLOAK_IMAGE)
-      .withFeaturesEnabled("scripts", "token-exchange", "admin-fine-grained-authz")
+      .withFeaturesEnabled("scripts:v1", "token-exchange:v1", "admin-fine-grained-authz:v1")
       .withAdminUsername("keycloak-test-admin")
       .withAdminPassword(RandomStringUtils.secure().next(20, true, true))
       .withProviderLibsFrom(List.of(readToFile("keycloak/folio-scripts.jar", "folio-scripts", ".jar")))
