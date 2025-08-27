@@ -85,8 +85,13 @@ public class StringExpressionBuilder {
    * @return created {@link RouteExpression} object
    */
   public RouteExpression regexMatching(String regex) {
-    var value = requireNonNull(regex, "StringExpression regex must not be null");
-    return buildRouteExpression(field, REGEX_MATCHING, value);
+    requireNonNull(regex, "StringExpression regex must not be null");
+    return buildRouteExpression(field, REGEX_MATCHING, regex);
+  }
+
+  public RouteExpression headerRegexMatching(String regex) {
+    requireNonNull(regex, "StringExpression regex must not be null");
+    return buildRouteExpressionWithRegex(field, regex);
   }
 
   /**
@@ -102,5 +107,10 @@ public class StringExpressionBuilder {
   private static RouteExpression buildRouteExpression(String key, RouteOperator operator, String value) {
     requireNonNull(value, "StringExpression value must not be null");
     return new RouteExpression(key, operator, "\"" + value + "\"");
+  }
+
+  private static RouteExpression buildRouteExpressionWithRegex(String key, String regex) {
+    requireNonNull(regex, "StringExpression regex must not be null");
+    return new RouteExpression(key, REGEX_MATCHING, "r#" + regex + "#");
   }
 }

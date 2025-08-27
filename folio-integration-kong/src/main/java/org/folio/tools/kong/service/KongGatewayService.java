@@ -10,7 +10,6 @@ import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.folio.common.utils.CollectionUtils.mapItems;
 import static org.folio.common.utils.CollectionUtils.toStream;
-import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
 import static org.folio.tools.kong.model.expression.RouteExpressions.combineUsingAnd;
 import static org.folio.tools.kong.model.expression.RouteExpressions.combineUsingOr;
 import static org.folio.tools.kong.model.expression.RouteExpressions.httpHeader;
@@ -46,7 +45,6 @@ import org.folio.tools.kong.client.KongAdminClient.KongResultList;
 import org.folio.tools.kong.exception.KongIntegrationException;
 import org.folio.tools.kong.model.Route;
 import org.folio.tools.kong.model.Service;
-import org.folio.tools.kong.model.expression.RouteExpression;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -306,7 +304,7 @@ public class KongGatewayService {
 
     var pathExpression = path.endsWith("$") ? httpPath().regexMatching(path) : httpPath().equalsTo(path);
     var methodsExpression = combineUsingOr(mapItems(httpMethods, method -> httpMethod().equalsTo(method)));
-    var headersExpression = getHeadersExpression(moduleId, isMultiple);
+    var headersExpression = httpHeader("x-okapi-tenant").headerRegexMatching("\".*\"");
     return Optional.of(
       new Route()
         .priority(kongPathPair.getRight())
@@ -321,10 +319,6 @@ public class KongGatewayService {
     return Stream.of(path, String.join(",", httpMethods), moduleId, interfaceId)
       .filter(StringUtils::isNotBlank)
       .collect(joining("|"));
-  }
-
-  private static RouteExpression getHeadersExpression(String moduleId, boolean isMultiple) {
-    return isMultiple ? httpHeader(MODULE_ID).equalsTo(moduleId) : null;
   }
 
   /**
