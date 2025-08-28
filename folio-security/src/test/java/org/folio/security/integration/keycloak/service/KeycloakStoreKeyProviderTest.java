@@ -63,14 +63,14 @@ class KeycloakStoreKeyProviderTest {
 
   private static String globalStoreKey(String clientId) {
     var secureStoreProperties = mock(SecureStoreProperties.class);
-    when(secureStoreProperties.getEnvironment()).thenReturn(TEST_ENV);
+    when(secureStoreProperties.getSecureStoreEnvironment()).thenReturn(TEST_ENV);
     var keycloakStoreKeyProvider = new KeycloakStoreKeyProvider(secureStoreProperties);
     return keycloakStoreKeyProvider.globalStoreKey(clientId);
   }
 
   private static String tenantStoreKey(String tenant, String clientId) {
     var secureStoreProperties = mock(SecureStoreProperties.class);
-    when(secureStoreProperties.getEnvironment()).thenReturn(TEST_ENV);
+    when(secureStoreProperties.getSecureStoreEnvironment()).thenReturn(TEST_ENV);
     var keycloakStoreKeyProvider = new KeycloakStoreKeyProvider(secureStoreProperties);
     return keycloakStoreKeyProvider.tenantStoreKey(tenant, clientId);
   }

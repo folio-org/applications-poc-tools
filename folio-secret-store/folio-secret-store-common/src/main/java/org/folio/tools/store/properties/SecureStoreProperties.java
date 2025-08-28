@@ -3,13 +3,16 @@ package org.folio.tools.store.properties;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @Validated
-public class SecureStoreProperties extends SecureStoreConfigProperties {
+@Configuration
+@NoArgsConstructor
+public class SecureStoreProperties {
 
   /**
    * First segment of the secure store key, for example "prod" or "test".
@@ -18,5 +21,6 @@ public class SecureStoreProperties extends SecureStoreConfigProperties {
    */
   @NotEmpty
   @Pattern(regexp = "[\\w\\-]+", message = "Value must follow the pattern: '[\\w\\-]+'")
-  private String environment;
+  @Value("${application.secure-store.environment}")
+  private String secureStoreEnvironment;
 }

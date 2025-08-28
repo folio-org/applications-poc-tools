@@ -17,6 +17,7 @@ import org.folio.test.extensions.EnableKeycloakDataImport;
 import org.folio.test.extensions.EnableKeycloakTlsMode;
 import org.folio.test.types.IntegrationTest;
 import org.folio.tools.store.configuration.SecureStoreAutoconfiguration;
+import org.folio.tools.store.properties.SecureStoreProperties;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
@@ -27,18 +28,15 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
 
 @IntegrationTest
 @EnableKeycloakTlsMode
 @EnableKeycloakDataImport
-@TestPropertySource(properties = {
-  "application.secret-store.environment=folio",
-})
 @SpringBootTest(classes = {
   KeycloakDataImportConfiguration.class,
   KeycloakStoreKeyProvider.class,
   SecureStoreAutoconfiguration.class,
+  SecureStoreProperties.class,
   TestConfiguration.class
 })
 class KeycloakImportServiceIT {
