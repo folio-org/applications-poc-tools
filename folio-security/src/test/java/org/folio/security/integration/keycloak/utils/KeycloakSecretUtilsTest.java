@@ -1,19 +1,21 @@
-package org.folio.security.integration.keycloak.service;
+package org.folio.security.integration.keycloak.utils;
 
-import static org.folio.security.integration.keycloak.service.KeycloakStoreKeyProvider.GLOBAL_SECTION;
+import static org.folio.security.integration.keycloak.utils.KeycloakSecretUtils.GLOBAL_SECTION;
+import static org.folio.security.integration.keycloak.utils.KeycloakSecretUtils.globalStoreKey;
+import static org.folio.security.integration.keycloak.utils.KeycloakSecretUtils.tenantStoreKey;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mockStatic;
 
+import org.folio.common.configuration.properties.FolioEnvironment;
 import org.folio.test.types.UnitTest;
-import org.folio.tools.store.properties.SecureStoreProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.mockito.MockedStatic;
 
 @UnitTest
-class KeycloakStoreKeyProviderTest {
+class KeycloakSecretUtilsTest {
 
   private static final String TEST_ENV = "test";
   private static final String TEST_CLIENT_ID = "test-client-id";
@@ -21,9 +23,13 @@ class KeycloakStoreKeyProviderTest {
 
   @Test
   void globalStoreKey_positive() {
-    var key = globalStoreKey(TEST_CLIENT_ID);
+    try (MockedStatic<FolioEnvironment> mockedEnv = mockStatic(FolioEnvironment.class)) {
+      mockedEnv.when(FolioEnvironment::getFolioEnvName).thenReturn(TEST_ENV);
 
-    assertEquals(key(GLOBAL_SECTION, TEST_CLIENT_ID), key);
+      var key = globalStoreKey(TEST_CLIENT_ID);
+
+      assertEquals(key(GLOBAL_SECTION, TEST_CLIENT_ID), key);
+    }
   }
 
   @ParameterizedTest
@@ -36,9 +42,13 @@ class KeycloakStoreKeyProviderTest {
 
   @Test
   void tenantStoreKey_positive() {
-    var key = tenantStoreKey(TEST_TENANT, TEST_CLIENT_ID);
+    try (MockedStatic<FolioEnvironment> mockedEnv = mockStatic(FolioEnvironment.class)) {
+      mockedEnv.when(FolioEnvironment::getFolioEnvName).thenReturn(TEST_ENV);
 
-    assertEquals(key(TEST_TENANT, TEST_CLIENT_ID), key);
+      var key = tenantStoreKey(TEST_TENANT, TEST_CLIENT_ID);
+
+      assertEquals(key(TEST_TENANT, TEST_CLIENT_ID), key);
+    }
   }
 
   @ParameterizedTest
@@ -59,19 +69,5 @@ class KeycloakStoreKeyProviderTest {
 
   private static String key(String tenant, String client) {
     return String.format("%s_%s_%s", TEST_ENV, tenant, client);
-  }
-
-  private static String globalStoreKey(String clientId) {
-    var secureStoreProperties = mock(SecureStoreProperties.class);
-    when(secureStoreProperties.getSecureStoreEnvironment()).thenReturn(TEST_ENV);
-    var keycloakStoreKeyProvider = new KeycloakStoreKeyProvider(secureStoreProperties);
-    return keycloakStoreKeyProvider.globalStoreKey(clientId);
-  }
-
-  private static String tenantStoreKey(String tenant, String clientId) {
-    var secureStoreProperties = mock(SecureStoreProperties.class);
-    when(secureStoreProperties.getSecureStoreEnvironment()).thenReturn(TEST_ENV);
-    var keycloakStoreKeyProvider = new KeycloakStoreKeyProvider(secureStoreProperties);
-    return keycloakStoreKeyProvider.tenantStoreKey(tenant, clientId);
   }
 }

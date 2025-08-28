@@ -11,13 +11,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.folio.security.integration.keycloak.configuration.KeycloakDataImportConfiguration;
-import org.folio.security.integration.keycloak.service.KeycloakStoreKeyProvider;
 import org.folio.security.support.TestConfiguration;
 import org.folio.test.extensions.EnableKeycloakDataImport;
 import org.folio.test.extensions.EnableKeycloakTlsMode;
 import org.folio.test.types.IntegrationTest;
 import org.folio.tools.store.configuration.SecureStoreAutoconfiguration;
-import org.folio.tools.store.properties.SecureStoreProperties;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
@@ -34,9 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @EnableKeycloakDataImport
 @SpringBootTest(classes = {
   KeycloakDataImportConfiguration.class,
-  KeycloakStoreKeyProvider.class,
   SecureStoreAutoconfiguration.class,
-  SecureStoreProperties.class,
   TestConfiguration.class
 })
 class KeycloakImportServiceIT {
