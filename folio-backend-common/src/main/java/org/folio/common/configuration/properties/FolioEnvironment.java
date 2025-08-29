@@ -20,19 +20,15 @@ import org.springframework.validation.annotation.Validated;
 @AllArgsConstructor(staticName = "of")
 public class FolioEnvironment {
 
-  /**
-   * Kafka topic prefix, for example the flower release name "trillium".
-   *
-   * <p>For the first segment of the secure store prefix see
-   * org.folio.tools.store.properties.SecureStoreProperties#getSecureStoreEnvironment.
-   */
   @NotEmpty
   @Pattern(regexp = "[\\w\\-]+", message = "Value must follow the pattern: '[\\w\\-]+'")
   @Value("${application.environment}")
   private String environment;
 
   /**
-   * Return Kafka topic prefix from environment or system properties as {@link String} object.
+   * Return folio env name from environment or system properties as {@link String} object.
+   *
+   * @return folio env name.
    */
   public static String getFolioEnvName() {
     return firstNonBlank(getenv("ENV"), getProperty("env"), "folio");

@@ -13,9 +13,5 @@ import org.springframework.test.context.TestPropertySource;
 @Tag("keycloak-import-integration")
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-@TestPropertySource(properties = {
-  "application.keycloak.enabled=true",
-  "application.keycloak.import.enabled=true",
-  "application.secure-store.environment=folio",
-  })
+@TestPropertySource(properties = {"application.keycloak.enabled=true", "application.keycloak.import.enabled=true"})
 public @interface EnableKeycloakDataImport {}
