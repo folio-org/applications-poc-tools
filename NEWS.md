@@ -9,5 +9,4 @@
 * SecretStore implementation for folio-secure-store-proxy (APPPOCTOOL-59)
 * Fix JWT token decoding
 * Fix: `.collection.post` is DATA not PROCEDURAL
-* Use SECURE\_STORE\_ENV, not ENV, for secure store key; drop KeycloakSecretUtils ((APPPOCTOOL-63)[https://folio-org.atlassian.net/browse/APPPOCTOOL-63])
 * Add wildcard to route's tenant header regex ((APPPOCTOOL-64)[https://folio-org.atlassian.net/browse/APPPOCTOOL-64])
