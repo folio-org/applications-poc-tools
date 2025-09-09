@@ -1,3 +1,8 @@
+## Version `v3.0.4` (21.08.2025)
+* Upgrade to Keycloak 26.3.3 (KEYCLOAK-56)
+
+---
+
 ## Version `v3.0.3` (21.08.2025)
 * Support find topics by name in KafkaAdminService (MGRENTITLE-135)
 
