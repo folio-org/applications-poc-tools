@@ -50,7 +50,6 @@ import org.folio.tools.kong.model.Service;
 @RequiredArgsConstructor
 public class KongGatewayService {
 
-  private static final String MULTIPLE_INTERFACE_TYPE = "multiple";
   private static final String KONG_PATH_VARIABLE_REGEX_GROUP = "([^/]+)";
   private static final Pattern PATH_VARIABLE_REGEX = Pattern.compile("\\{[^}]+}");
 
@@ -208,22 +207,21 @@ public class KongGatewayService {
 
   private List<Pair<Route, RoutingEntry>> prepareRoutes(ModuleDescriptor desc, String moduleId) {
     return toStream(desc.getProvides())
-      .map(interfaceDescriptor -> prepareRoutes(interfaceDescriptor, moduleId))
+      .map(interfaceDescriptor -> prepareRoutes(interfaceDescriptor, moduleId, desc.isMgrComponent()))
       .flatMap(Collection::stream)
       .toList();
   }
 
-  private List<Pair<Route, RoutingEntry>> prepareRoutes(InterfaceDescriptor desc, String moduleId) {
+  private List<Pair<Route, RoutingEntry>> prepareRoutes(InterfaceDescriptor desc, String moduleId,
+    boolean isMgrComponent) {
     var interfaceId = desc.getId() + "-" + desc.getVersion();
     if (desc.isSystem()) {
       log.debug("System interface is ignored: moduleId={}, interfaceId={}]", moduleId, interfaceId);
       return emptyList();
     }
 
-    var interfaceType = desc.getInterfaceType();
-    var isMultiple = StringUtils.equals(interfaceType, MULTIPLE_INTERFACE_TYPE);
     return toStream(desc.getHandlers())
-      .map(routingEntry -> getRoute(moduleId, interfaceId, routingEntry, isMultiple)
+      .map(routingEntry -> getRoute(moduleId, interfaceId, routingEntry, isMgrComponent)
         .map(route -> Pair.of(route, routingEntry)))
       .flatMap(Optional::stream)
       .toList();
@@ -287,7 +285,8 @@ public class KongGatewayService {
   }
 
   @SuppressWarnings("java:S4790")
-  private static Optional<Route> getRoute(String moduleId, String interfaceId, RoutingEntry re, boolean isMultiple) {
+  private static Optional<Route> getRoute(String moduleId, String interfaceId, RoutingEntry re,
+    boolean isMgrComponent) {
 
     var staticPath = re.getStaticPath();
     var httpMethods = getMethods(re);
@@ -304,7 +303,7 @@ public class KongGatewayService {
 
     var pathExpression = path.endsWith("$") ? httpPath().regexMatching(path) : httpPath().equalsTo(path);
     var methodsExpression = combineUsingOr(mapItems(httpMethods, method -> httpMethod().equalsTo(method)));
-    var headersExpression = httpHeader("x-okapi-tenant").headerRegexMatching("\".*\"");
+    var headersExpression = isMgrComponent ? null : httpHeader("x-okapi-tenant").headerRegexMatching("\".*\"");
     return Optional.of(
       new Route()
         .priority(kongPathPair.getRight())
