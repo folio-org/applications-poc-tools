@@ -345,6 +345,25 @@ class KongGatewayServiceTest {
       verify(kongAdminClient, never()).deleteRoute(anyString(), anyString());
     }
 
+    @Test
+    void positive_mgrComponent() {
+      var serviceId = UUID.randomUUID().toString();
+      var moduleId = "mgr-component-1.0.0";
+      when(kongAdminClient.getService(moduleId)).thenReturn(new Service().id(serviceId).name(moduleId));
+      when(kongAdminClient.upsertRoute(eq(serviceId), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
+
+      var moduleDescriptor = moduleDescriptor().id(moduleId);
+
+      kongGatewayService.addRoutes(singletonList(moduleDescriptor));
+
+      var capturedRoutes = routeCaptor.getAllValues();
+      assertThat(capturedRoutes).isNotEmpty();
+
+      capturedRoutes.forEach(route -> {
+        assertThat(route.getExpression()).doesNotContain("http.headers.x_okapi_tenant");
+      });
+    }
+
     static ModuleDescriptor moduleDescriptor() {
       return new ModuleDescriptor()
         .id(MOD_ID)
