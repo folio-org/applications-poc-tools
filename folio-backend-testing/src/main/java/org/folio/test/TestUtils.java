@@ -2,6 +2,9 @@ package org.folio.test;
 
 import static org.springframework.test.util.ReflectionTestUtils.getField;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.serializers.DefaultSerializers.UUIDSerializer;
+import com.esotericsoftware.kryo.util.Pool;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -10,6 +13,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -29,6 +33,21 @@ public class TestUtils {
     .setSerializationInclusion(Include.NON_EMPTY)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+
+  private static final Pool<Kryo> KRYO_POOL;
+
+  static {
+    KRYO_POOL = new Pool<>(true, false, 10) {
+      protected Kryo create() {
+        var kryo = new Kryo();
+
+        kryo.register(UUID.class, new UUIDSerializer());
+        kryo.setRegistrationRequired(false);
+
+        return kryo;
+      }
+    };
+  }
 
   @SneakyThrows
   public static String asJsonString(Object value) {
@@ -84,5 +103,15 @@ public class TestUtils {
       .toArray();
 
     Mockito.verifyNoMoreInteractions(mocks);
+  }
+
+  public static <T> T copy(T object) {
+    Kryo kryo = KRYO_POOL.obtain();
+
+    try {
+      return kryo.copy(object);
+    } finally {
+      KRYO_POOL.free(kryo);
+    }
   }
 }
