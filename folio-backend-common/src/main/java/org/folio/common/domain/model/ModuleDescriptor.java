@@ -298,4 +298,14 @@ public class ModuleDescriptor implements Artifact {
   public String getName() {
     return isNotBlank(id) ? SemverUtils.getName(id) : null;
   }
+
+  /**
+   * Checks if the module is a manager component by inspecting its id.
+   *
+   * @return true if the module is a manager component (mgr-*), false otherwise
+   */
+  @JsonIgnore
+  public boolean isMgrComponent() {
+    return isNotBlank(id) && id.startsWith("mgr-");
+  }
 }
