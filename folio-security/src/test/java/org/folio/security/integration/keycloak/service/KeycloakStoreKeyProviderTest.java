@@ -31,7 +31,7 @@ class KeycloakStoreKeyProviderTest {
   void globalStoreKey_negative_clientIdEmpty(String clientId) {
     var exc = assertThrows(IllegalArgumentException.class, () -> globalStoreKey(clientId));
 
-    assertEquals(exc.getMessage(), "Client id cannot be empty");
+    assertEquals("Client id cannot be empty", exc.getMessage());
   }
 
   @Test
@@ -46,7 +46,7 @@ class KeycloakStoreKeyProviderTest {
   void tenantStoreKey_negative_clientIdEmpty(String clientId) {
     var exc = assertThrows(IllegalArgumentException.class, () -> tenantStoreKey(TEST_TENANT, clientId));
 
-    assertEquals(exc.getMessage(), "Client id cannot be empty");
+    assertEquals( "Client id cannot be empty", exc.getMessage());
   }
 
   @ParameterizedTest
@@ -54,7 +54,7 @@ class KeycloakStoreKeyProviderTest {
   void tenantStoreKey_negative_tenantEmpty(String tenant) {
     var exc = assertThrows(IllegalArgumentException.class, () -> tenantStoreKey(tenant, TEST_CLIENT_ID));
 
-    assertEquals(exc.getMessage(), "Tenant cannot be empty");
+    assertEquals("Tenant cannot be empty", exc.getMessage());
   }
 
   private static String key(String tenant, String client) {
