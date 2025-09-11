@@ -46,7 +46,7 @@ class KeycloakStoreKeyProviderTest {
   void tenantStoreKey_negative_clientIdEmpty(String clientId) {
     var exc = assertThrows(IllegalArgumentException.class, () -> tenantStoreKey(TEST_TENANT, clientId));
 
-    assertEquals( "Client id cannot be empty", exc.getMessage());
+    assertEquals("Client id cannot be empty", exc.getMessage());
   }
 
   @ParameterizedTest
