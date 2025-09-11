@@ -9,4 +9,3 @@
 * SecretStore implementation for folio-secure-store-proxy (APPPOCTOOL-59)
 * Fix JWT token decoding
 * Fix: `.collection.post` is DATA not PROCEDURAL
-* Add wildcard to route's tenant header regex ((APPPOCTOOL-64)[https://folio-org.atlassian.net/browse/APPPOCTOOL-64])
