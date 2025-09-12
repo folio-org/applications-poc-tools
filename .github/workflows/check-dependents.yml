@@ -4,18 +4,26 @@ on:
   workflow_dispatch:
     inputs:
       pr_branch:
-        description: 'Branch name of the current PR (e.g., feature/my-new-feature)'
-        required: true
+        description: 'Branch name of the library to build (e.g., feature/my-branch). Empty = current'
+        required: false
         type: string
+        default: ''
       pr_head_sha:
-        description: 'Head SHA of the PR to check'
-        required: true
+        description: 'Head SHA of the PR (optional; set to update PR commit status)'
+        required: false
         type: string
+        default: ''
+
+permissions:
+  contents: read
+  statuses: write
 
 jobs:
   build-this-library:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    env:
+      M2: ${{ runner.temp }}/m2repo
+    timeout-minutes: 20
     steps:
       - name: Checkout current repository (this library)
         uses: actions/checkout@v4
@@ -24,27 +32,29 @@ jobs:
           fetch-depth: 1
           submodules: recursive
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
 
       - name: Build and install this library to local Maven repository
-        run: mvn -B clean install -DskipTests
+        run: mvn -B -U -Dmaven.repo.local='${{ env.M2 }}' clean install -DskipTests
 
       - name: Upload this library's Maven artifacts
         uses: actions/upload-artifact@v4
         with:
           name: this-library-maven-artifacts
-          path: ~/.m2/repository/org/folio
+          path: ${{ env.M2 }}/org/folio
           if-no-files-found: error
           retention-days: 1
 
   build-and-test-dependents:
     needs: build-this-library
     runs-on: ubuntu-latest
+    env:
+      M2: ${{ runner.temp }}/m2repo
     strategy:
       fail-fast: false
       matrix:
@@ -68,7 +78,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: this-library-maven-artifacts
-          path: ~/.m2/repository/org/folio
+          path: ${{ env.M2 }}/org/folio
 
       - name: Clone Dependent Repository ${{ matrix.dependent.name }}
         run: git clone --depth 1 --recurse-submodules ${{ matrix.dependent.url }} ${{ matrix.dependent.name }}
@@ -76,39 +86,42 @@ jobs:
         # Example: git clone https://YOUR_GITHUB_TOKEN@github.com/folio-org/mod-quick-marc
 
       - name: Build and Test Dependent Repository ${{ matrix.dependent.name }}
-        run: cd ${{ matrix.dependent.name }}; mvn -B clean verify
+        run: cd ${{ matrix.dependent.name }}; mvn -B -nsu -Dmaven.repo.local='${{ env.M2 }}' clean verify
 
   # Final job to update the PR status, dependent on build-and-test-dependents
   final-pr-status-update:
     needs: build-and-test-dependents
     runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.pr_head_sha != '' }}
+    env:
+      MATRIX_RESULT: ${{ needs.build-and-test-dependents.result }}
+      PR_SHA: ${{ github.event.inputs.pr_head_sha }}
     steps:
       - name: Final PR Status Update
         uses: actions/github-script@v6
         with:
           script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const prHeadSha = github.event.inputs.pr_head_sha;
-            const overallStatus = needs.build-and-test-dependents.result;
+            const { owner, repo } = context.repo;
+            const runId = process.env.GITHUB_RUN_ID;
+            const overallStatus = process.env.MATRIX_RESULT;
+            const prHeadSha = process.env.PR_SHA;
 
-            let finalState = 'success';
-            let finalDescription = 'All dependent services built and tested successfully.';
-
+            let state = 'success';
+            let description = 'All dependent services built and tested successfully.';
             if (overallStatus === 'failure') {
-              finalState = 'failure';
-              finalDescription = 'One or more dependent services failed to build or test.';
+              state = 'failure';
+              description = 'One or more dependent services failed to build or test.';
             } else if (overallStatus === 'cancelled') {
-              finalState = 'error';
-              finalDescription = 'Dependent services check was cancelled.';
+              state = 'error';
+              description = 'Dependent services check was cancelled.';
             }
 
-            github.rest.repos.createCommitStatus({
+            await github.rest.repos.createCommitStatus({
               owner,
               repo,
               sha: prHeadSha,
-              state: finalState,
-              target_url: `https://github.com/${owner}/${repo}/actions/runs/${github.run_id}`,
-              description: finalDescription,
+              state,
+              target_url: `https://github.com/${owner}/${repo}/actions/runs/${runId}`,
+              description,
               context: 'Dependent Services Check'
             });
