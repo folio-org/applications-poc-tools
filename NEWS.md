@@ -10,3 +10,7 @@
 * Fix JWT token decoding
 * Fix: `.collection.post` is DATA not PROCEDURAL
 * Add wildcard to route's tenant header regex ((APPPOCTOOL-64)[https://folio-org.atlassian.net/browse/APPPOCTOOL-64])
+* Use SECURE\_STORE\_ENV, not ENV, for secure store key; drop KeycloakSecretUtils ((APPPOCTOOL-63)[https://folio-org.atlassian.net/browse/APPPOCTOOL-63])
+
+### Migration:
+* Replace KeycloakSecretUtils with KeycloakStoreKeyProvider, add `application.secret-store.environment=${SECURE_STORE_ENV:folio}` to application.yaml (for Ramsons and Sunflower: add `application.secret-store.environment=${SECURE_STORE_ENV:${ENV:folio}}` to application.yaml).

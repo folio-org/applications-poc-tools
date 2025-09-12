@@ -8,7 +8,7 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
 import org.folio.security.integration.keycloak.service.KeycloakImportService;
 import org.folio.security.integration.keycloak.service.KeycloakModuleDescriptorMapper;
-import org.folio.security.integration.keycloak.utils.KeycloakSecretUtils;
+import org.folio.security.integration.keycloak.service.SecureStoreKeyProvider;
 import org.folio.security.service.InternalModuleDescriptorProvider;
 import org.folio.tools.store.SecureStore;
 import org.folio.tools.store.exception.SecretNotFoundException;
@@ -29,6 +29,7 @@ public class KeycloakDataImportConfiguration {
 
   private final KeycloakProperties properties;
   private final SecureStore secureStore;
+  private final SecureStoreKeyProvider secureStoreKeyProvider;
 
   @Bean
   public Keycloak keycloak() {
@@ -58,7 +59,7 @@ public class KeycloakDataImportConfiguration {
     var admin = properties.getAdmin();
     String clientId = admin.getClientId();
     String secret = null;
-    var key = KeycloakSecretUtils.globalStoreKey(clientId);
+    var key = secureStoreKeyProvider.globalStoreKey(clientId);
     try {
       secret = secureStore.get(key);
     } catch (SecretNotFoundException e) {
