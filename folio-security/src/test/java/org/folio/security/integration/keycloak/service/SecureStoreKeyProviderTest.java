@@ -1,6 +1,6 @@
 package org.folio.security.integration.keycloak.service;
 
-import static org.folio.security.integration.keycloak.service.KeycloakStoreKeyProvider.GLOBAL_SECTION;
+import static org.folio.security.integration.keycloak.service.SecureStoreKeyProvider.GLOBAL_SECTION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -13,7 +13,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 @UnitTest
-class KeycloakStoreKeyProviderTest {
+class SecureStoreKeyProviderTest {
 
   private static final String TEST_ENV = "test";
   private static final String TEST_CLIENT_ID = "test-client-id";
@@ -64,14 +64,14 @@ class KeycloakStoreKeyProviderTest {
   private static String globalStoreKey(String clientId) {
     var secureStoreProperties = mock(SecureStoreProperties.class);
     when(secureStoreProperties.getEnvironment()).thenReturn(TEST_ENV);
-    var keycloakStoreKeyProvider = new KeycloakStoreKeyProvider(secureStoreProperties);
+    var keycloakStoreKeyProvider = new SecureStoreKeyProvider(secureStoreProperties);
     return keycloakStoreKeyProvider.globalStoreKey(clientId);
   }
 
   private static String tenantStoreKey(String tenant, String clientId) {
     var secureStoreProperties = mock(SecureStoreProperties.class);
     when(secureStoreProperties.getEnvironment()).thenReturn(TEST_ENV);
-    var keycloakStoreKeyProvider = new KeycloakStoreKeyProvider(secureStoreProperties);
+    var keycloakStoreKeyProvider = new SecureStoreKeyProvider(secureStoreProperties);
     return keycloakStoreKeyProvider.tenantStoreKey(tenant, clientId);
   }
 }

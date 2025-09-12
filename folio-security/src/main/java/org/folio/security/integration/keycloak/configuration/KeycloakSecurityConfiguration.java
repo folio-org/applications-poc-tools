@@ -14,7 +14,7 @@ import org.folio.security.integration.keycloak.client.KeycloakAuthClient;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
 import org.folio.security.integration.keycloak.service.KeycloakAuthorizationService;
 import org.folio.security.integration.keycloak.service.KeycloakPublicKeyProvider;
-import org.folio.security.integration.keycloak.service.KeycloakStoreKeyProvider;
+import org.folio.security.integration.keycloak.service.SecureStoreKeyProvider;
 import org.folio.security.service.InternalModuleDescriptorProvider;
 import org.folio.security.service.RoutingEntryMatcher;
 import org.folio.tools.store.properties.SecureStoreProperties;
@@ -37,8 +37,8 @@ public class KeycloakSecurityConfiguration {
   private final KeycloakProperties properties;
 
   @Bean
-  public KeycloakStoreKeyProvider storeKeyProvider(SecureStoreProperties secureStoreProperties) {
-    return new KeycloakStoreKeyProvider(secureStoreProperties);
+  public SecureStoreKeyProvider storeKeyProvider(SecureStoreProperties secureStoreProperties) {
+    return new SecureStoreKeyProvider(secureStoreProperties);
   }
 
   @Bean

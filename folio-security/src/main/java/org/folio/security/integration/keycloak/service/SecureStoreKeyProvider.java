@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.folio.tools.store.properties.SecureStoreProperties;
 
 @RequiredArgsConstructor
-public class KeycloakStoreKeyProvider {
+public class SecureStoreKeyProvider {
 
   public static final String GLOBAL_SECTION = "master";
 
