@@ -1,8 +1,6 @@
-name: Dependent Services Check
+name: Manual Dependent Services Check
 
 on:
-  pull_request:
-    branches: [ master ]
   workflow_dispatch:
     inputs:
       pr_branch:
@@ -15,31 +13,7 @@ on:
         type: string
 
 jobs:
-  set-default-success-status:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set default success status for Dependent Services Check
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const sha = context.sha;
-            const workflowRunUrl = `https://github.com/${owner}/${repo}/actions/workflows/${github.workflow}.yml`;
-
-            github.rest.repos.createCommitStatus({
-              owner,
-              repo,
-              sha,
-              state: 'success',
-              target_url: workflowRunUrl,
-              description: 'Manual dependent services check available. Click "Details" to run.',
-              context: 'Dependent Services Check'
-            });
-
   build-this-library:
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -69,17 +43,18 @@ jobs:
           retention-days: 1
 
   build-and-test-dependents:
-    if: github.event_name == 'workflow_dispatch'
     needs: build-this-library
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         dependent:
-          - name: "mgr-applications"
-            url: "https://github.com/folio-org/mgr-applications.git"
-#          - name: "mgr-tenants"
-#            url: "https://github.com/folio-org/mgr-tenants.git"
+          # !!! IMPORTANT: Replace this list with your actual dependent repositories !!!
+          - name: "mgr-applications" # Example: Replace with the actual service name
+            url: "https://github.com/folio-org/mgr-applications.git" # Example: Replace with the actual repository URL
+#          - name: "mgr-tenants" # Example: Replace with the actual service name
+#            url: "https://github.com/folio-org/mgr-tenants.git" # Example: Replace with the actual repository URL
+          # Add all your 7+ dependent services here
 
     steps:
       - name: Set up JDK 21
@@ -97,13 +72,14 @@ jobs:
 
       - name: Clone Dependent Repository ${{ matrix.dependent.name }}
         run: git clone --depth 1 --recurse-submodules ${{ matrix.dependent.url }} ${{ matrix.dependent.name }}
+        # Improvement: If the repository is private, authentication setup will be required (e.g., using a PAT).
+        # Example: git clone https://YOUR_GITHUB_TOKEN@github.com/folio-org/mod-quick-marc
 
       - name: Build and Test Dependent Repository ${{ matrix.dependent.name }}
         run: cd ${{ matrix.dependent.name }}; mvn -B clean verify
 
   # Final job to update the PR status, dependent on build-and-test-dependents
   final-pr-status-update:
-    if: github.event_name == 'workflow_dispatch'
     needs: build-and-test-dependents
     runs-on: ubuntu-latest
     steps:

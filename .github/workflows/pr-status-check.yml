@@ -1,0 +1,29 @@
+name: PR Dependent Services Status Check
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  set-default-success-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set default success status for Dependent Services Check
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = context.sha;
+            // Reference the manual workflow file for the target_url
+            const manualWorkflowRunUrl = `https://github.com/${owner}/${repo}/actions/workflows/manual-dependent-check.yml`;
+            
+            github.rest.repos.createCommitStatus({
+              owner,
+              repo,
+              sha,
+              state: 'success',
+              target_url: manualWorkflowRunUrl,
+              description: 'Manual dependent services check available. Click "Details" to run.',
+              context: 'Dependent Services Check'
+            });
