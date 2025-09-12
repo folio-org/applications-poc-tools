@@ -1,0 +1,127 @@
+name: Manual Dependent Services Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_branch:
+        description: 'Branch name of the library to build (e.g., feature/my-branch). Empty = current'
+        required: false
+        type: string
+        default: ''
+      pr_head_sha:
+        description: 'Head SHA of the PR (optional; set to update PR commit status)'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  build-this-library:
+    runs-on: ubuntu-latest
+    env:
+      M2: ${{ github.workspace }}/.m2repo
+    timeout-minutes: 20
+    steps:
+      - name: Checkout current repository (this library)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.pr_branch }}
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and install this library to local Maven repository
+        run: mvn -B -U -Dmaven.repo.local='${{ env.M2 }}' clean install -DskipTests
+
+      - name: Upload this library's Maven artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: this-library-maven-artifacts
+          path: ${{ env.M2 }}/org/folio
+          if-no-files-found: error
+          retention-days: 1
+
+  build-and-test-dependents:
+    needs: build-this-library
+    runs-on: ubuntu-latest
+    env:
+      M2: ${{ github.workspace }}/.m2repo
+    strategy:
+      fail-fast: false
+      matrix:
+        dependent:
+          # !!! IMPORTANT: Replace this list with your actual dependent repositories !!!
+          - name: "mgr-applications" # Example: Replace with the actual service name
+            url: "https://github.com/folio-org/mgr-applications.git" # Example: Replace with the actual repository URL
+#          - name: "mgr-tenants" # Example: Replace with the actual service name
+#            url: "https://github.com/folio-org/mgr-tenants.git" # Example: Replace with the actual repository URL
+          # Add all your 7+ dependent services here
+
+    steps:
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Download this library's Maven artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: this-library-maven-artifacts
+          path: ${{ env.M2 }}/org/folio
+
+      - name: Clone Dependent Repository ${{ matrix.dependent.name }}
+        run: git clone --depth 1 --recurse-submodules ${{ matrix.dependent.url }} ${{ matrix.dependent.name }}
+        # Improvement: If the repository is private, authentication setup will be required (e.g., using a PAT).
+        # Example: git clone https://YOUR_GITHUB_TOKEN@github.com/folio-org/mod-quick-marc
+
+      - name: Build and Test Dependent Repository ${{ matrix.dependent.name }}
+        run: cd ${{ matrix.dependent.name }}; mvn -B -nsu -Dmaven.repo.local='${{ env.M2 }}' clean verify
+
+  # Final job to update the PR status, dependent on build-and-test-dependents
+  final-pr-status-update:
+    needs: build-and-test-dependents
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.pr_head_sha != '' }}
+    env:
+      MATRIX_RESULT: ${{ needs.build-and-test-dependents.result }}
+      PR_SHA: ${{ github.event.inputs.pr_head_sha }}
+    steps:
+      - name: Final PR Status Update
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const runId = process.env.GITHUB_RUN_ID;
+            const overallStatus = process.env.MATRIX_RESULT;
+            const prHeadSha = process.env.PR_SHA;
+
+            let state = 'success';
+            let description = 'All dependent services built and tested successfully.';
+            if (overallStatus === 'failure') {
+              state = 'failure';
+              description = 'One or more dependent services failed to build or test.';
+            } else if (overallStatus === 'cancelled') {
+              state = 'error';
+              description = 'Dependent services check was cancelled.';
+            }
+
+            await github.rest.repos.createCommitStatus({
+              owner,
+              repo,
+              sha: prHeadSha,
+              state,
+              target_url: `https://github.com/${owner}/${repo}/actions/runs/${runId}`,
+              description,
+              context: 'Dependent Services Check'
+            });
