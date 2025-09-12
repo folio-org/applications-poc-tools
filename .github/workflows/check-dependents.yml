@@ -101,38 +101,10 @@ jobs:
       - name: Build and Test Dependent Repository ${{ matrix.dependent.name }}
         run: cd ${{ matrix.dependent.name }}; mvn -B clean verify
 
-  # Job to determine the overall status of the build-and-test-dependents matrix
-  # This is needed to get the overall matrix status, as job.status doesn't directly work for matrices
-  determine-matrix-status:
-    if: github.event_name == 'workflow_dispatch'
-    needs: build-and-test-dependents
-    runs-on: ubuntu-latest
-    outputs:
-      overall_status: ${{ steps.check_status.outputs.overall_status }}
-    steps:
-      - name: Check overall matrix status
-        id: check_status
-        run: |
-          # Check the status of each job in the matrix
-          # If at least one job in the matrix failed, the overall status will be failure
-          # Otherwise, if all are successful, the overall status is success
-          # If there are cancelled jobs, then error
-          overall_status="success"
-          for job_name in ${{ toJson(needs.build-and-test-dependents.outputs) }}; do
-            if [[ "${{ needs.build-and-test-dependents.outputs[job_name].result }}" == "failure" ]]; then
-              overall_status="failure"
-              break
-            elif [[ "${{ needs.build-and-test-dependents.outputs[job_name].result }}" == "cancelled" ]]; then
-              overall_status="error"
-              break
-            fi
-          done
-          echo "overall_status=$overall_status" >> "$GITHUB_OUTPUT"
-
-  # Final job to update the PR status, dependent on determine-matrix-status
+  # Final job to update the PR status, dependent on build-and-test-dependents
   final-pr-status-update:
     if: github.event_name == 'workflow_dispatch'
-    needs: determine-matrix-status
+    needs: build-and-test-dependents
     runs-on: ubuntu-latest
     steps:
       - name: Final PR Status Update
@@ -142,7 +114,7 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const prHeadSha = github.event.inputs.pr_head_sha;
-            const overallStatus = needs.determine-matrix-status.outputs.overall_status;
+            const overallStatus = needs.build-and-test-dependents.result;
 
             let finalState = 'success';
             let finalDescription = 'All dependent services built and tested successfully.';
@@ -150,9 +122,9 @@ jobs:
             if (overallStatus === 'failure') {
               finalState = 'failure';
               finalDescription = 'One or more dependent services failed to build or test.';
-            } else if (overallStatus === 'error') {
+            } else if (overallStatus === 'cancelled') {
               finalState = 'error';
-              finalDescription = 'Dependent services check was cancelled or encountered an error.';
+              finalDescription = 'Dependent services check was cancelled.';
             }
 
             github.rest.repos.createCommitStatus({
