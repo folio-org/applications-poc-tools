@@ -1,0 +1,166 @@
+name: Dependent Services Check
+
+on:
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      pr_branch:
+        description: 'Branch name of the current PR (e.g., feature/my-new-feature)'
+        required: true
+        type: string
+      pr_head_sha:
+        description: 'Head SHA of the PR to check'
+        required: true
+        type: string
+
+jobs:
+  set-default-success-status:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set default success status for Dependent Services Check
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = context.sha;
+            const workflowRunUrl = `https://github.com/${owner}/${repo}/actions/workflows/${github.workflow}.yml`;
+
+            github.rest.repos.createCommitStatus({
+              owner,
+              repo,
+              sha,
+              state: 'success',
+              target_url: workflowRunUrl,
+              description: 'Manual dependent services check available. Click "Details" to run.',
+              context: 'Dependent Services Check'
+            });
+
+  build-this-library:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout current repository (this library)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.pr_branch }}
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and install this library to local Maven repository
+        run: mvn -B clean install -DskipTests
+
+      - name: Upload this library's Maven artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: this-library-maven-artifacts
+          path: ~/.m2/repository/org/folio
+          if-no-files-found: error
+          retention-days: 1
+
+  build-and-test-dependents:
+    if: github.event_name == 'workflow_dispatch'
+    needs: build-this-library
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dependent:
+          - name: "mgr-applications"
+            url: "https://github.com/folio-org/mgr-applications.git"
+#          - name: "mgr-tenants"
+#            url: "https://github.com/folio-org/mgr-tenants.git"
+
+    steps:
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Download this library's Maven artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: this-library-maven-artifacts
+          path: ~/.m2/repository/org/folio
+
+      - name: Clone Dependent Repository ${{ matrix.dependent.name }}
+        run: git clone --depth 1 --recurse-submodules ${{ matrix.dependent.url }} ${{ matrix.dependent.name }}
+
+      - name: Build and Test Dependent Repository ${{ matrix.dependent.name }}
+        run: cd ${{ matrix.dependent.name }}; mvn -B clean verify
+
+  # Job to determine the overall status of the build-and-test-dependents matrix
+  # This is needed to get the overall matrix status, as job.status doesn't directly work for matrices
+  determine-matrix-status:
+    if: github.event_name == 'workflow_dispatch'
+    needs: build-and-test-dependents
+    runs-on: ubuntu-latest
+    outputs:
+      overall_status: ${{ steps.check_status.outputs.overall_status }}
+    steps:
+      - name: Check overall matrix status
+        id: check_status
+        run: |
+          # Check the status of each job in the matrix
+          # If at least one job in the matrix failed, the overall status will be failure
+          # Otherwise, if all are successful, the overall status is success
+          # If there are cancelled jobs, then error
+          overall_status="success"
+          for job_name in ${{ toJson(needs.build-and-test-dependents.outputs) }}; do
+            if [[ "${{ needs.build-and-test-dependents.outputs[job_name].result }}" == "failure" ]]; then
+              overall_status="failure"
+              break
+            elif [[ "${{ needs.build-and-test-dependents.outputs[job_name].result }}" == "cancelled" ]]; then
+              overall_status="error"
+              break
+            fi
+          done
+          echo "overall_status=$overall_status" >> "$GITHUB_OUTPUT"
+
+  # Final job to update the PR status, dependent on determine-matrix-status
+  final-pr-status-update:
+    if: github.event_name == 'workflow_dispatch'
+    needs: determine-matrix-status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Final PR Status Update
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prHeadSha = github.event.inputs.pr_head_sha;
+            const overallStatus = needs.determine-matrix-status.outputs.overall_status;
+
+            let finalState = 'success';
+            let finalDescription = 'All dependent services built and tested successfully.';
+
+            if (overallStatus === 'failure') {
+              finalState = 'failure';
+              finalDescription = 'One or more dependent services failed to build or test.';
+            } else if (overallStatus === 'error') {
+              finalState = 'error';
+              finalDescription = 'Dependent services check was cancelled or encountered an error.';
+            }
+
+            github.rest.repos.createCommitStatus({
+              owner,
+              repo,
+              sha: prHeadSha,
+              state: finalState,
+              target_url: `https://github.com/${owner}/${repo}/actions/runs/${github.run_id}`,
+              description: finalDescription,
+              context: 'Dependent Services Check'
+            });
