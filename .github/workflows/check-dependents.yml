@@ -22,7 +22,7 @@ jobs:
   build-this-library:
     runs-on: ubuntu-latest
     env:
-      M2: ${{ runner.temp }}/m2repo
+      M2: ${{ github.workspace }}/.m2repo
     timeout-minutes: 20
     steps:
       - name: Checkout current repository (this library)
@@ -54,7 +54,7 @@ jobs:
     needs: build-this-library
     runs-on: ubuntu-latest
     env:
-      M2: ${{ runner.temp }}/m2repo
+      M2: ${{ github.workspace }}/.m2repo
     strategy:
       fail-fast: false
       matrix:
