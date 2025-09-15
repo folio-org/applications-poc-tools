@@ -14,8 +14,10 @@ import org.folio.security.integration.keycloak.client.KeycloakAuthClient;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
 import org.folio.security.integration.keycloak.service.KeycloakAuthorizationService;
 import org.folio.security.integration.keycloak.service.KeycloakPublicKeyProvider;
+import org.folio.security.integration.keycloak.service.SecureStoreKeyProvider;
 import org.folio.security.service.InternalModuleDescriptorProvider;
 import org.folio.security.service.RoutingEntryMatcher;
+import org.folio.tools.store.properties.SecureStoreProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -33,6 +35,11 @@ import org.springframework.web.util.UrlPathHelper;
 public class KeycloakSecurityConfiguration {
 
   private final KeycloakProperties properties;
+
+  @Bean
+  public SecureStoreKeyProvider storeKeyProvider(SecureStoreProperties secureStoreProperties) {
+    return new SecureStoreKeyProvider(secureStoreProperties);
+  }
 
   @Bean
   public KeycloakAuthClient keycloakAuthClient(okhttp3.OkHttpClient okHttpClient, Contract contract, Encoder encoder,
