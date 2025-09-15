@@ -10,12 +10,14 @@ import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.folio.common.utils.CollectionUtils.mapItems;
 import static org.folio.common.utils.CollectionUtils.toStream;
+import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
 import static org.folio.tools.kong.model.expression.RouteExpressions.combineUsingAnd;
 import static org.folio.tools.kong.model.expression.RouteExpressions.combineUsingOr;
 import static org.folio.tools.kong.model.expression.RouteExpressions.httpHeader;
 import static org.folio.tools.kong.model.expression.RouteExpressions.httpMethod;
 import static org.folio.tools.kong.model.expression.RouteExpressions.httpPath;
 import static org.folio.tools.kong.utls.RoutingEntryUtils.getMethods;
+import static org.springframework.util.ObjectUtils.nullSafeEquals;
 
 import feign.FeignException;
 import feign.FeignException.NotFound;
@@ -45,11 +47,14 @@ import org.folio.tools.kong.client.KongAdminClient.KongResultList;
 import org.folio.tools.kong.exception.KongIntegrationException;
 import org.folio.tools.kong.model.Route;
 import org.folio.tools.kong.model.Service;
+import org.folio.tools.kong.model.expression.RouteExpression;
+import org.jetbrains.annotations.Nullable;
 
 @Log4j2
 @RequiredArgsConstructor
 public class KongGatewayService {
 
+  public static final String MULTIPLE_INTERFACE_TYPE = "multiple";
   private static final String KONG_PATH_VARIABLE_REGEX_GROUP = "([^/]+)";
   private static final Pattern PATH_VARIABLE_REGEX = Pattern.compile("\\{[^}]+}");
 
@@ -220,8 +225,9 @@ public class KongGatewayService {
       return emptyList();
     }
 
+    var isMultiple = nullSafeEquals(desc.getInterfaceType(), MULTIPLE_INTERFACE_TYPE);
     return toStream(desc.getHandlers())
-      .map(routingEntry -> getRoute(moduleId, interfaceId, routingEntry, isMgrComponent)
+      .map(routingEntry -> getRoute(moduleId, interfaceId, routingEntry, isMgrComponent, isMultiple)
         .map(route -> Pair.of(route, routingEntry)))
       .flatMap(Optional::stream)
       .toList();
@@ -286,7 +292,7 @@ public class KongGatewayService {
 
   @SuppressWarnings("java:S4790")
   private static Optional<Route> getRoute(String moduleId, String interfaceId, RoutingEntry re,
-    boolean isMgrComponent) {
+    boolean isMgrComponent, boolean isMultiple) {
 
     var staticPath = re.getStaticPath();
     var httpMethods = getMethods(re);
@@ -303,14 +309,14 @@ public class KongGatewayService {
 
     var pathExpression = path.endsWith("$") ? httpPath().regexMatching(path) : httpPath().equalsTo(path);
     var methodsExpression = combineUsingOr(mapItems(httpMethods, method -> httpMethod().equalsTo(method)));
-    var headersExpression = isMgrComponent ? null : httpHeader("x-okapi-tenant").headerRegexMatching("\".*\"");
-    return Optional.of(
-      new Route()
-        .priority(kongPathPair.getRight())
-        .name(sha1Hex(routeName))
-        .expression(combineUsingAnd(getNonNullValues(pathExpression, methodsExpression, headersExpression)))
-        .tags(getNonNullValues(moduleId, interfaceId))
-        .stripPath(false)
+    var moduleIdExp = buildModuleIdHeaderExpression(moduleId, isMultiple);
+    var tenantExp = buildTenantHeaderExpression(isMgrComponent);
+    return Optional.of(new Route()
+      .priority(kongPathPair.getRight())
+      .name(sha1Hex(routeName))
+      .expression(combineUsingAnd(getNonNullValues(pathExpression, methodsExpression, moduleIdExp, tenantExp)))
+      .tags(getNonNullValues(moduleId, interfaceId))
+      .stripPath(false)
     );
   }
 
@@ -352,5 +358,13 @@ public class KongGatewayService {
   @SafeVarargs
   private static <T> List<T> getNonNullValues(T... nullableValues) {
     return Stream.of(nullableValues).filter(Objects::nonNull).toList();
+  }
+
+  private static RouteExpression buildModuleIdHeaderExpression(String moduleId, boolean isMultiple) {
+    return isMultiple ? httpHeader(MODULE_ID).equalsTo(moduleId) : null;
+  }
+
+  private static @Nullable RouteExpression buildTenantHeaderExpression(boolean isMgrComponent) {
+    return isMgrComponent ? null : httpHeader("x-okapi-tenant").headerRegexMatching("\".*\"");
   }
 }

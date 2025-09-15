@@ -23,6 +23,7 @@ import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdW
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithMultipleInterface2;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.mdWithTimerInterface;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.moduleDescriptor;
+import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.multipleTypeHeaders;
 import static org.folio.tools.kong.service.KongGatewayServiceTest.TestValues.route;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -128,9 +129,9 @@ class KongGatewayServiceTest {
       kongGatewayService.addRoutes(List.of(mdWithMultipleInterface1(), mdWithMultipleInterface2()));
 
       assertThat(routeCaptor.getAllValues()).hasSize(4).isEqualTo(List.of(
-        route(List.of("GET"), "/baz/entities", 1, "baz-multiple-1.0", fooModuleId),
+        route(List.of("GET"), "/baz/entities", 1, "baz-multiple-1.0", fooModuleId, multipleTypeHeaders(fooModuleId)),
         route(List.of("POST"), "/foo/entities", 1, "foo-1.0", fooModuleId),
-        route(List.of("GET"), "/baz/entities", 1, "baz-multiple-1.0", barModuleId),
+        route(List.of("GET"), "/baz/entities", 1, "baz-multiple-1.0", barModuleId, multipleTypeHeaders(barModuleId)),
         route(List.of("POST"), "/bar/entities", 1, "bar-1.0", barModuleId)));
     }
 
