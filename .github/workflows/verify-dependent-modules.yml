@@ -1,0 +1,283 @@
+name: Verify Dependent Modules
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: verify-dependent-modules-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+env:
+  MAVEN_ARGS: -B -ntp
+  DEPENDENT_MATRIX: |
+    {"include": [
+      {"name": "mgr-applications", "repo": "folio-org/mgr-applications"},
+      {"name": "mgr-tenants", "repo": "folio-org/mgr-tenants"},
+      {"name": "mgr-tenant-entitlements", "repo": "folio-org/mgr-tenant-entitlements"},
+      {"name": "mod-roles-keycloak", "repo": "folio-org/mod-roles-keycloak"},
+      {"name": "mod-login-keycloak", "repo": "folio-org/mod-login-keycloak"},
+      {"name": "mod-users-keycloak", "repo": "folio-org/mod-users-keycloak"},
+      {"name": "mod-scheduler", "repo": "folio-org/mod-scheduler"},
+      {"name": "mod-consortia-keycloak", "repo": "folio-org/mod-consortia-keycloak"},
+      {"name": "folio-module-sidecar", "repo": "folio-org/folio-module-sidecar"}
+    ]}
+
+jobs:
+  prepare-matrix:
+    name: Prepare matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.emit.outputs.matrix }}
+    steps:
+      - id: emit
+        run: |
+          {
+            echo 'matrix<<EOF'
+            printf '%s\n' "$DEPENDENT_MATRIX"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+  build-library:
+    name: Build applications-poc-tools
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+      - name: Set up Temurin JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: pom.xml
+      - name: Build library (install to local repository)
+        run: mvn ${MAVEN_ARGS} clean install -DskipTests
+      - name: Upload Maven org/folio artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lib-m2-org-folio
+          path: ~/.m2/repository/org/folio
+          if-no-files-found: error
+          retention-days: 1
+
+  build-dependent-modules:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs:
+      - prepare-matrix
+      - build-library
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout ${{ matrix.name }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repo }}
+          path: module
+          fetch-depth: 1
+      - name: Set up Temurin JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Cache Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('module/pom.xml') }}
+          restore-keys: maven-${{ runner.os }}-${{ matrix.name }}-
+      - name: Clear cached org/folio artifacts
+        run: rm -rf ~/.m2/repository/org/folio
+      - name: Download library artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: lib-m2-org-folio
+          path: ~/.m2/repository/org/folio
+      - name: Build & test ${{ matrix.name }}
+        working-directory: module
+        run: mvn ${MAVEN_ARGS} clean verify
+      - name: Publish failed test summary
+        if: failure()
+        working-directory: module
+        run: |
+          report_dirs=(
+            "target/surefire-reports"
+            "target/failsafe-reports"
+          )
+
+          has_reports=false
+          for dir in "${report_dirs[@]}"; do
+            if compgen -G "${dir}/*.xml" > /dev/null; then
+              if ! ${has_reports}; then
+                printf '## %s failed tests\n\n' '${{ matrix.name }}' >> "$GITHUB_STEP_SUMMARY"
+                has_reports=true
+              fi
+              find "${dir}" -maxdepth 1 -type f -name '*.xml' -printf '- %f\n' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+  report:
+    name: Report to PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs:
+      - build-library
+      - build-dependent-modules
+    if: always()
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Post PR summary
+        uses: actions/github-script@v7
+        env:
+          BUILD_LIBRARY_RESULT: ${{ needs.build-library.result }}
+          DEPENDENT_MATRIX: ${{ env.DEPENDENT_MATRIX }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const commitSha = context.sha;
+            const statusLabels = {
+              success: '✅ success',
+              failure: '❌ failure',
+              cancelled: '⚠️ cancelled',
+              skipped: '⚠️ skipped',
+              neutral: '⚠️ neutral',
+              timed_out: '❌ timed out',
+            };
+
+            // Pull workflow attempt metadata to link back to logs.
+            const runResponse = await github.rest.actions.getWorkflowRun({
+              owner,
+              repo,
+              run_id: context.runId,
+            });
+
+            const attempt = runResponse.data.run_attempt || context.runAttempt || 1;
+            const workflowRunUrl = runResponse.data.html_url;
+
+            const { data: jobList } = await github.rest.actions.listJobsForWorkflowRunAttempt({ owner, repo, run_id: context.runId, attempt_number: attempt });
+
+            const jobs = jobList.jobs ?? [];
+
+            // Format status text for table rows.
+            const labelFor = (status) => statusLabels[status] || `⚠️ ${status || 'unknown'}`;
+            const linkFor = (job, status, fallback = '-') => {
+              const normalized = status?.toLowerCase();
+              if (job?.html_url && normalized && normalized !== 'success') {
+                return `[Logs](${job.html_url})`;
+              }
+              if (workflowRunUrl) {
+                return `[Workflow](${workflowRunUrl})`;
+              }
+              return fallback;
+            };
+
+            // Identify the main library job status, first via env fallback then API.
+            const libraryJob = jobs.find((job) => job.name === 'Build applications-poc-tools' || job.name === 'build-library');
+            const libraryStatus = (process.env.BUILD_LIBRARY_RESULT || libraryJob?.conclusion || 'unknown').toLowerCase();
+
+            // Expand matrix names from shared env definition to build per-module rows.
+            const matrixEnv = JSON.parse(process.env.DEPENDENT_MATRIX ?? '{}');
+            const matrixModules = (matrixEnv.include || []).map((entry) => entry.name).filter(Boolean);
+
+            // Ensure we display best-effort statuses even if job list is incomplete.
+            const fallbackStatus = (status, job) => {
+              if (status) {
+                return status.toLowerCase();
+              }
+              if (job?.status === 'queued' || job?.status === 'in_progress') {
+                return job.status.toLowerCase();
+              }
+              return 'skipped';
+            };
+
+            const moduleJobs = new Map();
+            for (const job of jobs) {
+              if (!job.name) {
+                continue;
+              }
+
+              // Job names sometimes append matrix values in parentheses; normalise both forms.
+              const directName = matrixModules.find((module) => job.name === module);
+              if (directName) {
+                moduleJobs.set(directName, job);
+                continue;
+              }
+
+              const match = job.name.match(/\(([^)]+)\)$/);
+              if (!match) {
+                continue;
+              }
+
+              const moduleName = match[1].trim();
+              if (matrixModules.includes(moduleName)) {
+                moduleJobs.set(moduleName, job);
+              }
+            }
+
+            const libraryRow = `| applications-poc-tools | ${labelFor(libraryStatus)} | ${linkFor(libraryJob, libraryStatus)} |`;
+
+            const libraryFailed = libraryStatus !== 'success';
+
+            const moduleRows = matrixModules.map((moduleName) => {
+              const job = moduleJobs.get(moduleName);
+              const statusRaw = job?.conclusion || null;
+              let status = fallbackStatus(statusRaw, job);
+              let detail = '-';
+
+              if (libraryFailed) {
+                status = 'skipped';
+                detail = 'Blocked by library build failure';
+              } else if (job && status !== 'success') {
+                detail = linkFor(job, status, 'See workflow logs');
+              } else if (!job && status === 'skipped') {
+                detail = 'Job not created';
+              }
+
+              return `| ${moduleName} | ${labelFor(status)} | ${detail} |`;
+            });
+
+            const summaryLines = [
+              '### Check dependent modules',
+              `Commit: \`${commitSha.slice(0, 7)}\``,
+              '',
+              '| Module | Result | Details |',
+              '| --- | --- | --- |',
+              libraryRow,
+              ...moduleRows,
+              ''
+            ];
+            await core.summary.addRaw(summaryLines.join('\n')).write();
+
+            // Resolve PR associated with this commit; skip comment when run is detached from PRs.
+            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({ owner, repo, commit_sha: commitSha });
+
+            if (!prs.data.length) {
+              core.info(`No pull requests found for commit ${commitSha}. Skipping PR comment.`);
+              return;
+            }
+
+            const prNumber = prs.data[0].number;
+            const body = summaryLines.join('\n');
+
+            // Publish summary comment (create or update) on the associated PR.
+            await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body });
