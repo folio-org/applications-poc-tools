@@ -11,6 +11,8 @@ Provide a brief technical summary of the changes.
 - [ ] **Self-reviewed Code** — Reviewed code for issues, unnecessary parts, and overall quality.
 - [ ] **Change Notes** — NEWS.md updated with clear description and issue key.
 - [ ] **Testing** — Confirmed changes were tested locally or on dev environment.
+- [ ] **Dependent module build verification** — Ran [Verify Dependent Modules](../docs/workflows/verify-dependent-modules.md) manually when library changes impact downstream modules.
+  > Actions → Verify Dependent Modules → Run workflow → select branch → Run.
 - [ ] **Breaking Changes (if any)** — Handled if changes affect integration with other services.
 - [ ] **New Properties / Environment Variables** — Updated README.md if new configs were added.
 - [ ] **Environment Recreation Test (if needed)** — Verified that environment can be recreated successfully.
