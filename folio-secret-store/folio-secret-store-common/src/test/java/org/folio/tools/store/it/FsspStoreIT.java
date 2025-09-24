@@ -36,7 +36,6 @@ class FsspStoreIT {
     var properties = FsspConfigProperties.builder()
       .address(System.getProperty(WM_URL_PROPERTY))
       .secretPath("secure-store/entries")
-      .enableSsl(false)
       .build();
 
     fsspStore = new FsspStore(properties);
