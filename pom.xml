@@ -49,7 +49,6 @@
 
     <!-- Test dependencies versions -->
     <mockito.version>5.20.0</mockito.version>
-    <wiremock.version>2.35.2</wiremock.version>
     <testcontainer.version>1.21.3</testcontainer.version>
     <instancio.version>5.5.1</instancio.version>
 
@@ -106,13 +105,6 @@
         <version>${testcontainer.version}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>com.github.tomakehurst</groupId>
-        <artifactId>wiremock-jre8</artifactId>
-        <version>${wiremock.version}</version>
-        <scope>test</scope>
       </dependency>
 
       <dependency>
