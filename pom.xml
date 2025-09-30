@@ -44,7 +44,7 @@
     <apache-commons-collections4.version>4.5.0</apache-commons-collections4.version>
     <spring-kafka.version>3.3.10</spring-kafka.version>
     <spring-boot-starter-validation.version>3.0.4</spring-boot-starter-validation.version>
-    <apache-commons-lang3.version>3.18.0</apache-commons-lang3.version>
+    <apache-commons-lang3.version>3.19.0</apache-commons-lang3.version>
     <feign-okhttp.version>13.6</feign-okhttp.version>
 
     <!-- Test dependencies versions -->
@@ -54,7 +54,7 @@
 
     <!-- Plugins versions -->
     <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
-    <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+    <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
     <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
@@ -166,7 +166,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>11.0.1</version>
+              <version>11.1.0</version>
             </dependency>
             <dependency>
               <groupId>org.folio</groupId>

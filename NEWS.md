@@ -14,4 +14,4 @@
 * Add verify dependents module workflow (APPPOCTOOL-70)
 
 ### Migration:
-* Replace KeycloakSecretUtils with KeycloakStoreKeyProvider, add `application.secret-store.environment=${SECURE_STORE_ENV:folio}` to application.yaml (for Ramsons and Sunflower: add `application.secret-store.environment=${SECURE_STORE_ENV:${ENV:folio}}` to application.yaml).
+* Replace KeycloakSecretUtils with SecureStoreKeyProvider, add `application.secret-store.environment=${SECURE_STORE_ENV:folio}` to application.yaml (for Ramsons and Sunflower: add `application.secret-store.environment=${SECURE_STORE_ENV:${ENV:folio}}` to application.yaml).
