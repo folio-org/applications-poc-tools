@@ -10,11 +10,19 @@ import lombok.Value;
 public class TlsProperties {
 
   boolean enabled;
-  String trustStorePath;
-  String trustStorePassword;
-  String trustStoreType;
+  Store keyStore;
+  Store trustStore;
 
-  public String getTrustStorePassword() {
-    return defaultString(trustStorePassword);
+  @Value
+  @Builder
+  public static class Store {
+
+    String path;
+    String password;
+    String type;
+
+    public String getPassword() {
+      return defaultString(password);
+    }
   }
 }
