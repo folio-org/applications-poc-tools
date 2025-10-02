@@ -1,6 +1,7 @@
 ## Version `v3.0.6` (13.10.2025)
 * Support "delete" operation in secure store (FSSP-1)
 * SecretStore implementation for folio-secure-store-proxy (APPPOCTOOL-59)
+* Implement mTLS Client-Side Authentication for FSSP client (APPPOCTOOL-62)
 
 ---
 

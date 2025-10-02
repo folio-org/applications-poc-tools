@@ -1,7 +1,5 @@
 package org.folio.tools.store.properties;
 
-import static java.lang.Boolean.parseBoolean;
-
 import java.util.Properties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,12 +13,13 @@ import lombok.NoArgsConstructor;
 public class FsspConfigProperties {
 
   public static final String DEFAULT_SECRET_PATH = "secure-store/entries";
-  public static final boolean DEFAULT_ENABLE_SSL = false;
   public static final String DEFAULT_TRUSTSTORE_FILE_TYPE = "jks";
 
   public static final String PROP_FSSP_ADDRESS = "address";
   public static final String PROP_FSSP_SECRET_PATH = "secretPath";
-  public static final String PROP_FSSP_ENABLE_SSL = "enableSsl";
+  public static final String PROP_FSSP_KEYSTORE_PATH = "keyStorePath";
+  public static final String PROP_FSSP_KEYSTORE_FILE_TYPE = "keyStoreFileType";
+  public static final String PROP_FSSP_KEYSTORE_PASSWORD = "keyStorePassword";
   public static final String PROP_FSSP_TRUSTSTORE_PATH = "trustStorePath";
   public static final String PROP_FSSP_TRUSTSTORE_FILE_TYPE = "trustStoreFileType";
   public static final String PROP_FSSP_TRUSTSTORE_PASSWORD = "trustStorePassword";
@@ -37,10 +36,20 @@ public class FsspConfigProperties {
   private String secretPath = DEFAULT_SECRET_PATH;
 
   /**
-   * Whether to use SSL.
+   * The path to the key store file.
+   */
+  private String keyStorePath;
+
+  /**
+   * The password for the key store file.
+   */
+  private String keyStorePassword;
+
+  /**
+   * The type of the key store file (e.g., "jks", "pem").
    */
   @Builder.Default
-  private Boolean enableSsl = DEFAULT_ENABLE_SSL;
+  private String keyStoreFileType = DEFAULT_TRUSTSTORE_FILE_TYPE;
 
   /**
    * The path to the trust store file.
@@ -62,7 +71,9 @@ public class FsspConfigProperties {
     return builder()
       .address(properties.getProperty(PROP_FSSP_ADDRESS))
       .secretPath(properties.getProperty(PROP_FSSP_SECRET_PATH, DEFAULT_SECRET_PATH))
-      .enableSsl(parseBoolean(properties.getProperty(PROP_FSSP_ENABLE_SSL, String.valueOf(DEFAULT_ENABLE_SSL))))
+      .keyStorePath(properties.getProperty(PROP_FSSP_KEYSTORE_PATH))
+      .keyStoreFileType(properties.getProperty(PROP_FSSP_KEYSTORE_FILE_TYPE, DEFAULT_TRUSTSTORE_FILE_TYPE))
+      .keyStorePassword(properties.getProperty(PROP_FSSP_KEYSTORE_PASSWORD))
       .trustStorePath(properties.getProperty(PROP_FSSP_TRUSTSTORE_PATH))
       .trustStoreFileType(properties.getProperty(PROP_FSSP_TRUSTSTORE_FILE_TYPE, DEFAULT_TRUSTSTORE_FILE_TYPE))
       .trustStorePassword(properties.getProperty(PROP_FSSP_TRUSTSTORE_PASSWORD))

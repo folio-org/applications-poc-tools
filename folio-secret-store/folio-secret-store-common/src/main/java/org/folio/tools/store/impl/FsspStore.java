@@ -20,7 +20,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -38,6 +37,7 @@ import org.folio.tools.store.exception.SecretNotFoundException;
 import org.folio.tools.store.exception.SecureStoreServiceException;
 import org.folio.tools.store.properties.FsspConfigProperties;
 import org.folio.tools.store.utils.TlsProperties;
+import org.folio.tools.store.utils.TlsProperties.Store;
 
 @Log4j2
 public class FsspStore implements SecureStore {
@@ -110,7 +110,8 @@ public class FsspStore implements SecureStore {
   }
 
   private static String buildUri(FsspConfigProperties properties) throws URISyntaxException {
-    return new URI(removeEnd(properties.getAddress(), "/") + wrapIfMissing(properties.getSecretPath(), "/")).toString();
+    return new URI(removeEnd(properties.getAddress(), "/")
+      + wrapIfMissing(properties.getSecretPath(), "/")).toString();
   }
 
   private static ResponseHandler<String> handleGet(String key) {
@@ -198,13 +199,11 @@ public class FsspStore implements SecureStore {
         .build();
       builder.setDefaultRequestConfig(requestConfig);
 
-      if (BooleanUtils.isTrue(properties.getEnableSsl())) {
-        var sslContext = buildSslContext(toTlsProperties(properties));
-        builder.setSSLContext(sslContext);
+      var sslContext = buildSslContext(toTlsProperties(properties));
+      builder.setSSLContext(sslContext);
 
-        if (IS_HOSTNAME_VERIFICATION_DISABLED) {
-          builder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
-        }
+      if (IS_HOSTNAME_VERIFICATION_DISABLED) {
+        builder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
       }
 
       return builder;
@@ -212,10 +211,17 @@ public class FsspStore implements SecureStore {
 
     private static TlsProperties toTlsProperties(FsspConfigProperties properties) {
       return TlsProperties.builder()
-        .enabled(properties.getEnableSsl())
-        .trustStorePath(properties.getTrustStorePath())
-        .trustStoreType(properties.getTrustStoreFileType())
-        .trustStorePassword(properties.getTrustStorePassword())
+        .enabled(true)
+        .keyStore(Store.builder()
+          .path(properties.getKeyStorePath())
+          .type(properties.getKeyStoreFileType())
+          .password(properties.getKeyStorePassword())
+          .build())
+        .trustStore(Store.builder()
+          .path(properties.getTrustStorePath())
+          .type(properties.getTrustStoreFileType())
+          .password(properties.getTrustStorePassword())
+          .build())
         .build();
     }
   }
