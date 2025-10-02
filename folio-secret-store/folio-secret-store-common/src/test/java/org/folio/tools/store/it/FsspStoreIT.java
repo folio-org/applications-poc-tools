@@ -6,6 +6,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.folio.test.TestUtils.parse;
 import static org.folio.test.TestUtils.readString;
+import static org.folio.tools.store.support.SecretStoreTestValues.FSSP_CLIENT_KEYSTORE_PATH;
+import static org.folio.tools.store.support.SecretStoreTestValues.FSSP_CLIENT_TRUSTSTORE_PATH;
+import static org.folio.tools.store.support.SecretStoreTestValues.FSSP_SERVER_KEYSTORE_PATH;
+import static org.folio.tools.store.support.SecretStoreTestValues.FSSP_SERVER_TRUSTSTORE_PATH;
+import static org.folio.tools.store.support.SecretStoreTestValues.KS_FILE_TYPE_PKCS12;
+import static org.folio.tools.store.support.SecretStoreTestValues.KS_PASSWORD;
 
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
@@ -31,18 +37,15 @@ class FsspStoreIT {
   private static final String KEY1 = "key1";
   private static final String VALUE1 = "value1";
 
-  private static final String KS_FILE_TYPE_PKCS12 = "PKCS12";
-  private static final String KS_PASSWORD = "supersecret";
-
   private static final String SERVER_KEYSTORE_PATH;
   private static final String SERVER_TRUSTSTORE_PATH;
 
   static {
     try {
-      var ksFile = ResourceUtils.getFile("classpath:certificates/server/fssp-server-keystore.p12");
+      var ksFile = ResourceUtils.getFile(FSSP_SERVER_KEYSTORE_PATH);
       SERVER_KEYSTORE_PATH = ksFile.getAbsolutePath();
 
-      var tsFile = ResourceUtils.getFile("classpath:certificates/server/fssp-server-truststore.p12");
+      var tsFile = ResourceUtils.getFile(FSSP_SERVER_TRUSTSTORE_PATH);
       SERVER_TRUSTSTORE_PATH = tsFile.getAbsolutePath();
     } catch (FileNotFoundException e) {
       throw new RuntimeException(e);
@@ -92,10 +95,10 @@ class FsspStoreIT {
     var properties = FsspConfigProperties.builder()
       .address(wm.baseUrl())
       .secretPath("secure-store/entries")
-      .keyStorePath("classpath:certificates/client/fssp-user-client-keystore.p12")
+      .keyStorePath(FSSP_CLIENT_KEYSTORE_PATH)
       .keyStorePassword(KS_PASSWORD)
       .keyStoreFileType(KS_FILE_TYPE_PKCS12)
-      .trustStorePath("classpath:certificates/client/fssp-client-truststore.p12")
+      .trustStorePath(FSSP_CLIENT_TRUSTSTORE_PATH)
       .trustStorePassword(KS_PASSWORD)
       .trustStoreFileType(KS_FILE_TYPE_PKCS12)
       .build();
