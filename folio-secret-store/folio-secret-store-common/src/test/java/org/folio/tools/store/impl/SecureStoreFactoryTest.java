@@ -1,9 +1,12 @@
 package org.folio.tools.store.impl;
 
+import static org.folio.tools.store.properties.FsspConfigProperties.PROP_FSSP_TRUSTSTORE_FILE_TYPE;
+import static org.folio.tools.store.properties.FsspConfigProperties.PROP_FSSP_TRUSTSTORE_PASSWORD;
+import static org.folio.tools.store.properties.FsspConfigProperties.PROP_FSSP_TRUSTSTORE_PATH;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Properties;
 import org.folio.test.types.UnitTest;
@@ -28,6 +31,10 @@ class SecureStoreFactoryTest {
 
       if (clazz.equals(AwsStore.class)) {
         props.put(AwsStore.PROP_REGION, "us-east-1");
+      } else if (clazz.equals(FsspStore.class)) {
+        props.put(PROP_FSSP_TRUSTSTORE_PATH, "classpath:certificates/client/fssp-client-truststore.p12");
+        props.put(PROP_FSSP_TRUSTSTORE_FILE_TYPE, "PKCS12");
+        props.put(PROP_FSSP_TRUSTSTORE_PASSWORD, "supersecret");
       }
 
       actual = SecureStoreFactory.getSecureStore((String) clazz.getField("TYPE").get(null), props);
