@@ -45,6 +45,7 @@ import org.folio.common.domain.model.error.Parameter;
 import org.folio.tools.kong.client.KongAdminClient;
 import org.folio.tools.kong.client.KongAdminClient.KongResultList;
 import org.folio.tools.kong.exception.KongIntegrationException;
+import org.folio.tools.kong.exception.TenantRouteUpdateException;
 import org.folio.tools.kong.model.Route;
 import org.folio.tools.kong.model.Service;
 import org.folio.tools.kong.model.expression.RouteExpression;
@@ -59,6 +60,7 @@ public class KongGatewayService {
   private static final Pattern PATH_VARIABLE_REGEX = Pattern.compile("\\{[^}]+}");
 
   private final KongAdminClient kongAdminClient;
+  private final KongRouteTenantService kongRouteTenantService;
 
   /**
    * Adds routes for API Gateway.
@@ -88,6 +90,97 @@ public class KongGatewayService {
    */
   public void removeRoutes(Collection<ModuleDescriptor> moduleDescriptors) {
     performOperation(moduleDescriptors, "remove", md -> removeKongRoutes(md.getId()));
+  }
+
+  /**
+   * Adds a tenant to all routes for a specific module.
+   *
+   * @param moduleId - the module identifier
+   * @param tenantName - the tenant name to add
+   * @throws TenantRouteUpdateException if the operation fails
+   */
+  public void addTenantToModuleRoutes(String moduleId, String tenantName) {
+    log.info("Adding tenant [{}] to routes for module [{}]", tenantName, moduleId);
+    try {
+      var serviceId = getExistingServiceId(moduleId);
+      var routes = getKongRoutes(moduleId);
+      
+      if (routes.isEmpty()) {
+        log.warn("No routes found for module [{}]", moduleId);
+        return;
+      }
+
+      var failedRoutes = addTenantToRoutes(routes, tenantName, serviceId);
+      validateTenantChangeOperation(tenantName, moduleId, failedRoutes, "add");
+
+      log.info("Successfully added tenant [{}] to {} routes for module [{}]", tenantName, routes.size(), moduleId);
+    } catch (TenantRouteUpdateException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new TenantRouteUpdateException(
+        "Failed to add tenant [" + tenantName + "] to routes for module [" + moduleId + "]", e);
+    }
+  }
+
+  /**
+   * Removes a tenant from all routes for a specific module.
+   *
+   * @param moduleId - the module identifier
+   * @param tenantName - the tenant name to remove
+   * @throws TenantRouteUpdateException if the operation fails
+   */
+  public void removeTenantFromModuleRoutes(String moduleId, String tenantName) {
+    log.info("Removing tenant [{}] from routes for module [{}]", tenantName, moduleId);
+    try {
+      var serviceId = getExistingServiceId(moduleId);
+      var routes = getKongRoutes(moduleId);
+      
+      if (routes.isEmpty()) {
+        log.warn("No routes found for module [{}]", moduleId);
+        return;
+      }
+
+      var failedRoutes = removeTenantFromRoutes(routes, tenantName, serviceId);
+      validateTenantChangeOperation(tenantName, moduleId, failedRoutes, "remove");
+
+      log.info("Successfully removed tenant [{}] from {} routes for module [{}]", 
+        tenantName, routes.size(), moduleId);
+    } catch (TenantRouteUpdateException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new TenantRouteUpdateException(
+        "Failed to remove tenant [" + tenantName + "] from routes for module [" + moduleId + "]", e);
+    }
+  }
+
+  private List<String> addTenantToRoutes(List<Route> routes, String tenantName, String serviceId) {
+    var failedRoutes = new ArrayList<String>();
+    for (var route : routes) {
+      try {
+        var changedRoute = kongRouteTenantService.addTenant(route, tenantName);
+        kongAdminClient.upsertRoute(serviceId, route.getName(), changedRoute);
+        log.debug("Successfully added tenant [{}] to route [{}]", tenantName, route.getName());
+      } catch (Exception e) {
+        log.error("Failed to add tenant [{}] to route [{}]: {}", tenantName, route.getName(), e.getMessage());
+        failedRoutes.add(route.getName());
+      }
+    }
+    return failedRoutes;
+  }
+
+  private List<String> removeTenantFromRoutes(List<Route> routes, String tenantName, String serviceId) {
+    var failedRoutes = new ArrayList<String>();
+    for (var route : routes) {
+      try {
+        var changedRoute = kongRouteTenantService.removeTenant(route, tenantName);
+        kongAdminClient.upsertRoute(serviceId, route.getName(), changedRoute);
+        log.debug("Successfully removed tenant [{}] from route [{}]", tenantName, route.getName());
+      } catch (Exception e) {
+        log.error("Failed to remove tenant [{}] from route [{}]: {}", tenantName, route.getName(), e.getMessage());
+        failedRoutes.add(route.getName());
+      }
+    }
+    return failedRoutes;
   }
 
   /**
@@ -366,5 +459,14 @@ public class KongGatewayService {
 
   private static @Nullable RouteExpression buildTenantHeaderExpression(boolean isMgrComponent) {
     return isMgrComponent ? null : httpHeader("x-okapi-tenant").headerRegexMatching("\".*\"");
+  }
+
+  private static void validateTenantChangeOperation(String tenantName, String moduleId, List<String> failedRoutes,
+    String operation) {
+    if (!failedRoutes.isEmpty()) {
+      throw new TenantRouteUpdateException(
+        "Failed to " + operation + " tenant [" + tenantName + "] to routes for module [" + moduleId + "]. "
+          + "Failed routes: " + String.join(", ", failedRoutes));
+    }
   }
 }
