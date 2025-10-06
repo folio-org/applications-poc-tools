@@ -9,6 +9,7 @@ import feign.codec.Encoder;
 import org.folio.tools.kong.client.KongAdminClient;
 import org.folio.tools.kong.service.KongGatewayService;
 import org.folio.tools.kong.service.KongModuleRegistrar;
+import org.folio.tools.kong.service.KongRouteTenantService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -42,15 +43,28 @@ public class KongRegistrarAutoConfiguration {
   }
 
   /**
+   * Creates {@link KongRouteTenantService} bean.
+   *
+   * @return created {@link KongRouteTenantService} bean
+   */
+  @Bean(name = "folioKongRouteTenantService")
+  @ConditionalOnMissingBean(KongRouteTenantService.class)
+  public KongRouteTenantService kongRouteTenantService() {
+    return new KongRouteTenantService();
+  }
+
+  /**
    * Creates {@link KongGatewayService} bean.
    *
-   * @param kongAdminClient - {@link KongAdminClient} bean from spring context.
+   * @param kongAdminClient - {@link KongAdminClient} bean from spring context
+   * @param kongRouteTenantService - {@link KongRouteTenantService} bean from spring context
    * @return created {@link KongGatewayService} bean
    */
   @Bean(name = "folioKongGatewayService")
   @ConditionalOnMissingBean(KongGatewayService.class)
-  public KongGatewayService kongGatewayService(KongAdminClient kongAdminClient) {
-    return new KongGatewayService(kongAdminClient);
+  public KongGatewayService kongGatewayService(KongAdminClient kongAdminClient,
+    KongRouteTenantService kongRouteTenantService) {
+    return new KongGatewayService(kongAdminClient, kongRouteTenantService);
   }
 
   /**

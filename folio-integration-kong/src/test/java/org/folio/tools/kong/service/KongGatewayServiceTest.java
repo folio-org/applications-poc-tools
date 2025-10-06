@@ -56,6 +56,7 @@ import org.folio.test.types.UnitTest;
 import org.folio.tools.kong.client.KongAdminClient;
 import org.folio.tools.kong.client.KongAdminClient.KongResultList;
 import org.folio.tools.kong.exception.KongIntegrationException;
+import org.folio.tools.kong.exception.TenantRouteUpdateException;
 import org.folio.tools.kong.model.Identifier;
 import org.folio.tools.kong.model.Route;
 import org.folio.tools.kong.model.Service;
@@ -83,6 +84,7 @@ class KongGatewayServiceTest {
 
   @InjectMocks private KongGatewayService kongGatewayService;
   @Mock private KongAdminClient kongAdminClient;
+  @Mock private KongRouteTenantService kongRouteTenantService;
   @Captor private ArgumentCaptor<Route> routeCaptor;
 
   @BeforeEach
@@ -92,7 +94,7 @@ class KongGatewayServiceTest {
 
   @AfterEach
   void tearDown() {
-    verifyNoMoreInteractions(kongAdminClient);
+    verifyNoMoreInteractions(kongAdminClient, kongRouteTenantService);
   }
 
   @Nested
@@ -467,6 +469,256 @@ class KongGatewayServiceTest {
       assertThatThrownBy(() -> kongGatewayService.deleteServiceRoutes(MOD_ID)).isInstanceOf(
           KongIntegrationException.class).hasCause(cause)
         .hasMessage("Failed to delete all routes for service " + MOD_ID);
+    }
+  }
+
+  @Nested
+  @DisplayName("addTenantToModuleRoutes")
+  class AddTenantToModuleRoutes {
+
+    private static final String TENANT_NAME = "test-tenant";
+    private static final String ROUTE_ID_1 = "route-1";
+    private static final String ROUTE_ID_2 = "route-2";
+
+    @Test
+    @DisplayName("should add tenant to all module routes successfully")
+    void addTenantToModuleRoutes_positive() {
+      var route1 = new Route().id(ROUTE_ID_1).name("route-name-1")
+        .expression("http.path == \"/test1\"");
+      var route2 = new Route().id(ROUTE_ID_2).name("route-name-2")
+        .expression("http.path == \"/test2\"");
+      var routes = List.of(route1, route2);
+
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
+        .thenReturn(new KongResultList<>(null, routes));
+      when(kongAdminClient.upsertRoute(anyString(), eq("route-name-1"), any(Route.class))).thenReturn(route1);
+      when(kongAdminClient.upsertRoute(anyString(), eq("route-name-2"), any(Route.class))).thenReturn(route2);
+      when(kongRouteTenantService.addTenant(route1, TENANT_NAME)).thenReturn(route1);
+      when(kongRouteTenantService.addTenant(route2, TENANT_NAME)).thenReturn(route2);
+
+      kongGatewayService.addTenantToModuleRoutes(MOD_ID, TENANT_NAME);
+
+      verify(kongAdminClient).getService(MOD_ID);
+      verify(kongAdminClient).getRoutesByTag(ROUTE_TAGS, null);
+      verify(kongRouteTenantService).addTenant(route1, TENANT_NAME);
+      verify(kongRouteTenantService).addTenant(route2, TENANT_NAME);
+      verify(kongAdminClient, times(2)).upsertRoute(anyString(), anyString(), any(Route.class));
+    }
+
+    @Test
+    @DisplayName("should handle empty routes list")
+    void addTenantToModuleRoutes_emptyRoutes() {
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
+        .thenReturn(new KongResultList<>(null, emptyList()));
+
+      kongGatewayService.addTenantToModuleRoutes(MOD_ID, TENANT_NAME);
+
+      verify(kongAdminClient).getService(MOD_ID);
+      verify(kongAdminClient).getRoutesByTag(ROUTE_TAGS, null);
+      verify(kongRouteTenantService, never()).addTenant(any(), any());
+      verify(kongAdminClient, never()).upsertRoute(anyString(), anyString(), any(Route.class));
+    }
+
+    @Test
+    @DisplayName("should throw exception when service not found")
+    void addTenantToModuleRoutes_serviceNotFound() {
+      var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
+      when(kongAdminClient.getService(MOD_ID))
+        .thenThrow(new NotFound("Service not found", request, null, emptyMap()));
+
+      assertThatThrownBy(() -> kongGatewayService.addTenantToModuleRoutes(MOD_ID, TENANT_NAME))
+        .isInstanceOf(TenantRouteUpdateException.class)
+        .hasMessageContaining("Failed to add tenant")
+        .hasMessageContaining(TENANT_NAME)
+        .hasMessageContaining(MOD_ID);
+
+      verify(kongAdminClient).getService(MOD_ID);
+    }
+
+    @Test
+    @DisplayName("should throw exception when route update fails")
+    void addTenantToModuleRoutes_routeUpdateFails() {
+      var route1 = new Route().id(ROUTE_ID_1).name("route-name-1")
+        .expression("http.path == \"/test1\"");
+      var routes = List.of(route1);
+      var request = create(PUT, "/services/" + SERVICE_ID + "/routes/route-name-1", emptyMap(), null, 
+        (RequestTemplate) null);
+
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
+        .thenReturn(new KongResultList<>(null, routes));
+      when(kongRouteTenantService.addTenant(route1, TENANT_NAME)).thenReturn(route1);
+      doThrow(new InternalServerError("Update failed", request, null, emptyMap()))
+        .when(kongAdminClient).upsertRoute(anyString(), anyString(), any(Route.class));
+
+      assertThatThrownBy(() -> kongGatewayService.addTenantToModuleRoutes(MOD_ID, TENANT_NAME))
+        .isInstanceOf(TenantRouteUpdateException.class)
+        .hasMessageContaining("Failed to add tenant")
+        .hasMessageContaining(TENANT_NAME)
+        .hasMessageContaining(MOD_ID);
+
+      verify(kongAdminClient).getService(MOD_ID);
+      verify(kongAdminClient).getRoutesByTag(ROUTE_TAGS, null);
+      verify(kongRouteTenantService).addTenant(route1, TENANT_NAME);
+      verify(kongAdminClient).upsertRoute(anyString(), anyString(), any(Route.class));
+    }
+
+    @Test
+    @DisplayName("should throw exception when partial routes update fails")
+    void addTenantToModuleRoutes_partialFailure() {
+      var route1 = new Route().id(ROUTE_ID_1).name("route-name-1")
+        .expression("http.path == \"/test1\"");
+      var route2 = new Route().id(ROUTE_ID_2).name("route-name-2")
+        .expression("http.path == \"/test2\"");
+      var routes = List.of(route1, route2);
+      var request = create(PUT, "/services/" + SERVICE_ID + "/routes/route-name-2", emptyMap(), null, 
+        (RequestTemplate) null);
+
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
+        .thenReturn(new KongResultList<>(null, routes));
+      when(kongAdminClient.upsertRoute(anyString(), eq("route-name-1"), any(Route.class))).thenReturn(route1);
+      when(kongRouteTenantService.addTenant(route1, TENANT_NAME)).thenReturn(route1);
+      when(kongRouteTenantService.addTenant(route2, TENANT_NAME)).thenReturn(route2);
+      doThrow(new InternalServerError("Update failed", request, null, emptyMap()))
+        .when(kongAdminClient).upsertRoute(anyString(), eq("route-name-2"), any(Route.class));
+
+      assertThatThrownBy(() -> kongGatewayService.addTenantToModuleRoutes(MOD_ID, TENANT_NAME))
+        .isInstanceOf(TenantRouteUpdateException.class)
+        .hasMessageContaining("Failed to add tenant")
+        .hasMessageContaining("route-name-2");
+
+      verify(kongAdminClient).getService(MOD_ID);
+      verify(kongAdminClient).getRoutesByTag(ROUTE_TAGS, null);
+      verify(kongRouteTenantService, times(2)).addTenant(any(), eq(TENANT_NAME));
+      verify(kongAdminClient, times(2)).upsertRoute(anyString(), anyString(), any(Route.class));
+    }
+  }
+
+  @Nested
+  @DisplayName("removeTenantFromModuleRoutes")
+  class RemoveTenantFromModuleRoutes {
+
+    private static final String TENANT_NAME = "test-tenant";
+    private static final String ROUTE_ID_1 = "route-1";
+    private static final String ROUTE_ID_2 = "route-2";
+
+    @Test
+    @DisplayName("should remove tenant from all module routes successfully")
+    void removeTenantFromModuleRoutes_positive() {
+      var route1 = new Route().id(ROUTE_ID_1).name("route-name-1")
+        .expression("http.path == \"/test1\"");
+      var route2 = new Route().id(ROUTE_ID_2).name("route-name-2")
+        .expression("http.path == \"/test2\"");
+      var routes = List.of(route1, route2);
+
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
+        .thenReturn(new KongResultList<>(null, routes));
+      when(kongAdminClient.upsertRoute(anyString(), eq("route-name-1"), any(Route.class))).thenReturn(route1);
+      when(kongAdminClient.upsertRoute(anyString(), eq("route-name-2"), any(Route.class))).thenReturn(route2);
+      when(kongRouteTenantService.removeTenant(route1, TENANT_NAME)).thenReturn(route1);
+      when(kongRouteTenantService.removeTenant(route2, TENANT_NAME)).thenReturn(route2);
+
+      kongGatewayService.removeTenantFromModuleRoutes(MOD_ID, TENANT_NAME);
+
+      verify(kongAdminClient).getService(MOD_ID);
+      verify(kongAdminClient).getRoutesByTag(ROUTE_TAGS, null);
+      verify(kongRouteTenantService).removeTenant(route1, TENANT_NAME);
+      verify(kongRouteTenantService).removeTenant(route2, TENANT_NAME);
+      verify(kongAdminClient, times(2)).upsertRoute(anyString(), anyString(), any(Route.class));
+    }
+
+    @Test
+    @DisplayName("should handle empty routes list")
+    void removeTenantFromModuleRoutes_emptyRoutes() {
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
+        .thenReturn(new KongResultList<>(null, emptyList()));
+
+      kongGatewayService.removeTenantFromModuleRoutes(MOD_ID, TENANT_NAME);
+
+      verify(kongAdminClient).getService(MOD_ID);
+      verify(kongAdminClient).getRoutesByTag(ROUTE_TAGS, null);
+      verify(kongRouteTenantService, never()).removeTenant(any(), any());
+      verify(kongAdminClient, never()).upsertRoute(anyString(), anyString(), any(Route.class));
+    }
+
+    @Test
+    @DisplayName("should throw exception when service not found")
+    void removeTenantFromModuleRoutes_serviceNotFound() {
+      var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
+      when(kongAdminClient.getService(MOD_ID))
+        .thenThrow(new NotFound("Service not found", request, null, emptyMap()));
+
+      assertThatThrownBy(() -> kongGatewayService.removeTenantFromModuleRoutes(MOD_ID, TENANT_NAME))
+        .isInstanceOf(TenantRouteUpdateException.class)
+        .hasMessageContaining("Failed to remove tenant")
+        .hasMessageContaining(TENANT_NAME)
+        .hasMessageContaining(MOD_ID);
+
+      verify(kongAdminClient).getService(MOD_ID);
+    }
+
+    @Test
+    @DisplayName("should throw exception when route update fails")
+    void removeTenantFromModuleRoutes_routeUpdateFails() {
+      var route1 = new Route().id(ROUTE_ID_1).name("route-name-1")
+        .expression("http.path == \"/test1\"");
+      var routes = List.of(route1);
+      var request = create(PUT, "/services/" + SERVICE_ID + "/routes/route-name-1", emptyMap(), null, 
+        (RequestTemplate) null);
+
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
+        .thenReturn(new KongResultList<>(null, routes));
+      when(kongRouteTenantService.removeTenant(route1, TENANT_NAME)).thenReturn(route1);
+      doThrow(new InternalServerError("Update failed", request, null, emptyMap()))
+        .when(kongAdminClient).upsertRoute(anyString(), anyString(), any(Route.class));
+
+      assertThatThrownBy(() -> kongGatewayService.removeTenantFromModuleRoutes(MOD_ID, TENANT_NAME))
+        .isInstanceOf(TenantRouteUpdateException.class)
+        .hasMessageContaining("Failed to remove tenant")
+        .hasMessageContaining(TENANT_NAME)
+        .hasMessageContaining(MOD_ID);
+
+      verify(kongAdminClient).getService(MOD_ID);
+      verify(kongAdminClient).getRoutesByTag(ROUTE_TAGS, null);
+      verify(kongRouteTenantService).removeTenant(route1, TENANT_NAME);
+      verify(kongAdminClient).upsertRoute(anyString(), anyString(), any(Route.class));
+    }
+
+    @Test
+    @DisplayName("should throw exception when partial routes update fails")
+    void removeTenantFromModuleRoutes_partialFailure() {
+      var route1 = new Route().id(ROUTE_ID_1).name("route-name-1")
+        .expression("http.path == \"/test1\"");
+      var route2 = new Route().id(ROUTE_ID_2).name("route-name-2")
+        .expression("http.path == \"/test2\"");
+      var routes = List.of(route1, route2);
+      var request = create(PUT, "/services/" + SERVICE_ID + "/routes/route-name-2", emptyMap(), null, 
+        (RequestTemplate) null);
+
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
+        .thenReturn(new KongResultList<>(null, routes));
+      when(kongAdminClient.upsertRoute(anyString(), eq("route-name-1"), any(Route.class))).thenReturn(route1);
+      when(kongRouteTenantService.removeTenant(route1, TENANT_NAME)).thenReturn(route1);
+      when(kongRouteTenantService.removeTenant(route2, TENANT_NAME)).thenReturn(route2);
+      doThrow(new InternalServerError("Update failed", request, null, emptyMap()))
+        .when(kongAdminClient).upsertRoute(anyString(), eq("route-name-2"), any(Route.class));
+
+      assertThatThrownBy(() -> kongGatewayService.removeTenantFromModuleRoutes(MOD_ID, TENANT_NAME))
+        .isInstanceOf(TenantRouteUpdateException.class)
+        .hasMessageContaining("Failed to remove tenant")
+        .hasMessageContaining("route-name-2");
+
+      verify(kongAdminClient).getService(MOD_ID);
+      verify(kongAdminClient).getRoutesByTag(ROUTE_TAGS, null);
+      verify(kongRouteTenantService, times(2)).removeTenant(any(), eq(TENANT_NAME));
+      verify(kongAdminClient, times(2)).upsertRoute(anyString(), anyString(), any(Route.class));
     }
   }
 
