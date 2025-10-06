@@ -14,7 +14,6 @@ import org.folio.tools.kong.model.Route;
 public class KongRouteTenantService {
 
   private static final String TENANT_HEADER = "http.headers.x_okapi_tenant";
-  private static final String TENANT_HEADER_REGEX = "http\\.headers\\.x_okapi_tenant\\s*~\\s*r#\".*\"#";
   private static final String WILDCARD_TENANT_EXPRESSION = "http.headers.x_okapi_tenant ~ r#\".*\"#";
 
   // Matches a tenant clause consisting of one or multiple header equality checks joined by ||, wrapped in parentheses.
@@ -31,6 +30,17 @@ public class KongRouteTenantService {
   // Pattern to match a single tenant equality check
   private static final Pattern SINGLE_TENANT_PATTERN = Pattern.compile(
     Pattern.quote(TENANT_HEADER) + "\\s*==\\s*\"([^\"]+)\""
+  );
+
+  // Pattern to match wildcard tenant expression (used for checking existence)
+  private static final Pattern WILDCARD_TENANT_PATTERN = Pattern.compile(
+    Pattern.quote(TENANT_HEADER) + "\\s*~\\s*r#\".*\"#"
+  );
+
+  // Pattern to match wildcard tenant expression with optional surrounding whitespace and parentheses
+  // Used for replacement operations
+  private static final Pattern WILDCARD_REPLACEMENT_PATTERN = Pattern.compile(
+    "\\s*\\(?\\s*" + Pattern.quote(TENANT_HEADER) + "\\s*~\\s*r#\".*\"#\\s*\\)?"
   );
 
   /**
@@ -52,7 +62,7 @@ public class KongRouteTenantService {
 
     log.debug("Adding tenant [{}] to route [id: {}, expression: {}]", tenantId, route.getId(), expression);
 
-    if (expression.matches(".*" + TENANT_HEADER_REGEX + ".*")) {
+    if (containsWildcardPattern(expression)) {
       return replaceWildcardPattern(route, expression, tenantId);
     }
 
@@ -78,7 +88,7 @@ public class KongRouteTenantService {
 
     log.debug("Removing tenant [{}] from route [id: {}, expression: {}]", tenantId, route.getId(), expression);
 
-    if (expression.matches(".*" + TENANT_HEADER_REGEX + ".*")) {
+    if (containsWildcardPattern(expression)) {
       log.debug("Route expression contains wildcard tenant pattern, cannot remove specific tenant");
       return route;
     }
@@ -100,6 +110,14 @@ public class KongRouteTenantService {
       return false;
     }
     return true;
+  }
+
+  /**
+   * Checks if the expression contains a wildcard tenant pattern.
+   * Uses Pattern.find() to avoid catastrophic backtracking issues.
+   */
+  private static boolean containsWildcardPattern(String expression) {
+    return WILDCARD_TENANT_PATTERN.matcher(expression).find();
   }
 
   private static Route replaceWildcardPattern(Route route, String expression, String tenantId) {
@@ -172,8 +190,7 @@ public class KongRouteTenantService {
    * Replaces wildcard tenant pattern with specific tenant clause.
    */
   private static String replaceWildcardWithTenant(String expression, String tenantId) {
-    var pattern = Pattern.compile("\\s*\\(?\\s*" + TENANT_HEADER_REGEX + "\\s*\\)?");
-    var matcher = pattern.matcher(expression);
+    var matcher = WILDCARD_REPLACEMENT_PATTERN.matcher(expression);
 
     if (matcher.find()) {
       var matched = matcher.group();
