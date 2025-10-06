@@ -8,6 +8,8 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.logging.log4j.util.Strings.isBlank;
 import static org.folio.common.utils.CollectionUtils.mapItems;
 import static org.folio.common.utils.CollectionUtils.toStream;
 import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
@@ -102,8 +104,12 @@ public class KongGatewayService {
   public void addTenantToModuleRoutes(String moduleId, String tenantName) {
     log.info("Adding tenant [{}] to routes for module [{}]", tenantName, moduleId);
     try {
+      validateTenantChangeInput(tenantName, moduleId, "add");
       var serviceId = getExistingServiceId(moduleId);
-      var routes = getKongRoutes(moduleId);
+      var routes = toStream(getKongRoutes(moduleId))
+        .filter(Objects::nonNull)
+        .filter(route -> isNotBlank(route.getExpression()))
+        .toList();
       
       if (routes.isEmpty()) {
         log.warn("No routes found for module [{}]", moduleId);
@@ -132,8 +138,12 @@ public class KongGatewayService {
   public void removeTenantFromModuleRoutes(String moduleId, String tenantName) {
     log.info("Removing tenant [{}] from routes for module [{}]", tenantName, moduleId);
     try {
+      validateTenantChangeInput(tenantName, moduleId, "remove");
       var serviceId = getExistingServiceId(moduleId);
-      var routes = getKongRoutes(moduleId);
+      var routes = toStream(getKongRoutes(moduleId))
+        .filter(Objects::nonNull)
+        .filter(route -> isNotBlank(route.getExpression()))
+        .toList();
       
       if (routes.isEmpty()) {
         log.warn("No routes found for module [{}]", moduleId);
@@ -143,8 +153,7 @@ public class KongGatewayService {
       var failedRoutes = removeTenantFromRoutes(routes, tenantName, serviceId);
       validateTenantChangeOperation(tenantName, moduleId, failedRoutes, "remove");
 
-      log.info("Successfully removed tenant [{}] from {} routes for module [{}]", 
-        tenantName, routes.size(), moduleId);
+      log.info("Successfully removed tenant [{}] from {} routes for module [{}]", tenantName, routes.size(), moduleId);
     } catch (TenantRouteUpdateException e) {
       throw e;
     } catch (Exception e) {
@@ -467,6 +476,14 @@ public class KongGatewayService {
       throw new TenantRouteUpdateException(
         "Failed to " + operation + " tenant [" + tenantName + "] to routes for module [" + moduleId + "]. "
           + "Failed routes: " + String.join(", ", failedRoutes));
+    }
+  }
+
+  private static void validateTenantChangeInput(String tenantName, String moduleId, String operation) {
+    if (isBlank(tenantName) || isBlank(moduleId)) {
+      throw new IllegalStateException(
+        "Failed to " + operation + " tenant [" + tenantName + "] to routes for module [" + moduleId + "]."
+          + "Tenant name and module id must be non-blank strings.");
     }
   }
 }

@@ -53,6 +53,21 @@ class KongRouteTenantServiceTest {
     }
 
     @Test
+    @DisplayName("should replace wildcard tenant pattern in bracers with specific tenant")
+    void addTenant_wildcardPatternInBracers() {
+      var route = new Route()
+        .id("test-route-2")
+        .expression("(http.path ~ \"^/users/([^/]+)/capabilities$\" && http.method == \"GET\" "
+          + "&& (http.headers.x_okapi_tenant ~ r#\".*\"#))");
+
+      var result = service.addTenant(route, "tenant1");
+
+      assertThat(result.getExpression())
+        .isEqualTo("(http.path ~ \"^/users/([^/]+)/capabilities$\" && http.method == \"GET\" "
+          + "&& (http.headers.x_okapi_tenant == \"tenant1\"))");
+    }
+
+    @Test
     @DisplayName("should add tenant to existing single tenant clause")
     void addTenant_singleTenantExists() {
       var route = new Route()
@@ -185,7 +200,7 @@ class KongRouteTenantServiceTest {
   class RemoveTenant {
 
     @Test
-    @DisplayName("should replace with placeholder when removing last tenant")
+    @DisplayName("should replace with wildcard when removing last tenant")
     void removeTenant_singleTenant() {
       var route = new Route()
         .id("test-route-20")
@@ -196,7 +211,7 @@ class KongRouteTenantServiceTest {
 
       assertThat(result.getExpression())
         .isEqualTo("(http.path ~ \"^/users/([^/]+)/capabilities$\" && http.method == \"GET\" "
-          + "&& (http.headers.x_okapi_tenant == \"PLACEHOLDER-TENANT\"))");
+          + "&& (http.headers.x_okapi_tenant ~ r#\".*\"#))");
     }
 
     @Test
@@ -332,7 +347,7 @@ class KongRouteTenantServiceTest {
     }
 
     @Test
-    @DisplayName("should replace with placeholder when tenant clause at the beginning")
+    @DisplayName("should replace with wildcard when tenant clause at the beginning")
     void removeTenant_clauseAtBeginning() {
       var route = new Route()
         .id("test-route-30")
@@ -342,12 +357,12 @@ class KongRouteTenantServiceTest {
       var result = service.removeTenant(route, "tenant1");
 
       assertThat(result.getExpression())
-        .isEqualTo("(http.headers.x_okapi_tenant == \"PLACEHOLDER-TENANT\") "
+        .isEqualTo("(http.headers.x_okapi_tenant ~ r#\".*\"#) "
           + "&& http.path ~ \"^/users$\" && http.method == \"GET\"");
     }
 
     @Test
-    @DisplayName("should replace with placeholder when tenant clause in the middle")
+    @DisplayName("should replace with wildcard when tenant clause in the middle")
     void removeTenant_clauseInMiddle() {
       var route = new Route()
         .id("test-route-31")
@@ -358,7 +373,7 @@ class KongRouteTenantServiceTest {
 
       assertThat(result.getExpression())
         .isEqualTo("http.path ~ \"^/users$\" "
-          + "&& (http.headers.x_okapi_tenant == \"PLACEHOLDER-TENANT\") && http.method == \"GET\"");
+          + "&& (http.headers.x_okapi_tenant ~ r#\".*\"#) && http.method == \"GET\"");
     }
 
     @Test
@@ -440,7 +455,7 @@ class KongRouteTenantServiceTest {
       service.removeTenant(route, "tenant3");
       assertThat(route.getExpression())
         .isEqualTo("(http.path ~ \"^/users$\" && http.method == \"GET\") "
-          + "&& (http.headers.x_okapi_tenant == \"PLACEHOLDER-TENANT\")");
+          + "&& (http.headers.x_okapi_tenant ~ r#\".*\"#)");
     }
 
     @Test
@@ -490,7 +505,7 @@ class KongRouteTenantServiceTest {
     }
 
     @Test
-    @DisplayName("should replace with placeholder when removing last tenant from expression")
+    @DisplayName("should replace with wildcard when removing last tenant from expression")
     void placeholderReplacement() {
       var route = new Route()
         .id("test-route-43")
@@ -501,7 +516,86 @@ class KongRouteTenantServiceTest {
 
       assertThat(route.getExpression())
         .isEqualTo("(http.path ~ \"^/users/([^/]+)/capabilities$\" "
-          + "&& http.method == \"GET\" && (http.headers.x_okapi_tenant == \"PLACEHOLDER-TENANT\"))");
+          + "&& http.method == \"GET\" && (http.headers.x_okapi_tenant ~ r#\".*\"#))");
+    }
+
+    @Test
+    @DisplayName("should replace tenant with wildcard expression as per requirement example")
+    void removeTenant_requirementExample() {
+      var route = new Route()
+        .id("test-route-44")
+        .expression("(http.path ~ \"^/users/([^/]+)/capabilities$\" && http.method == \"GET\" "
+          + "&& (http.headers.x_okapi_tenant == \"t1\"))");
+
+      var result = service.removeTenant(route, "t1");
+
+      assertThat(result.getExpression())
+        .isEqualTo("(http.path ~ \"^/users/([^/]+)/capabilities$\" && http.method == \"GET\" "
+          + "&& (http.headers.x_okapi_tenant ~ r#\".*\"#))");
+    }
+
+    @Test
+    @DisplayName("should replace wildcard back to specific tenant when adding")
+    void addTenant_afterWildcardReplacement() {
+      var route = new Route()
+        .id("test-route-45")
+        .expression("(http.path ~ \"^/users/([^/]+)/capabilities$\" && http.method == \"GET\" "
+          + "&& (http.headers.x_okapi_tenant == \"t1\"))");
+
+      // Remove the last tenant - should create wildcard
+      service.removeTenant(route, "t1");
+      assertThat(route.getExpression())
+        .isEqualTo("(http.path ~ \"^/users/([^/]+)/capabilities$\" && http.method == \"GET\" "
+          + "&& (http.headers.x_okapi_tenant ~ r#\".*\"#))");
+
+      // Add a new tenant - should replace wildcard with specific tenant
+      service.addTenant(route, "t2");
+      assertThat(route.getExpression())
+        .isEqualTo("(http.path ~ \"^/users/([^/]+)/capabilities$\" && http.method == \"GET\" "
+          + "&& (http.headers.x_okapi_tenant == \"t2\"))");
+    }
+
+    @Test
+    @DisplayName("should handle multiple tenants removal to wildcard")
+    void removeTenant_multipleToWildcard() {
+      var route = new Route()
+        .id("test-route-46")
+        .expression("(http.path ~ \"^/users$\" && http.method == \"GET\" "
+          + "&& (http.headers.x_okapi_tenant == \"t1\" || http.headers.x_okapi_tenant == \"t2\"))");
+
+      // Remove first tenant
+      service.removeTenant(route, "t1");
+      assertThat(route.getExpression())
+        .isEqualTo("(http.path ~ \"^/users$\" && http.method == \"GET\" "
+          + "&& (http.headers.x_okapi_tenant == \"t2\"))");
+
+      // Remove last tenant - should create wildcard
+      service.removeTenant(route, "t2");
+      assertThat(route.getExpression())
+        .isEqualTo("(http.path ~ \"^/users$\" && http.method == \"GET\" "
+          + "&& (http.headers.x_okapi_tenant ~ r#\".*\"#))");
+    }
+
+    @Test
+    @DisplayName("should handle wildcard at different positions in expression")
+    void removeTenant_wildcardAtDifferentPositions() {
+      // Test with tenant clause at the end
+      var route1 = new Route()
+        .id("test-route-47")
+        .expression("http.path ~ \"^/test$\" && (http.headers.x_okapi_tenant == \"t1\")");
+
+      service.removeTenant(route1, "t1");
+      assertThat(route1.getExpression())
+        .isEqualTo("http.path ~ \"^/test$\" && (http.headers.x_okapi_tenant ~ r#\".*\"#)");
+
+      // Test with tenant clause at the start
+      var route2 = new Route()
+        .id("test-route-48")
+        .expression("(http.headers.x_okapi_tenant == \"t1\") && http.path ~ \"^/test$\"");
+
+      service.removeTenant(route2, "t1");
+      assertThat(route2.getExpression())
+        .isEqualTo("(http.headers.x_okapi_tenant ~ r#\".*\"#) && http.path ~ \"^/test$\"");
     }
   }
 }

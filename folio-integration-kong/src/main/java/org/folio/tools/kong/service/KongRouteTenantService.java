@@ -15,7 +15,7 @@ public class KongRouteTenantService {
 
   private static final String TENANT_HEADER = "http.headers.x_okapi_tenant";
   private static final String TENANT_HEADER_REGEX = "http\\.headers\\.x_okapi_tenant\\s*~\\s*r#\".*\"#";
-  private static final String PLACEHOLDER_TENANT = "PLACEHOLDER-TENANT";
+  private static final String WILDCARD_TENANT_EXPRESSION = "http.headers.x_okapi_tenant ~ r#\".*\"#";
 
   // Matches a tenant clause consisting of one or multiple header equality checks joined by ||, wrapped in parentheses.
   // Examples that will match:
@@ -162,10 +162,10 @@ public class KongRouteTenantService {
   }
 
   private static void replaceTenantClauseWithPlaceholder(Route route, String expression, String tenantClause) {
-    var placeholderClause = createTenantClause(PLACEHOLDER_TENANT);
-    var updatedExpression = expression.replace(tenantClause, placeholderClause);
+    var wildcardClause = "(" + WILDCARD_TENANT_EXPRESSION + ")";
+    var updatedExpression = expression.replace(tenantClause, wildcardClause);
     route.setExpression(updatedExpression);
-    log.debug("Replaced tenant clause with placeholder, updated route expression: {}", updatedExpression);
+    log.debug("Replaced tenant clause with wildcard expression, updated route expression: {}", updatedExpression);
   }
 
   /**
