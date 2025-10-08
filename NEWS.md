@@ -13,6 +13,7 @@
 * Use SECURE\_STORE\_ENV, not ENV, for secure store key; drop KeycloakSecretUtils ((APPPOCTOOL-63)[https://folio-org.atlassian.net/browse/APPPOCTOOL-63])
 * Add verify dependents module workflow (APPPOCTOOL-70)
 * Implement mTLS Client-Side Authentication for FSSP client (APPPOCTOOL-62)
+* Add support for custom Keycloak base URL for JWKS endpoint ((MODSIDECAR-148)[https://folio-org.atlassian.net/browse/MODSIDECAR-148])
 
 ### Migration:
 * Replace KeycloakSecretUtils with SecureStoreKeyProvider, add `application.secret-store.environment=${SECURE_STORE_ENV:folio}` to application.yaml (for Ramsons and Sunflower: add `application.secret-store.environment=${SECURE_STORE_ENV:${ENV:folio}}` to application.yaml).

@@ -6,16 +6,39 @@ import io.smallrye.jwt.auth.principal.JWTParser;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
-@RequiredArgsConstructor
 public class OpenidJwtParserProvider {
 
   private final Map<String, JWTParser> tokenParsers = new ConcurrentHashMap<>();
   private final int jwksRefreshInterval;
   private final int forcedJwksRefreshInterval;
+  private final String jwksKeycloakBaseUrl;
+
+  /**
+   * Constructor with all parameters.
+   *
+   * @param jwksRefreshInterval - JWKS refresh interval
+   * @param forcedJwksRefreshInterval - forced JWKS refresh interval
+   * @param jwksKeycloakBaseUrl - custom Keycloak base URL for JWKS endpoint
+   */
+  public OpenidJwtParserProvider(int jwksRefreshInterval, int forcedJwksRefreshInterval,
+    String jwksKeycloakBaseUrl) {
+    this.jwksRefreshInterval = jwksRefreshInterval;
+    this.forcedJwksRefreshInterval = forcedJwksRefreshInterval;
+    this.jwksKeycloakBaseUrl = jwksKeycloakBaseUrl;
+  }
+
+  /**
+   * Constructor for backward compatibility.
+   *
+   * @param jwksRefreshInterval - JWKS refresh interval
+   * @param forcedJwksRefreshInterval - forced JWKS refresh interval
+   */
+  public OpenidJwtParserProvider(int jwksRefreshInterval, int forcedJwksRefreshInterval) {
+    this(jwksRefreshInterval, forcedJwksRefreshInterval, null);
+  }
 
   /**
    * Provides JWT parser for given issuer URI.
@@ -29,12 +52,36 @@ public class OpenidJwtParserProvider {
       return jwtTokenParserProvider;
     }
 
-    var jwtAuthContextInfo = new JWTAuthContextInfo(issuerUri + "/protocol/openid-connect/certs", issuerUri);
+    var jwksUrl = buildJwksUrl(issuerUri);
+    log.debug("Creating JWT parser for issuer: {}, JWKS URL: {}", issuerUri, jwksUrl);
+
+    var jwtAuthContextInfo = new JWTAuthContextInfo(jwksUrl, issuerUri);
     jwtAuthContextInfo.setJwksRefreshInterval(jwksRefreshInterval);
     jwtAuthContextInfo.setForcedJwksRefreshInterval(forcedJwksRefreshInterval);
     var jwtParser = new DefaultJWTParser(jwtAuthContextInfo);
     tokenParsers.put(issuerUri, jwtParser);
     return jwtParser;
+  }
+
+  /**
+   * Builds JWKS URL based on issuer URI and custom base URL if specified.
+   *
+   * @param issuerUri - JWT token issuer URI
+   * @return JWKS endpoint URL
+   */
+  private String buildJwksUrl(String issuerUri) {
+    if (jwksKeycloakBaseUrl != null && !jwksKeycloakBaseUrl.isBlank()) {
+      var realm = resolveTenant(issuerUri);
+      var baseUrl = jwksKeycloakBaseUrl.endsWith("/")
+        ? jwksKeycloakBaseUrl.substring(0, jwksKeycloakBaseUrl.length() - 1)
+        : jwksKeycloakBaseUrl;
+
+      var customUrl = baseUrl + "/realms/" + realm + "/protocol/openid-connect/certs";
+      log.debug("Using custom Keycloak base URL for JWKS: {} (original issuer: {})", customUrl, issuerUri);
+      return customUrl;
+    }
+
+    return issuerUri + "/protocol/openid-connect/certs";
   }
 
   /**
