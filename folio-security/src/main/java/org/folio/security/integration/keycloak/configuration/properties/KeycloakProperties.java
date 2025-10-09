@@ -23,7 +23,7 @@ public class KeycloakProperties {
    * Useful for using internal Keycloak interface instead of public one.
    * Example: <a href="http://keycloak-headless:8080">...</a>
    */
-  private String jwksKeycloakBaseUrl;
+  private String jwksBaseUrl;
 
   /**
    * Authentication JWT parser configuration settings.

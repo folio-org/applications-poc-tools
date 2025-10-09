@@ -74,7 +74,7 @@ public class KeycloakSecurityConfiguration {
     return new OpenidJwtParserProvider(
       jwtCacheConfiguration.getJwksRefreshInterval(),
       jwtCacheConfiguration.getForcedJwksRefreshInterval(),
-      properties.getJwksKeycloakBaseUrl());
+      properties.getJwksBaseUrl());
   }
 
   @Bean
