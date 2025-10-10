@@ -18,6 +18,14 @@ public class KeycloakProperties {
   private String url;
 
   /**
+   * Custom base URL for JWKS endpoint.
+   * If specified, will be used instead of issuer URL from token's iss claim.
+   * Useful for using internal Keycloak interface instead of public one.
+   * Example: <a href="http://keycloak-headless:8080">...</a>
+   */
+  private String jwksBaseUrl;
+
+  /**
    * Authentication JWT parser configuration settings.
    */
   private KeycloakJwtCacheProperties jwtCacheConfiguration = new KeycloakJwtCacheProperties();
