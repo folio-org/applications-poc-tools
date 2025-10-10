@@ -7,6 +7,7 @@
 * Support "delete" operation in secure store (FSSP-1)
 * SecretStore implementation for folio-secure-store-proxy (APPPOCTOOL-59)
 * Implement mTLS Client-Side Authentication for FSSP client (APPPOCTOOL-62)
+* Add support for custom Keycloak base URL for JWKS endpoint ((MODSIDECAR-148)[https://folio-org.atlassian.net/browse/MODSIDECAR-148])
 
 ---
 

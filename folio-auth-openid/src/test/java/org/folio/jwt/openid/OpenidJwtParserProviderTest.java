@@ -21,7 +21,7 @@ class OpenidJwtParserProviderTest {
 
   @BeforeEach
   void setUp() {
-    openidJwtParserProvider = new OpenidJwtParserProvider(60, 60);
+    openidJwtParserProvider = new OpenidJwtParserProvider(60, 60, null);
   }
 
   @Test
@@ -99,6 +99,54 @@ class OpenidJwtParserProviderTest {
 
     openidJwtParserProvider.invalidateCache(List.of("other_tenant_id"));
     assertThat(cache).isEmpty();
+  }
+
+  @Test
+  void getParser_positive_withCustomKeycloakBaseUrl() {
+    var customBaseUrl = "http://keycloak-headless:8080";
+    var providerWithCustomUrl = new OpenidJwtParserProvider(60, 60, customBaseUrl);
+
+    var parser = providerWithCustomUrl.getParser(ISSUER_URI);
+    assertThat(parser).isNotNull();
+
+    var cachedParser = providerWithCustomUrl.getParser(ISSUER_URI);
+    assertThat(cachedParser).isEqualTo(parser);
+  }
+
+  @Test
+  void getParser_positive_withCustomKeycloakBaseUrlTrailingSlash() {
+    var customBaseUrl = "http://keycloak-headless:8080/";
+    var providerWithCustomUrl = new OpenidJwtParserProvider(60, 60, customBaseUrl);
+
+    var parser = providerWithCustomUrl.getParser(ISSUER_URI);
+    assertThat(parser).isNotNull();
+  }
+
+  @Test
+  void getParser_positive_withEmptyCustomKeycloakBaseUrl() {
+    var providerWithEmptyUrl = new OpenidJwtParserProvider(60, 60, "");
+
+    var parser = providerWithEmptyUrl.getParser(ISSUER_URI);
+    assertThat(parser).isNotNull();
+  }
+
+  @Test
+  void getParser_positive_withBlankCustomKeycloakBaseUrl() {
+    var providerWithBlankUrl = new OpenidJwtParserProvider(60, 60, "   ");
+
+    var parser = providerWithBlankUrl.getParser(ISSUER_URI);
+    assertThat(parser).isNotNull();
+  }
+
+  @Test
+  void getParser_positive_backwardCompatibility() {
+    var providerWithOldConstructor = new OpenidJwtParserProvider(60, 60);
+
+    var parser = providerWithOldConstructor.getParser(ISSUER_URI);
+    assertThat(parser).isNotNull();
+
+    var cachedParser = providerWithOldConstructor.getParser(ISSUER_URI);
+    assertThat(cachedParser).isEqualTo(parser);
   }
 
   @SuppressWarnings("unchecked")
