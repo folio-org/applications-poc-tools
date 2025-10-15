@@ -1,3 +1,8 @@
+## Version `v3.0.8` (15.10.2025)
+* Add support for custom Keycloak base URL for JWKS endpoint ((MODSIDECAR-148)[https://folio-org.atlassian.net/browse/MODSIDECAR-148])
+
+---
+
 ## Version `v3.0.7` (14.10.2025)
 * Tenant specific Kong route management support (MGRAPPS-70)
 
@@ -7,7 +12,6 @@
 * Support "delete" operation in secure store (FSSP-1)
 * SecretStore implementation for folio-secure-store-proxy (APPPOCTOOL-59)
 * Implement mTLS Client-Side Authentication for FSSP client (APPPOCTOOL-62)
-* Add support for custom Keycloak base URL for JWKS endpoint ((MODSIDECAR-148)[https://folio-org.atlassian.net/browse/MODSIDECAR-148])
 
 ---
 
