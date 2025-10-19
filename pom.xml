@@ -49,7 +49,7 @@
 
     <!-- Test dependencies versions -->
     <mockito.version>5.20.0</mockito.version>
-    <testcontainer.version>1.21.3</testcontainer.version>
+    <testcontainer.version>2.0.1</testcontainer.version>
     <instancio.version>5.5.1</instancio.version>
 
     <!-- Plugins versions -->
