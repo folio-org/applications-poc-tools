@@ -4,7 +4,7 @@ import java.util.Map;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 public class PostgresContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
@@ -13,7 +13,7 @@ public class PostgresContainerExtension implements BeforeAllCallback, AfterAllCa
   private static final String SPRING_PROPERTY_NAME = "spring.datasource.url";
 
   @SuppressWarnings("resource")
-  private static final PostgreSQLContainer<?> CONTAINER = new PostgreSQLContainer<>(IMAGE_NAME)
+  private static final PostgreSQLContainer CONTAINER = new PostgreSQLContainer(IMAGE_NAME)
     .withDatabaseName("folio_test")
     .withUsername("folio_admin")
     .withPassword("qwerty123");
