@@ -1,6 +1,6 @@
 package org.folio.security.integration.keycloak.service;
 
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import org.assertj.core.api.Assertions;
