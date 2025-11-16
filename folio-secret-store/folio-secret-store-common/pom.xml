@@ -18,7 +18,7 @@
     <aws.version>2.38.2</aws.version>
     <apache-commons-text.version>1.14.0</apache-commons-text.version>
     <bc-fips>2.1.2</bc-fips>
-    <wiremock.version>3.13.1</wiremock.version>
+    <wiremock.version>3.13.2</wiremock.version>
     <jetty-bom.version>11.0.26</jetty-bom.version>
 
     <sonar.exclusions>
