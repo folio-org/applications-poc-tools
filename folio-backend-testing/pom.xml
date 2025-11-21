@@ -16,8 +16,8 @@
     <sonar.exclusions>src/main/**/*</sonar.exclusions>
     <jsonassert.version>1.5.3</jsonassert.version>
     <jjwt.version>0.13.0</jjwt.version>
-    <testcontainers-keycloak.version>3.8.0</testcontainers-keycloak.version>
-    <keycloak-admin-client.version>26.0.6</keycloak-admin-client.version>
+    <testcontainers-keycloak.version>3.9.0</testcontainers-keycloak.version>
+    <kryo.version>5.6.2</kryo.version>
   </properties>
 
   <dependencies>
@@ -105,7 +105,6 @@
     <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-admin-client</artifactId>
-      <version>${keycloak-admin-client.version}</version>
       <scope>compile</scope>
     </dependency>
 
