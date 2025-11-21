@@ -17,7 +17,6 @@
       src/main/java/**/domain/model/**/*
     </sonar.exclusions>
     <semver4j.version>5.8.0</semver4j.version>
-    <keycloak-admin-client.version>26.0.6</keycloak-admin-client.version>
   </properties>
 
   <dependencies>
@@ -78,12 +77,6 @@
       <groupId>org.semver4j</groupId>
       <artifactId>semver4j</artifactId>
       <version>${semver4j.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.keycloak</groupId>
-      <artifactId>keycloak-admin-client</artifactId>
-      <version>${keycloak-admin-client.version}</version>
     </dependency>
 
     <!-- Test dependencies -->

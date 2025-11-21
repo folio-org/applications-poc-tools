@@ -92,6 +92,11 @@
       <version>${jwks-rsa.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-admin-client</artifactId>
+    </dependency>
+
     <!-- Fix vulnerability in org.apache.james:apache-mime4j-core
          https://www.cve.org/CVERecord?id=CVE-2024-21742
          Remove this dependency when keycloak-admin-client ships with
