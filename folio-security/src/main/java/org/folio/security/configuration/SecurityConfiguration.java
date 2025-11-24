@@ -23,6 +23,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 
@@ -74,6 +76,13 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
       .authorizeHttpRequests(auth -> auth.requestMatchers("/**").permitAll())
       .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
       .build();
+  }
+
+  @Bean
+  public UserDetailsService noOpUserDetailsService() {
+    return username -> {
+      throw new UsernameNotFoundException("UserDetailsService is not used.");
+    };
   }
 
   private String getExcludedRoutesPattern() {
