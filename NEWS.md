@@ -14,6 +14,7 @@
 * Add verify dependents module workflow (APPPOCTOOL-70)
 * Implement mTLS Client-Side Authentication for FSSP client (APPPOCTOOL-62)
 * Add support for custom Keycloak base URL for JWKS endpoint ((MODSIDECAR-148)[https://folio-org.atlassian.net/browse/MODSIDECAR-148])
+* Upgrade Keycloak to 26.4.6 (KEYCLOAK-73)
 
 ### Migration:
 * Replace KeycloakSecretUtils with SecureStoreKeyProvider, add `application.secret-store.environment=${SECURE_STORE_ENV:folio}` to application.yaml (for Ramsons and Sunflower: add `application.secret-store.environment=${SECURE_STORE_ENV:${ENV:folio}}` to application.yaml).
