@@ -46,7 +46,7 @@
     <spring-boot-starter-validation.version>3.0.4</spring-boot-starter-validation.version>
     <apache-commons-lang3.version>3.19.0</apache-commons-lang3.version>
     <feign-okhttp.version>13.6</feign-okhttp.version>
-    <keycloak-admin-client.version>26.0.6</keycloak-admin-client.version>
+    <keycloak-admin-client.version>26.0.7</keycloak-admin-client.version>
 
     <!-- Test dependencies versions -->
     <mockito.version>5.20.0</mockito.version>
