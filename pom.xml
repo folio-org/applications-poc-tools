@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.7</version>
+    <version>4.0.0</version>
     <relativePath />
   </parent>
 
@@ -40,17 +40,17 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <lombok.version>1.18.42</lombok.version>
-    <spring-boot.version>3.5.7</spring-boot.version>
+    <spring-boot.version>4.0.0</spring-boot.version>
     <apache-commons-collections4.version>4.5.0</apache-commons-collections4.version>
-    <spring-kafka.version>3.3.10</spring-kafka.version>
+    <spring-kafka.version>4.0.0</spring-kafka.version>
     <spring-boot-starter-validation.version>3.0.4</spring-boot-starter-validation.version>
-    <apache-commons-lang3.version>3.19.0</apache-commons-lang3.version>
+    <apache-commons-lang3.version>3.20.0</apache-commons-lang3.version>
     <feign-okhttp.version>13.6</feign-okhttp.version>
     <keycloak-admin-client.version>26.0.7</keycloak-admin-client.version>
 
     <!-- Test dependencies versions -->
     <mockito.version>5.20.0</mockito.version>
-    <testcontainer.version>2.0.1</testcontainer.version>
+    <testcontainer.version>2.0.2</testcontainer.version>
     <instancio.version>5.5.1</instancio.version>
 
     <!-- Plugins versions -->
@@ -58,7 +58,7 @@
     <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
-    <maven-release-plugin.version>3.2.0</maven-release-plugin.version>
+    <maven-release-plugin.version>3.3.0</maven-release-plugin.version>
     <folio-java-checkstyle.version>1.2.0</folio-java-checkstyle.version>
 
     <argLine/>
@@ -173,7 +173,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>12.1.1</version>
+              <version>12.2.0</version>
             </dependency>
             <dependency>
               <groupId>org.folio</groupId>
