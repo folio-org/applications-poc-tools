@@ -1,3 +1,8 @@
+## Version `v3.0.9` (12.12.2025)
+* Upgrade Keycloak to 26.4.6 (KEYCLOAK-73)
+* Register JacksonProvider in ResteasyClient Keycloak for TLS connections (KEYCLOAK-90)
+---
+
 ## Version `v3.0.8` (15.10.2025)
 * Add support for custom Keycloak base URL for JWKS endpoint ((MODSIDECAR-148)[https://folio-org.atlassian.net/browse/MODSIDECAR-148])
 * Upgrade Keycloak to 26.4.6 (KEYCLOAK-73)
