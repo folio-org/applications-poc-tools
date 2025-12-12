@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.keycloak.OAuth2Constants;
+import org.keycloak.admin.client.JacksonProvider;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.PartialImportRepresentation;
@@ -116,7 +117,11 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   }
 
   private static ResteasyClient buildResteasyClient() {
-    return (ResteasyClient) newBuilder().sslContext(getSslContext()).hostnameVerifier(INSTANCE).build();
+    return (ResteasyClient) newBuilder()
+      .sslContext(getSslContext())
+      .hostnameVerifier(INSTANCE)
+      .register(JacksonProvider.class)
+      .build();
   }
 
   private static SSLContext getSslContext() {
