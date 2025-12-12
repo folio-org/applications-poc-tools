@@ -13,12 +13,14 @@ import org.folio.common.configuration.properties.TlsProperties;
 import org.folio.common.utils.tls.FeignClientTlsUtils;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
+import org.keycloak.admin.client.JacksonProvider;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 
 @Slf4j
 @UtilityClass
 public class ClientBuildUtils {
+
   private static final DefaultHostnameVerifier DEFAULT_HOSTNAME_VERIFIER = new DefaultHostnameVerifier();
 
   public static Keycloak buildKeycloakAdminClient(String clientSecret, KeycloakProperties properties) {
@@ -39,8 +41,9 @@ public class ClientBuildUtils {
   }
 
   private static ResteasyClient buildResteasyClient(TlsProperties tls) {
-    var clientBuilder = newBuilder().hostnameVerifier(
-      IS_HOSTNAME_VERIFICATION_DISABLED ? NoopHostnameVerifier.INSTANCE : DEFAULT_HOSTNAME_VERIFIER);
+    var clientBuilder = newBuilder()
+      .hostnameVerifier(IS_HOSTNAME_VERIFICATION_DISABLED ? NoopHostnameVerifier.INSTANCE : DEFAULT_HOSTNAME_VERIFIER)
+      .register(JacksonProvider.class);
     if (isBlank(tls.getTrustStorePath())) {
       log.debug("Creating ResteasyClient for Public Trusted Certificates");
       return (ResteasyClient) clientBuilder.build();
