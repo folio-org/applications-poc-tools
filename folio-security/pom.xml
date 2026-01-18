@@ -11,7 +11,7 @@
   <artifactId>folio-security</artifactId>
 
   <properties>
-    <spring-cloud-bom.version>2025.0.0</spring-cloud-bom.version>
+    <spring-cloud-bom.version>2025.1.0</spring-cloud-bom.version>
     <jwks-rsa.version>0.23.0</jwks-rsa.version>
 
     <sonar.exclusions>
@@ -105,7 +105,7 @@
     <dependency>
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-multipart-provider</artifactId>
-      <version>7.0.0.Final</version>
+      <version>7.0.1.Final</version>
     </dependency>
 
     <!-- Test dependencies -->
