@@ -16,9 +16,6 @@
     "decisionStrategy": "AFFIRMATIVE",
     "resources": [
       {
-        "name": "Default Resource"
-      },
-      {
         "name": "/foo/{id}",
         "scopes": [
           {
@@ -50,9 +47,6 @@
       }
     ],
     "policies": [
-      {
-        "name": "Default Policy"
-      },
       {
         "name": "Policy for role: Manager Test - Read only permissions",
         "type": "role",
@@ -133,17 +127,6 @@
           "resources": "[\"/foo\"]",
           "scopes": "[\"POST\"]",
           "applyPolicies": "[\"Policy for role: Manager Test - All permissions\"]"
-        }
-      },
-      {
-        "name": "Default Permission",
-        "description": "A permission that applies to the default resource type",
-        "type": "resource",
-        "logic": "POSITIVE",
-        "decisionStrategy": "UNANIMOUS",
-        "config": {
-          "defaultResourceType": "urn:mgr-test:resources:default",
-          "applyPolicies": "[\"Default Policy\"]"
         }
       },
       {
