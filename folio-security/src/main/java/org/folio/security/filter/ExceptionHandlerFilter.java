@@ -1,6 +1,5 @@
 package org.folio.security.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.ObjectMapper;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -55,7 +55,7 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
 
   private void writeResponse(HttpServletResponse response, ResponseEntity<ErrorResponse> responseEntity)
     throws IOException {
-    response.setStatus(responseEntity.getStatusCodeValue());
+    response.setStatus(responseEntity.getStatusCode().value());
 
     var error = responseEntity.getBody();
     if (error != null) {

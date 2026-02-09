@@ -4,7 +4,7 @@ import static java.util.Collections.emptyMap;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.folio.common.utils.OkapiHeaders.SUPERTENANT_ID;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Base64;

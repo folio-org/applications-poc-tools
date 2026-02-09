@@ -1,6 +1,5 @@
 package org.folio.security.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
@@ -8,6 +7,7 @@ import org.folio.common.domain.model.ModuleDescriptor;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ResourceLoader;
+import tools.jackson.databind.ObjectMapper;
 
 @Log4j2
 @RequiredArgsConstructor

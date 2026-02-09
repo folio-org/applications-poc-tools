@@ -2,7 +2,7 @@ package org.folio.tools.kong.service;
 
 import static java.util.Collections.singletonList;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

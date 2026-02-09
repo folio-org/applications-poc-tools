@@ -2,7 +2,7 @@ package org.folio.security.integration.keycloak.configuration;
 
 import static org.folio.security.integration.keycloak.utils.ClientBuildUtils.buildKeycloakAdminClient;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;

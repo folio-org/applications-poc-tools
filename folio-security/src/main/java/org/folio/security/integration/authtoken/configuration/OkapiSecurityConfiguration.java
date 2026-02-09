@@ -1,6 +1,6 @@
 package org.folio.security.integration.authtoken.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import feign.Contract;
 import feign.Feign;
 import feign.codec.Decoder;

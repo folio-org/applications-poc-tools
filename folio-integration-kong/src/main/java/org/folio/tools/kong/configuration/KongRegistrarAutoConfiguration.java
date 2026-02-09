@@ -2,7 +2,7 @@ package org.folio.tools.kong.configuration;
 
 import static org.folio.common.utils.tls.FeignClientTlsUtils.buildTargetFeignClient;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import feign.Contract;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
