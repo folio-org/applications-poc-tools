@@ -28,7 +28,6 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -45,7 +44,7 @@ class KafkaAdminServiceTest {
 
   @Autowired private KafkaAdminService kafkaAdminService;
   @Autowired private ApplicationContext applicationContext;
-  @MockBean private KafkaAdmin kafkaAdmin;
+  @Autowired private KafkaAdmin kafkaAdmin;
 
   @Test
   void createKafkaTopics_positive_newTopic() {
@@ -289,6 +288,11 @@ class KafkaAdminServiceTest {
       var config = new FolioEnvironment();
       config.setEnvironment("folio");
       return config;
+    }
+
+    @Bean
+    KafkaAdmin kafkaAdmin() {
+      return mock(KafkaAdmin.class);
     }
   }
 }

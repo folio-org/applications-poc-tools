@@ -1,13 +1,13 @@
 package org.folio.jwt.openid;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.jwt.auth.principal.ParseException;
 import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.folio.jwt.openid.configuration.JwtParserConfiguration;
 import org.jose4j.lang.UnresolvableKeyException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @RequiredArgsConstructor
 public class JsonWebTokenParser {

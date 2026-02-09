@@ -85,7 +85,7 @@
     </dependency>
 
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
+      <groupId>tools.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
 
@@ -109,8 +109,8 @@
           <artifactId>spring-boot-starter-test</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.springframework.kafka</groupId>
-          <artifactId>spring-kafka</artifactId>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-kafka</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
