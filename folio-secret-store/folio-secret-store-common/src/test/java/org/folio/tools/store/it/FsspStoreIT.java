@@ -4,7 +4,6 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.apache.commons.lang3.SystemProperties.JDK_INTERNAL_HTTP_CLIENT_DISABLE_HOST_NAME_VERIFICATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.folio.test.TestUtils.parse;
 import static org.folio.test.TestUtils.readString;
 import static org.folio.tools.store.support.SecretStoreTestValues.FSSP_CLIENT_KEYSTORE_PATH;
 import static org.folio.tools.store.support.SecretStoreTestValues.FSSP_CLIENT_TRUSTSTORE_PATH;
@@ -13,6 +12,7 @@ import static org.folio.tools.store.support.SecretStoreTestValues.FSSP_SERVER_TR
 import static org.folio.tools.store.support.SecretStoreTestValues.KS_FILE_TYPE_PKCS12;
 import static org.folio.tools.store.support.SecretStoreTestValues.KS_PASSWORD;
 
+import com.github.tomakehurst.wiremock.common.Json;
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
@@ -167,7 +167,8 @@ class FsspStoreIT {
   }
 
   private static void addStubMapping(String stubJson) {
-    var stub = parse(readString(stubJson), StubMapping.class);
+    var stubContent = readString(stubJson);
+    var stub = Json.read(stubContent, StubMapping.class);
     wm.addStubMapping(stub);
   }
 }

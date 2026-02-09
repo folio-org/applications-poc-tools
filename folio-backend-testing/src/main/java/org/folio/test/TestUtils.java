@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.springframework.test.web.servlet.MvcResult;
+import tools.jackson.core.StreamReadFeature;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
@@ -31,6 +32,7 @@ public class TestUtils {
 
   public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
     .rebuild()
+    .enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
     .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(Include.NON_EMPTY))
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
