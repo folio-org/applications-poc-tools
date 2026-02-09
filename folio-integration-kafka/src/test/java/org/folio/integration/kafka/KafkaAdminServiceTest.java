@@ -35,6 +35,7 @@ import org.springframework.kafka.KafkaException;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @UnitTest
 @Import(TestContextConfiguration.class)
@@ -44,7 +45,7 @@ class KafkaAdminServiceTest {
 
   @Autowired private KafkaAdminService kafkaAdminService;
   @Autowired private ApplicationContext applicationContext;
-  @Autowired private KafkaAdmin kafkaAdmin;
+  @MockitoBean private KafkaAdmin kafkaAdmin;
 
   @Test
   void createKafkaTopics_positive_newTopic() {
@@ -288,11 +289,6 @@ class KafkaAdminServiceTest {
       var config = new FolioEnvironment();
       config.setEnvironment("folio");
       return config;
-    }
-
-    @Bean
-    KafkaAdmin kafkaAdmin() {
-      return mock(KafkaAdmin.class);
     }
   }
 }

@@ -61,10 +61,10 @@ public class JsonWebTokenParser {
       throw new ParseException("Failed to decode json web token", exception);
     }
 
-    var issuer = jsonWebTokenTree.path(ISSUER_CLAIM).textValue();
-    if (issuer == null) {
+    if (!jsonWebTokenTree.has(ISSUER_CLAIM)) {
       throw new ParseException("Issuer not found in the json web token");
     }
+    var issuer = jsonWebTokenTree.path(ISSUER_CLAIM).asString();
 
     if (properties.isValidateUri()) {
       validateTokenIssuerUri(issuer);
