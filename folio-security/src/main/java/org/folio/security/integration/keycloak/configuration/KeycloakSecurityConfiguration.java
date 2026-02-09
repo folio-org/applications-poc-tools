@@ -2,7 +2,6 @@ package org.folio.security.integration.keycloak.configuration;
 
 import static org.folio.common.utils.tls.FeignClientTlsUtils.buildTargetFeignClient;
 
-import tools.jackson.databind.ObjectMapper;
 import feign.Contract;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
@@ -25,6 +24,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.web.util.UrlPathHelper;
+import tools.jackson.databind.ObjectMapper;
 
 @ConditionalOnProperty({"application.security.enabled", "application.keycloak.enabled"})
 @Import(FeignClientsConfiguration.class)

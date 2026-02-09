@@ -1,6 +1,5 @@
 package org.folio.security.integration.authtoken.configuration;
 
-import tools.jackson.databind.ObjectMapper;
 import feign.Contract;
 import feign.Feign;
 import feign.codec.Decoder;
@@ -22,6 +21,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.web.util.UrlPathHelper;
+import tools.jackson.databind.ObjectMapper;
 
 @Log4j2
 @ConditionalOnExpression(

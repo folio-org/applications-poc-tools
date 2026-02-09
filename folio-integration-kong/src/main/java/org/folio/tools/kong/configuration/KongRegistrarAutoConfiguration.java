@@ -2,7 +2,6 @@ package org.folio.tools.kong.configuration;
 
 import static org.folio.common.utils.tls.FeignClientTlsUtils.buildTargetFeignClient;
 
-import tools.jackson.databind.ObjectMapper;
 import feign.Contract;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
@@ -18,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ResourceLoader;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 @Import(FeignClientsConfiguration.class)
