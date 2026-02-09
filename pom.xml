@@ -40,6 +40,7 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <lombok.version>1.18.42</lombok.version>
+    <spring-boot.version>4.0.2</spring-boot.version>
     <apache-commons-collections4.version>4.5.0</apache-commons-collections4.version>
     <apache-commons-lang3.version>3.19.0</apache-commons-lang3.version>
     <feign-okhttp.version>13.6</feign-okhttp.version>
