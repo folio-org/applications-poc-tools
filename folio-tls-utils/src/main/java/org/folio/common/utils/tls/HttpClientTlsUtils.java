@@ -1,6 +1,7 @@
 package org.folio.common.utils.tls;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.folio.common.utils.tls.Utils.buildSslContext;
 
 import java.net.http.HttpClient;
 import lombok.experimental.UtilityClass;
@@ -63,7 +64,7 @@ public class HttpClientTlsUtils {
 
     // Configure TLS if enabled with custom truststore
     if (tls != null && tls.isEnabled() && isNotBlank(tls.getTrustStorePath())) {
-      httpClientBuilder.sslContext(Utils.buildSslContext(tls));
+      httpClientBuilder.sslContext(buildSslContext(tls));
     }
 
     var httpClient = httpClientBuilder.build();

@@ -169,7 +169,7 @@ public class FsspStore implements SecureStore {
     return OBJECT_MAPPER.readValue(entity.getContent(), SecureStoreEntry.class);
   }
 
-  private static HttpEntity serializeSecureStoreEntry(SecureStoreEntry entry) throws IOException {
+  private static HttpEntity serializeSecureStoreEntry(SecureStoreEntry entry) {
     return new StringEntity(OBJECT_MAPPER.writeValueAsString(entry), APPLICATION_JSON);
   }
 

@@ -71,10 +71,10 @@ class HttpClientTlsUtilsTest {
   @Test
   void buildHttpServiceClient_negative_invalidTruststorePath() {
     var restClientBuilder = RestClient.builder();
-
+    var invalidTlsProperties = getInvalidTlsProperties();
     assertThrows(SslInitializationException.class, () -> buildHttpServiceClient(
       restClientBuilder,
-      getInvalidTlsProperties(),
+      invalidTlsProperties,
       "https://localhost:8443",
       TestClient.class));
   }

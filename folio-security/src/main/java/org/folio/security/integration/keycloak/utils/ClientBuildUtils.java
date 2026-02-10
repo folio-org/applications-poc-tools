@@ -4,13 +4,13 @@ import static jakarta.ws.rs.client.ClientBuilder.newBuilder;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 import static org.folio.common.utils.tls.Utils.IS_HOSTNAME_VERIFICATION_DISABLED;
+import static org.folio.common.utils.tls.Utils.buildSslContext;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.folio.common.configuration.properties.TlsProperties;
-import org.folio.common.utils.tls.Utils;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.keycloak.admin.client.JacksonProvider;
@@ -48,6 +48,6 @@ public class ClientBuildUtils {
       log.debug("Creating ResteasyClient for Public Trusted Certificates");
       return (ResteasyClient) clientBuilder.build();
     }
-    return (ResteasyClient) clientBuilder.sslContext(Utils.buildSslContext(tls)).build();
+    return (ResteasyClient) clientBuilder.sslContext(buildSslContext(tls)).build();
   }
 }
