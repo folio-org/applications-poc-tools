@@ -11,6 +11,7 @@ import org.folio.security.integration.keycloak.configuration.KeycloakSecurityCon
 import org.folio.security.service.AuthorizationService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -50,7 +51,7 @@ public class SecurityConfiguration implements WebSecurityCustomizer {
   @Override
   public void customize(WebSecurity web) {
     web.ignoring()
-      .requestMatchers("/actuator/**")
+      .requestMatchers(EndpointRequest.toAnyEndpoint())
       .requestMatchers(regexMatcher(HttpMethod.GET, getExcludedRoutesPattern()));
   }
 
