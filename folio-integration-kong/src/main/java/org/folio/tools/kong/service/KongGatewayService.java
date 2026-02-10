@@ -21,8 +21,6 @@ import static org.folio.tools.kong.model.expression.RouteExpressions.httpPath;
 import static org.folio.tools.kong.utls.RoutingEntryUtils.getMethods;
 import static org.springframework.util.ObjectUtils.nullSafeEquals;
 
-import feign.FeignException;
-import feign.FeignException.NotFound;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,7 +49,8 @@ import org.folio.tools.kong.exception.TenantRouteUpdateException;
 import org.folio.tools.kong.model.Route;
 import org.folio.tools.kong.model.Service;
 import org.folio.tools.kong.model.expression.RouteExpression;
-import org.jetbrains.annotations.Nullable;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -208,7 +207,7 @@ public class KongGatewayService {
       } else {
         log.debug("Service already exists in Kong: moduleId = {}", serviceName);
       }
-    } catch (FeignException.NotFound e) {
+    } catch (HttpClientErrorException.NotFound e) {
       kongAdminClient.upsertService(serviceName, service);
       log.debug("Service is created in Kong: moduleId = {}", serviceName);
     }
@@ -236,7 +235,7 @@ public class KongGatewayService {
         routes = kongAdminClient.getServiceRoutes(serviceNameOrId, null);
         routes.forEach(route -> kongAdminClient.deleteRoute(serviceNameOrId, route.getId()));
       } while (routes.getData() != null && !routes.getData().isEmpty());
-    } catch (NotFound nf) {
+    } catch (HttpClientErrorException.NotFound nf) {
       throw new NoSuchElementException("No such service: " + serviceNameOrId);
     } catch (Exception e) {
       log.warn("Failed to delete all routes for Kong service: {}", serviceNameOrId, e);
@@ -348,7 +347,7 @@ public class KongGatewayService {
     try {
       kongAdminClient.upsertRoute(serviceId, route.getName(), route);
       return Optional.empty();
-    } catch (FeignException exception) {
+    } catch (RestClientException exception) {
       return Optional.of(new Parameter().key(asString(re)).value(exception.getMessage()));
     }
   }
@@ -466,7 +465,7 @@ public class KongGatewayService {
     return isMultiple ? httpHeader(MODULE_ID).equalsTo(moduleId) : null;
   }
 
-  private static @Nullable RouteExpression buildTenantHeaderExpression(boolean isMgrComponent) {
+  private static RouteExpression buildTenantHeaderExpression(boolean isMgrComponent) {
     return isMgrComponent ? null : httpHeader("x-okapi-tenant").headerRegexMatching("\".*\"");
   }
 

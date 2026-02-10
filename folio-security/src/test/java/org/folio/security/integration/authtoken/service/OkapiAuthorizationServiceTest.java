@@ -13,9 +13,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import feign.FeignException;
-import feign.RetryableException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +41,9 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.util.UrlPathHelper;
 import tools.jackson.databind.ObjectMapper;
 
@@ -89,7 +89,7 @@ class OkapiAuthorizationServiceTest {
   }
 
   @Test
-  void authorize_positive() throws JsonProcessingException {
+  void authorize_positive() {
     var permissionsRequired = List.of(PERMISSION_1, PERMISSION_2);
     var modulePermissions = List.of(MODULE_PERMISSION_1, MODULE_PERMISSION_2);
     var routingEntry = new RoutingEntry().path(PATH).methods(List.of(METHOD)).permissionsRequired(permissionsRequired)
@@ -110,7 +110,7 @@ class OkapiAuthorizationServiceTest {
   }
 
   @Test
-  void authorize_positive_emptyModulePermissions() throws JsonProcessingException {
+  void authorize_positive_emptyModulePermissions() {
     var permissionsRequired = List.of(PERMISSION_1, PERMISSION_2);
     var routingEntry = new RoutingEntry().path(PATH).methods(List.of(METHOD)).permissionsRequired(permissionsRequired);
 
@@ -167,7 +167,7 @@ class OkapiAuthorizationServiceTest {
   }
 
   @Test
-  void authorize_positive_pathWithPrefix() throws JsonProcessingException {
+  void authorize_positive_pathWithPrefix() {
     var permissionsRequired = List.of(PERMISSION_1, PERMISSION_2);
     var modulePermissions = List.of(MODULE_PERMISSION_1, MODULE_PERMISSION_2);
     var routingEntry = new RoutingEntry().path(PATH).methods(List.of(METHOD)).permissionsRequired(permissionsRequired)
@@ -210,7 +210,7 @@ class OkapiAuthorizationServiceTest {
     when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
-    doThrow(FeignException.Forbidden.class).when(client)
+    doThrow(HttpClientErrorException.Forbidden.class).when(client)
       .checkAuthToken(PATH, reqPerms, null, modPerms, TOKEN, SUPERTENANT_ID, null);
 
     assertThrows(ForbiddenException.class, () -> service.authorize(request, TOKEN));
@@ -231,7 +231,7 @@ class OkapiAuthorizationServiceTest {
     when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
-    doThrow(FeignException.Unauthorized.class).when(client)
+    doThrow(HttpClientErrorException.Unauthorized.class).when(client)
       .checkAuthToken(PATH, reqPerms, null, modPerms, TOKEN, SUPERTENANT_ID, null);
 
     assertThrows(NotAuthorizedException.class, () -> service.authorize(request, TOKEN));
@@ -250,10 +250,10 @@ class OkapiAuthorizationServiceTest {
     when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
-    doThrow(FeignException.InternalServerError.class).when(client)
+    doThrow(HttpServerErrorException.InternalServerError.class).when(client)
       .checkAuthToken(eq(PATH), anyString(), eq(null), any(), eq(TOKEN), eq(SUPERTENANT_ID), eq(null));
 
-    assertThrows(FeignException.InternalServerError.class, () -> service.authorize(request, TOKEN));
+    assertThrows(HttpServerErrorException.InternalServerError.class, () -> service.authorize(request, TOKEN));
   }
 
   @Test
@@ -269,10 +269,10 @@ class OkapiAuthorizationServiceTest {
     when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
-    doThrow(RetryableException.class).when(client)
+    doThrow(ResourceAccessException.class).when(client)
       .checkAuthToken(eq(PATH), anyString(), eq(null), any(), eq(TOKEN), eq(SUPERTENANT_ID), eq(null));
 
-    assertThrows(RetryableException.class, () -> service.authorize(request, TOKEN));
+    assertThrows(ResourceAccessException.class, () -> service.authorize(request, TOKEN));
   }
 
   private static AuthUserPrincipal authUserPrincipal() {

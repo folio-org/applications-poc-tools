@@ -69,11 +69,6 @@
     </dependency>
 
     <dependency>
-      <groupId>io.github.openfeign</groupId>
-      <artifactId>feign-okhttp</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.semver4j</groupId>
       <artifactId>semver4j</artifactId>
       <version>${semver4j.version}</version>

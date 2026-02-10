@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.folio.common.configuration.properties.TlsProperties;
-import org.folio.common.utils.tls.FeignClientTlsUtils;
+import org.folio.common.utils.tls.Utils;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.keycloak.admin.client.JacksonProvider;
@@ -48,6 +48,6 @@ public class ClientBuildUtils {
       log.debug("Creating ResteasyClient for Public Trusted Certificates");
       return (ResteasyClient) clientBuilder.build();
     }
-    return (ResteasyClient) clientBuilder.sslContext(FeignClientTlsUtils.buildSslContext(tls)).build();
+    return (ResteasyClient) clientBuilder.sslContext(Utils.buildSslContext(tls)).build();
   }
 }

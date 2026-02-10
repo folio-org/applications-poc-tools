@@ -1,17 +1,14 @@
 package org.folio.security.integration.keycloak.service;
 
-import static java.util.Map.entry;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.folio.common.utils.OkapiHeaders.TENANT;
 import static org.folio.security.integration.keycloak.service.KeycloakTokenValidator.resolveTenant;
 import static org.keycloak.OAuth2Constants.UMA_GRANT_TYPE;
 
-import feign.FeignException;
 import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +27,9 @@ import org.folio.security.service.AbstractAuthorizationService;
 import org.folio.security.service.RoutingEntryMatcher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -75,19 +75,20 @@ public class KeycloakAuthorizationService extends AbstractAuthorizationService {
     try {
       keycloakClient.evaluatePermissions(body, "Bearer " + jwtStr);
       return createAuthentication(jwt);
-    } catch (FeignException.Forbidden e) {
+    } catch (HttpClientErrorException.Forbidden e) {
       throw new ForbiddenException("Access forbidden", e);
-    } catch (FeignException.Unauthorized e) {
+    } catch (HttpClientErrorException.Unauthorized e) {
       throw new NotAuthorizedException("Not authorized", e);
     }
   }
 
-  private Map<String, ?> prepareRequestBody(RoutingEntry routingEntry, String scope) {
+  private MultiValueMap<String, String> prepareRequestBody(RoutingEntry routingEntry, String scope) {
     var resource = StringUtils.getIfEmpty(routingEntry.getPath(), routingEntry::getPathPattern);
-    return Map.ofEntries(
-      entry("grant_type", UMA_GRANT_TYPE),
-      entry("audience", properties.getClient().getClientId()),
-      entry("permission", resource + "#" + scope));
+    MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+    body.add("grant_type", UMA_GRANT_TYPE);
+    body.add("audience", properties.getClient().getClientId());
+    body.add("permission", resource + "#" + scope);
+    return body;
   }
 
   private static PreAuthenticatedAuthenticationToken createAuthentication(JsonWebToken accessToken) {

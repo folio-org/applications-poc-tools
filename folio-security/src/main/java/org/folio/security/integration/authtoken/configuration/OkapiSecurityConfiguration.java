@@ -1,9 +1,5 @@
 package org.folio.security.integration.authtoken.configuration;
 
-import feign.Contract;
-import feign.Feign;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.security.integration.authtoken.client.AuthtokenClient;
@@ -15,11 +11,12 @@ import org.folio.security.service.RoutingEntryMatcher;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.openfeign.FeignClientsConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
+import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import org.springframework.web.util.UrlPathHelper;
 import tools.jackson.databind.ObjectMapper;
 
@@ -27,17 +24,21 @@ import tools.jackson.databind.ObjectMapper;
 @ConditionalOnExpression(
   "${application.security.enabled} && ${application.okapi.enabled} && !${application.keycloak.enabled}")
 @EnableConfigurationProperties(OkapiProperties.class)
-@Import(FeignClientsConfiguration.class)
 @RequiredArgsConstructor
 public class OkapiSecurityConfiguration {
 
   private final OkapiProperties properties;
 
   @Bean
-  public AuthtokenClient authtokenClient(Contract contract, Encoder encoder, Decoder decoder) {
-    return Feign.builder()
-      .contract(contract).encoder(encoder).decoder(decoder)
-      .target(AuthtokenClient.class, properties.getModAuthtokenUrl());
+  public AuthtokenClient authtokenClient(RestClient.Builder restClientBuilder) {
+    var restClient = restClientBuilder
+      .baseUrl(properties.getModAuthtokenUrl())
+      .build();
+
+    var adapter = RestClientAdapter.create(restClient);
+    var factory = HttpServiceProxyFactory.builderFor(adapter).build();
+
+    return factory.createClient(AuthtokenClient.class);
   }
 
   @Bean

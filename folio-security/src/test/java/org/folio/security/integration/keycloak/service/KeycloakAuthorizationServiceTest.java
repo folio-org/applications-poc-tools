@@ -10,12 +10,9 @@ import static org.keycloak.OAuth2Constants.UMA_GRANT_TYPE;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import feign.FeignException.Forbidden;
-import feign.FeignException.Unauthorized;
 import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -41,6 +38,9 @@ import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.core.env.Environment;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UrlPathHelper;
 
 @UnitTest
@@ -169,7 +169,8 @@ class KeycloakAuthorizationServiceTest {
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
     when(routingEntryMatcher.lookup(HTTP_METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(jsonWebTokenParser.parse(TOKEN)).thenReturn(accessToken);
-    when(keycloakClient.evaluatePermissions(authRequestParameters(), "Bearer " + TOKEN)).thenThrow(Unauthorized.class);
+    when(keycloakClient.evaluatePermissions(authRequestParameters(), "Bearer " + TOKEN))
+      .thenThrow(HttpClientErrorException.Unauthorized.class);
 
     assertThatThrownBy(() -> keycloakAuthorizationService.authorize(httpServletRequest, TOKEN))
       .isInstanceOf(NotAuthorizedException.class)
@@ -187,7 +188,8 @@ class KeycloakAuthorizationServiceTest {
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
     when(routingEntryMatcher.lookup(HTTP_METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(jsonWebTokenParser.parse(TOKEN)).thenReturn(accessToken);
-    when(keycloakClient.evaluatePermissions(authRequestParameters(), "Bearer " + TOKEN)).thenThrow(Forbidden.class);
+    when(keycloakClient.evaluatePermissions(authRequestParameters(), "Bearer " + TOKEN))
+      .thenThrow(HttpClientErrorException.Forbidden.class);
 
     assertThatThrownBy(() -> keycloakAuthorizationService.authorize(httpServletRequest, TOKEN))
       .isInstanceOf(ForbiddenException.class)
@@ -200,11 +202,12 @@ class KeycloakAuthorizationServiceTest {
     return keycloakClientProperties;
   }
 
-  private static Map<String, ?> authRequestParameters() {
-    return Map.of(
-      "grant_type", UMA_GRANT_TYPE,
-      "audience", "be-test-admin-client",
-      "permission", PATH + "#" + HTTP_METHOD);
+  private static MultiValueMap<String, String> authRequestParameters() {
+    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+    params.add("grant_type", UMA_GRANT_TYPE);
+    params.add("audience", "be-test-admin-client");
+    params.add("permission", PATH + "#" + HTTP_METHOD);
+    return params;
   }
 
   private static AuthUserPrincipal authUserPrincipal() {

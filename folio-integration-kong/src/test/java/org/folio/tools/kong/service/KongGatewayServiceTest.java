@@ -1,8 +1,5 @@
 package org.folio.tools.kong.service;
 
-import static feign.Request.HttpMethod.GET;
-import static feign.Request.HttpMethod.PUT;
-import static feign.Request.create;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.emptyList;
@@ -35,9 +32,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import feign.FeignException.InternalServerError;
-import feign.FeignException.NotFound;
-import feign.RequestTemplate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -72,6 +66,9 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
@@ -159,8 +156,8 @@ class KongGatewayServiceTest {
       var serviceId = UUID.randomUUID().toString();
       var kongRoute = route(List.of("GET"), "^/entities/([^/]+)$", "test-1.0");
       var routeName = kongRoute.getName();
-      var request = create(PUT, "/services/" + serviceId + "/" + routeName, emptyMap(), null, (RequestTemplate) null);
-      var internalServerError = new InternalServerError("Failed to create route", request, null, emptyMap());
+      var internalServerError = HttpServerErrorException.create(HttpStatus.INTERNAL_SERVER_ERROR,
+        "Failed to create route", null, null, null);
 
       when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
       when(kongAdminClient.upsertRoute(serviceId, routeName, kongRoute)).thenThrow(internalServerError);
@@ -176,13 +173,13 @@ class KongGatewayServiceTest {
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(
           List.of(new Parameter()
             .key("RoutingEntry(methods=[GET], pathPattern=/entities/{id}, path=null)")
-            .value("Failed to create route"))));
+            .value("500 Failed to create route"))));
     }
 
     @Test
     void negative_serviceNotFound() {
-      var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
-      when(kongAdminClient.getService(MOD_ID)).thenThrow(new NotFound("Not found", request, null, emptyMap()));
+      when(kongAdminClient.getService(MOD_ID)).thenThrow(
+        HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not found", null, null, null));
 
       var moduleDescriptors = List.of(moduleDescriptor());
       assertThatThrownBy(() -> kongGatewayService.addRoutes(moduleDescriptors))
@@ -230,9 +227,8 @@ class KongGatewayServiceTest {
 
     @Test
     void negative_failedToFindRoutes() {
-      var url = format("/routes?tags=%s", MOD_ID);
-      var request = create(PUT, url, emptyMap(), null, (RequestTemplate) null);
-      var internalServerError = new InternalServerError("Unknown error", request, null, emptyMap());
+      var internalServerError = HttpServerErrorException.create(HttpStatus.INTERNAL_SERVER_ERROR,
+        "Unknown error", null, null, null);
 
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null)).thenThrow(internalServerError);
@@ -242,13 +238,12 @@ class KongGatewayServiceTest {
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to load routes")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
-          new Parameter().key("Failed to find routes").value("Unknown error"))));
+          new Parameter().key("Failed to find routes").value("500 Unknown error"))));
     }
 
     @Test
     void negative_serviceNotFound() {
-      var request = create(PUT, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
-      var notFoundError = new NotFound("Not Found", request, null, emptyMap());
+      var notFoundError = HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", null, null, null);
       when(kongAdminClient.getService(MOD_ID)).thenThrow(notFoundError);
 
       var moduleDescriptors = List.of(moduleDescriptor());
@@ -266,9 +261,8 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null)).thenReturn(routesByTag);
 
-      var url = format("/routes?tags=%s", MOD_ID);
-      var request = create(PUT, url, emptyMap(), null, (RequestTemplate) null);
-      var internalServerError = new InternalServerError("Failed to create route", request, null, emptyMap());
+      var internalServerError = HttpServerErrorException.create(HttpStatus.INTERNAL_SERVER_ERROR,
+        "Failed to create route", null, null, null);
       doThrow(internalServerError).when(kongAdminClient).deleteRoute(SERVICE_ID, "routeId");
 
       var moduleDescriptors = List.of(moduleDescriptor());
@@ -276,7 +270,7 @@ class KongGatewayServiceTest {
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to remove routes")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).isEqualTo(List.of(
-          new Parameter().key("routeId").value("Failed to create route"))));
+          new Parameter().key("routeId").value("500 Failed to create route"))));
     }
   }
 
@@ -334,8 +328,8 @@ class KongGatewayServiceTest {
 
     @Test
     void positive_serviceNotFound() {
-      var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
-      when(kongAdminClient.getService(MOD_ID)).thenThrow(new NotFound("Not found", request, null, emptyMap()));
+      when(kongAdminClient.getService(MOD_ID)).thenThrow(
+        HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not found", null, null, null));
 
       var moduleDescriptors = List.of(moduleDescriptor());
       assertThatThrownBy(() -> kongGatewayService.addRoutes(moduleDescriptors))
@@ -362,9 +356,9 @@ class KongGatewayServiceTest {
       var capturedRoutes = routeCaptor.getAllValues();
       assertThat(capturedRoutes).isNotEmpty();
 
-      capturedRoutes.forEach(route -> {
-        assertThat(route.getExpression()).doesNotContain("http.headers.x_okapi_tenant");
-      });
+      capturedRoutes.forEach(route ->
+        assertThat(route.getExpression()).doesNotContain("http.headers.x_okapi_tenant")
+      );
     }
 
     static ModuleDescriptor moduleDescriptor() {
@@ -385,7 +379,7 @@ class KongGatewayServiceTest {
     @Test
     void positive() {
       var kongService = kongService();
-      when(kongAdminClient.getService(MOD_ID)).thenThrow(NotFound.class);
+      when(kongAdminClient.getService(MOD_ID)).thenThrow(HttpClientErrorException.NotFound.class);
 
       kongGatewayService.upsertService(kongService);
 
@@ -437,9 +431,8 @@ class KongGatewayServiceTest {
 
     @Test
     void negative_serviceIsNotFound() {
-      var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
       var errorMessage = "Service is not found: test-module-0.0.1";
-      var notFoundException = new NotFound(errorMessage, request, null, emptyMap());
+      var notFoundException = HttpClientErrorException.create(HttpStatus.NOT_FOUND, errorMessage, null, null, null);
 
       doThrow(notFoundException).when(kongAdminClient).deleteService(MOD_ID);
 
@@ -447,7 +440,7 @@ class KongGatewayServiceTest {
         .isInstanceOf(KongIntegrationException.class)
         .hasMessage("Failed to delete Kong service: test-module-0.0.1")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors())
-          .isEqualTo(List.of(new Parameter().key("cause").value(errorMessage))));
+          .isEqualTo(List.of(new Parameter().key("cause").value("404 " + errorMessage))));
     }
 
     @Test
@@ -524,9 +517,8 @@ class KongGatewayServiceTest {
     @Test
     @DisplayName("should throw exception when service not found")
     void addTenantToModuleRoutes_serviceNotFound() {
-      var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
       when(kongAdminClient.getService(MOD_ID))
-        .thenThrow(new NotFound("Service not found", request, null, emptyMap()));
+        .thenThrow(HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Service not found", null, null, null));
 
       assertThatThrownBy(() -> kongGatewayService.addTenantToModuleRoutes(MOD_ID, TENANT_NAME))
         .isInstanceOf(TenantRouteUpdateException.class)
@@ -543,14 +535,12 @@ class KongGatewayServiceTest {
       var route1 = new Route().id(ROUTE_ID_1).name("route-name-1")
         .expression("http.path == \"/test1\"");
       var routes = List.of(route1);
-      var request = create(PUT, "/services/" + SERVICE_ID + "/routes/route-name-1", emptyMap(), null, 
-        (RequestTemplate) null);
 
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
         .thenReturn(new KongResultList<>(null, routes));
       when(kongRouteTenantService.addTenant(route1, TENANT_NAME)).thenReturn(route1);
-      doThrow(new InternalServerError("Update failed", request, null, emptyMap()))
+      doThrow(HttpServerErrorException.create(HttpStatus.INTERNAL_SERVER_ERROR, "Update failed", null, null, null))
         .when(kongAdminClient).upsertRoute(anyString(), anyString(), any(Route.class));
 
       assertThatThrownBy(() -> kongGatewayService.addTenantToModuleRoutes(MOD_ID, TENANT_NAME))
@@ -573,8 +563,6 @@ class KongGatewayServiceTest {
       var route2 = new Route().id(ROUTE_ID_2).name("route-name-2")
         .expression("http.path == \"/test2\"");
       var routes = List.of(route1, route2);
-      var request = create(PUT, "/services/" + SERVICE_ID + "/routes/route-name-2", emptyMap(), null, 
-        (RequestTemplate) null);
 
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
@@ -582,7 +570,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.upsertRoute(anyString(), eq("route-name-1"), any(Route.class))).thenReturn(route1);
       when(kongRouteTenantService.addTenant(route1, TENANT_NAME)).thenReturn(route1);
       when(kongRouteTenantService.addTenant(route2, TENANT_NAME)).thenReturn(route2);
-      doThrow(new InternalServerError("Update failed", request, null, emptyMap()))
+      doThrow(HttpServerErrorException.create(HttpStatus.INTERNAL_SERVER_ERROR, "Update failed", null, null, null))
         .when(kongAdminClient).upsertRoute(anyString(), eq("route-name-2"), any(Route.class));
 
       assertThatThrownBy(() -> kongGatewayService.addTenantToModuleRoutes(MOD_ID, TENANT_NAME))
@@ -649,9 +637,8 @@ class KongGatewayServiceTest {
     @Test
     @DisplayName("should throw exception when service not found")
     void removeTenantFromModuleRoutes_serviceNotFound() {
-      var request = create(GET, "/services/" + MOD_ID, emptyMap(), null, (RequestTemplate) null);
       when(kongAdminClient.getService(MOD_ID))
-        .thenThrow(new NotFound("Service not found", request, null, emptyMap()));
+        .thenThrow(HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Service not found", null, null, null));
 
       assertThatThrownBy(() -> kongGatewayService.removeTenantFromModuleRoutes(MOD_ID, TENANT_NAME))
         .isInstanceOf(TenantRouteUpdateException.class)
@@ -668,14 +655,12 @@ class KongGatewayServiceTest {
       var route1 = new Route().id(ROUTE_ID_1).name("route-name-1")
         .expression("http.path == \"/test1\"");
       var routes = List.of(route1);
-      var request = create(PUT, "/services/" + SERVICE_ID + "/routes/route-name-1", emptyMap(), null, 
-        (RequestTemplate) null);
 
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
         .thenReturn(new KongResultList<>(null, routes));
       when(kongRouteTenantService.removeTenant(route1, TENANT_NAME)).thenReturn(route1);
-      doThrow(new InternalServerError("Update failed", request, null, emptyMap()))
+      doThrow(HttpServerErrorException.create(HttpStatus.INTERNAL_SERVER_ERROR, "Update failed", null, null, null))
         .when(kongAdminClient).upsertRoute(anyString(), anyString(), any(Route.class));
 
       assertThatThrownBy(() -> kongGatewayService.removeTenantFromModuleRoutes(MOD_ID, TENANT_NAME))
@@ -698,8 +683,6 @@ class KongGatewayServiceTest {
       var route2 = new Route().id(ROUTE_ID_2).name("route-name-2")
         .expression("http.path == \"/test2\"");
       var routes = List.of(route1, route2);
-      var request = create(PUT, "/services/" + SERVICE_ID + "/routes/route-name-2", emptyMap(), null, 
-        (RequestTemplate) null);
 
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(ROUTE_TAGS, null))
@@ -707,7 +690,7 @@ class KongGatewayServiceTest {
       when(kongAdminClient.upsertRoute(anyString(), eq("route-name-1"), any(Route.class))).thenReturn(route1);
       when(kongRouteTenantService.removeTenant(route1, TENANT_NAME)).thenReturn(route1);
       when(kongRouteTenantService.removeTenant(route2, TENANT_NAME)).thenReturn(route2);
-      doThrow(new InternalServerError("Update failed", request, null, emptyMap()))
+      doThrow(HttpServerErrorException.create(HttpStatus.INTERNAL_SERVER_ERROR, "Update failed", null, null, null))
         .when(kongAdminClient).upsertRoute(anyString(), eq("route-name-2"), any(Route.class));
 
       assertThatThrownBy(() -> kongGatewayService.removeTenantFromModuleRoutes(MOD_ID, TENANT_NAME))
@@ -849,7 +832,7 @@ class KongGatewayServiceTest {
 
     static String getMethodsExpression(List<String> methods) {
       if (methods.size() == 1) {
-        return "http.method == \"" + methods.get(0) + "\"";
+        return "http.method == \"" + methods.getFirst() + "\"";
       }
 
       return methods.stream()

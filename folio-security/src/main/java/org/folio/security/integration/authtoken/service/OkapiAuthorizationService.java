@@ -4,7 +4,6 @@ import static java.util.Collections.emptyMap;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.folio.common.utils.OkapiHeaders.SUPERTENANT_ID;
 
-import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Base64;
 import java.util.Collections;
@@ -26,6 +25,7 @@ import org.folio.security.service.InternalModuleDescriptorProvider;
 import org.folio.security.service.RoutingEntryMatcher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import org.springframework.web.client.HttpClientErrorException;
 import tools.jackson.databind.ObjectMapper;
 
 @RequiredArgsConstructor
@@ -56,9 +56,9 @@ public class OkapiAuthorizationService extends AbstractAuthorizationService {
     try {
       authtokenClient.checkAuthToken(path, requiredPermissions, desiredPermissions, modulePermissions,
         token, SUPERTENANT_ID, okapiUrl);
-    } catch (FeignException.Forbidden e) {
+    } catch (HttpClientErrorException.Forbidden e) {
       throw new ForbiddenException("Access forbidden");
-    } catch (FeignException.Unauthorized e) {
+    } catch (HttpClientErrorException.Unauthorized e) {
       throw new NotAuthorizedException("Not authorized");
     }
     return createAuthentication(token);
