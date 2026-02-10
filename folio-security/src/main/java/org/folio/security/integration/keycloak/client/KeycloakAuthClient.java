@@ -13,7 +13,7 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 
-@HttpExchange(url = "", contentType = APPLICATION_JSON_VALUE)
+@HttpExchange(contentType = APPLICATION_JSON_VALUE)
 public interface KeycloakAuthClient {
 
   @PostExchange(value = "/realms/master/protocol/openid-connect/token", contentType = APPLICATION_FORM_URLENCODED_VALUE)
