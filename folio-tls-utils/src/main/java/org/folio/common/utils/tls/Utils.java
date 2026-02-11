@@ -63,7 +63,6 @@ public class Utils {
    * @param tls TLS configuration properties
    * @return initialized KeyStore
    * @throws KeyStoreException if keystore cannot be loaded
-   * @throws IOException if file cannot be read
    * @throws CertificateException if certificate is invalid
    * @throws NoSuchAlgorithmException if algorithm is not supported
    */
