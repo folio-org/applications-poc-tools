@@ -18,9 +18,9 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.IOUtils;
 import org.folio.test.extensions.KeycloakRealms;
 import org.folio.test.extensions.KeycloakRealmsGroup;
+import org.jspecify.annotations.NonNull;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.springframework.core.io.Resource;
-import org.springframework.lang.NonNull;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestExecutionListener;
 

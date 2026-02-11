@@ -49,6 +49,7 @@ import org.folio.tools.kong.exception.TenantRouteUpdateException;
 import org.folio.tools.kong.model.Route;
 import org.folio.tools.kong.model.Service;
 import org.folio.tools.kong.model.expression.RouteExpression;
+import org.jspecify.annotations.Nullable;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 
@@ -109,7 +110,7 @@ public class KongGatewayService {
         .filter(Objects::nonNull)
         .filter(route -> isNotBlank(route.getExpression()))
         .toList();
-      
+
       if (routes.isEmpty()) {
         log.warn("No routes found for module [{}]", moduleId);
         return;
@@ -143,7 +144,7 @@ public class KongGatewayService {
         .filter(Objects::nonNull)
         .filter(route -> isNotBlank(route.getExpression()))
         .toList();
-      
+
       if (routes.isEmpty()) {
         log.warn("No routes found for module [{}]", moduleId);
         return;
@@ -465,7 +466,7 @@ public class KongGatewayService {
     return isMultiple ? httpHeader(MODULE_ID).equalsTo(moduleId) : null;
   }
 
-  private static RouteExpression buildTenantHeaderExpression(boolean isMgrComponent) {
+  private static @Nullable RouteExpression buildTenantHeaderExpression(boolean isMgrComponent) {
     return isMgrComponent ? null : httpHeader("x-okapi-tenant").headerRegexMatching("\".*\"");
   }
 

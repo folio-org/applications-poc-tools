@@ -3,10 +3,10 @@ package org.folio.common.domain.model;
 import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 @EqualsAndHashCode
