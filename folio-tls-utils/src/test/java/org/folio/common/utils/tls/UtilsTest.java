@@ -3,6 +3,7 @@ package org.folio.common.utils.tls;
 import static org.apache.commons.lang3.SystemProperties.JDK_INTERNAL_HTTP_CLIENT_DISABLE_HOST_NAME_VERIFICATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.folio.common.utils.tls.Utils.buildSslContext;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -60,19 +61,12 @@ class UtilsTest {
     assertTrue(result, "Expected hostname verification to be disabled when property is set to 'true'.");
   }
 
-  private boolean invokeHostnameVerificationDisabledValue()
-    throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    Method method = Utils.class.getDeclaredMethod("hostnameVerificationDisabledValue");
-    method.setAccessible(true);
-    return (boolean) method.invoke(null);
-  }
-
   @Test
   void buildSslContext_positive_withValidTlsProperties() {
     var tls = TlsProperties.of(true, "classpath:certificates/test.truststore.jks",
       "secretpassword", "JKS");
 
-    var sslContext = Utils.buildSslContext(tls);
+    var sslContext = buildSslContext(tls);
 
     assertThat(sslContext).isNotNull();
     assertThat(sslContext.getProtocol()).isEqualTo("TLS");
@@ -80,7 +74,7 @@ class UtilsTest {
 
   @Test
   void buildSslContext_negative_withNullTlsProperties() {
-    assertThatThrownBy(() -> Utils.buildSslContext(null))
+    assertThatThrownBy(() -> buildSslContext(null))
       .isInstanceOf(NullPointerException.class)
       .hasMessage("TLS properties must not be null");
   }
@@ -89,7 +83,7 @@ class UtilsTest {
   void buildSslContext_negative_withNullTrustStorePath() {
     var tls = TlsProperties.of(true, null, "secretpassword", "JKS");
 
-    assertThatThrownBy(() -> Utils.buildSslContext(tls))
+    assertThatThrownBy(() -> buildSslContext(tls))
       .isInstanceOf(NullPointerException.class)
       .hasMessage("Trust store path is not defined");
   }
@@ -98,7 +92,7 @@ class UtilsTest {
   void buildSslContext_negative_withInvalidTrustStorePath() {
     var tls = TlsProperties.of(true, "classpath:certificates/nonexistent.jks", "secretpassword", "JKS");
 
-    assertThatThrownBy(() -> Utils.buildSslContext(tls))
+    assertThatThrownBy(() -> buildSslContext(tls))
       .isInstanceOf(SslInitializationException.class)
       .hasMessage("Error creating SSL context")
       .hasCauseInstanceOf(FileNotFoundException.class);
@@ -108,7 +102,7 @@ class UtilsTest {
   void buildSslContext_negative_withInvalidPassword() {
     var tls = TlsProperties.of(true, "classpath:certificates/test.truststore.jks", "wrongpassword", "JKS");
 
-    assertThatThrownBy(() -> Utils.buildSslContext(tls))
+    assertThatThrownBy(() -> buildSslContext(tls))
       .isInstanceOf(SslInitializationException.class)
       .hasMessage("Error creating SSL context")
       .hasCauseInstanceOf(IOException.class);
@@ -118,9 +112,16 @@ class UtilsTest {
   void buildSslContext_negative_withInvalidTrustStoreType() {
     var tls = TlsProperties.of(true, "classpath:certificates/test.truststore.jks", "secretpassword", "INVALID");
 
-    assertThatThrownBy(() -> Utils.buildSslContext(tls))
+    assertThatThrownBy(() -> buildSslContext(tls))
       .isInstanceOf(SslInitializationException.class)
       .hasMessage("Error creating SSL context")
       .hasCauseInstanceOf(KeyStoreException.class);
+  }
+
+  private boolean invokeHostnameVerificationDisabledValue()
+    throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    Method method = Utils.class.getDeclaredMethod("hostnameVerificationDisabledValue");
+    method.setAccessible(true);
+    return (boolean) method.invoke(null);
   }
 }
