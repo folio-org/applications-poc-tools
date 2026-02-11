@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Permission Capability Checker</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #222222;
+        --muted: #5d656f;
+        --surface: #f5f7f9;
+        --card: #ffffff;
+        --accent: #1f65a6;
+        --border: #d7dbe0;
+        --focus: rgba(31, 101, 166, 0.25);
+        --valid: #2e8540;
+        --invalid: #b52b2b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Source Sans Pro", "Helvetica Neue", Arial, sans-serif;
+        color: var(--ink);
+        background: var(--surface);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 36px 16px;
+      }
+
+      .shell {
+        width: min(720px, 100%);
+      }
+
+      .card {
+        background: var(--card);
+        border-radius: 4px;
+        padding: 18px 18px 20px;
+        border: 1px solid var(--border);
+        border-top: 3px solid var(--accent);
+        display: grid;
+        gap: 12px;
+      }
+
+      .header h1 {
+        font-size: 18px;
+        margin: 0 0 4px;
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 4px;
+      }
+
+      .subhead {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+
+      .inputRow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .input {
+        flex: 1;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        font-size: 14px;
+        transition: border 0.15s ease, box-shadow 0.15s ease;
+        background: #fff;
+      }
+
+      .input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--focus);
+      }
+
+      .statusDot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #9aa3ad;
+      }
+
+      .status-valid .input {
+        border-color: rgba(46, 133, 64, 0.8);
+        box-shadow: 0 0 0 2px rgba(46, 133, 64, 0.15);
+      }
+
+      .status-valid .statusDot {
+        background: var(--valid);
+      }
+
+      .status-invalid .input {
+        border-color: rgba(181, 43, 43, 0.85);
+        box-shadow: 0 0 0 2px rgba(181, 43, 43, 0.15);
+      }
+
+      .status-invalid .statusDot {
+        background: var(--invalid);
+      }
+
+      .error {
+        color: var(--invalid);
+        font-weight: 600;
+        background: rgba(181, 43, 43, 0.08);
+        padding: 8px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+
+      .result {
+        display: grid;
+        gap: 6px;
+        padding: 10px 12px;
+        border-radius: 4px;
+        background: #f8f9fb;
+        border: 1px solid #e3e8ee;
+        min-height: 108px;
+      }
+
+      .kv {
+        display: grid;
+        grid-template-columns: 110px 1fr;
+        align-items: start;
+        font-size: 12px;
+        min-height: 24px;
+      }
+
+      .kv span {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 10px;
+        font-weight: 600;
+        padding-top: 6px;
+      }
+
+      .kv code {
+        font-family: "Source Code Pro", "SFMono-Regular", Consolas, monospace;
+        font-size: 12px;
+        background: #ffffff;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid #e0e5eb;
+        display: flex;
+        align-items: center;
+        min-height: 24px;
+        width: 100%;
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 28px 12px;
+        }
+
+        .kv {
+          grid-template-columns: 1fr;
+          gap: 6px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="card">
+        <header class="header">
+          <p class="eyebrow">FOLIO Utilities</p>
+          <h1>Permission Capability Checker</h1>
+          <p class="subhead">Parse permission strings into type, action, and resource.</p>
+        </header>
+
+        <label class="label" for="permissionInput">Permission</label>
+        <div class="inputRow">
+          <input
+            id="permissionInput"
+            class="input"
+            placeholder="e.g. inventory-storage.items.collection.get"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <span id="statusDot" class="statusDot" aria-hidden="true"></span>
+        </div>
+
+        <div id="error" class="error" hidden></div>
+
+        <div id="result" class="result" hidden>
+          <div class="kv"><span>Type</span><code id="outType"></code></div>
+          <div class="kv"><span>Action</span><code id="outAction"></code></div>
+          <div class="kv"><span>Resource</span><code id="outResource"></code></div>
+          <div class="kv"><span>Capability Name</span><code id="outCapability"></code></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const DATA_SETTINGS_ACTIONS = new Map([
+        ["VIEW", ["get", "view", "read", "get-all", "read-all", "search"]],
+        ["CREATE", ["post", "create", "write"]],
+        ["EDIT", ["put", "edit", "update", "patch"]],
+        ["DELETE", ["delete", "delete-all"]],
+        ["MANAGE", ["all", "manage", "allops"]]
+      ]);
+
+      const DATA_KEYWORD_IDENTIFIERS = ["item", "collection", "items"];
+      const DATA_SUFFIXES = new Set([".item.post", ".collection.post"]);
+      const SETTINGS_KEYWORDS = ["module", "settings"];
+      const PROCEDURAL_KEYWORDS = new Set([
+        "post",
+        "download",
+        "export",
+        "assign",
+        "restore",
+        "approve",
+        "reopen",
+        "start",
+        "unopen",
+        "validate",
+        "resend",
+        "run-jobs",
+        "stop-jobs",
+        "generate",
+        "reset",
+        "test",
+        "import",
+        "cancel",
+        "exportCSV",
+        "showHidden",
+        "updateEncumbrances",
+        "execute",
+        "move"
+      ]);
+
+      const statusClassName = {
+        valid: "status-valid",
+        invalid: "status-invalid"
+      };
+
+      const actionValueMap = {
+        VIEW: "view",
+        CREATE: "create",
+        EDIT: "edit",
+        DELETE: "delete",
+        MANAGE: "manage",
+        EXECUTE: "execute"
+      };
+
+      const defaultErrorMessage = "Unable to parse permission";
+
+      function splitByDotLikeCommonsLang(input) {
+        if (input === null) {
+          return null;
+        }
+        if (input === "") {
+          return [];
+        }
+        return input.split(".").filter((token) => token.length > 0);
+      }
+
+      function extractPermissionData(permissionName) {
+        const permissionParts = splitByDotLikeCommonsLang(permissionName) || [];
+        const permissionType = calculatePermissionType(permissionName, permissionParts);
+        const resourceAction = calculatePermissionResourceAndAction(permissionParts, permissionType);
+        return {
+          resource: resourceAction.resource,
+          type: permissionType,
+          action: resourceAction.action,
+          permissionName
+        };
+      }
+
+      function hasRequiredFields(permissionData) {
+        return !!(permissionData.type && permissionData.resource && permissionData.action);
+      }
+
+      function hasNoRequiredFields(permissionData) {
+        return !hasRequiredFields(permissionData);
+      }
+
+      function calculatePermissionType(name, permissionParts) {
+        if (containsAny(permissionParts, SETTINGS_KEYWORDS) || startsWithAny(name, SETTINGS_KEYWORDS)) {
+          return "SETTINGS";
+        }
+
+        const containsDataKeywords = containsAny(permissionParts, DATA_KEYWORD_IDENTIFIERS);
+        if (endWithAny(name, PROCEDURAL_KEYWORDS) && !containsDataKeywords) {
+          return "PROCEDURAL";
+        }
+
+        if (endWithAny(name, DATA_SUFFIXES)) {
+          return "DATA";
+        }
+
+        if (containsAny(permissionParts, PROCEDURAL_KEYWORDS)) {
+          return "PROCEDURAL";
+        }
+
+        return "DATA";
+      }
+
+      function calculatePermissionResourceAndAction(parts, type) {
+        const length = parts.length;
+        if (length <= 1) {
+          return { resource: null, action: null };
+        }
+
+        const action = getActionByString(parts[length - 1], type);
+        if (type === "PROCEDURAL") {
+          const endIdx = action !== null ? length - 2 : length - 1;
+          return { resource: getResourceName(parts, endIdx), action: "EXECUTE" };
+        }
+
+        if (action === null && type === "SETTINGS") {
+          return { resource: getResourceName(parts, length - 1), action: "VIEW" };
+        }
+
+        return { resource: getResourceName(parts, length - 2), action };
+      }
+
+      function getResourceName(parts, endIdx) {
+        const maxIdx = Math.min(parts.length - 1, endIdx);
+        const segments = [];
+
+        for (let i = 0; i <= maxIdx; i += 1) {
+          const nameParts = splitByDelimiterLikeCommonsLang(parts[i], "_");
+          for (const namePart of nameParts) {
+            segments.push(toUpperKebabCase(namePart));
+          }
+        }
+
+        const resultString = segments.join(" ");
+        return resultString.startsWith("Ui") ? `UI${resultString.slice(2)}` : resultString;
+      }
+
+      function getActionByString(action, type) {
+        switch (type) {
+          case "SETTINGS":
+          case "DATA":
+            return getByMatchingValues(action, (value) => DATA_SETTINGS_ACTIONS.get(value) || []);
+          case "PROCEDURAL":
+            return getByMatchingValues(action, (value) => (value === "EXECUTE" ? PROCEDURAL_KEYWORDS : []));
+          default:
+            return null;
+        }
+      }
+
+      function getByMatchingValues(action, keywordProvider) {
+        const values = ["VIEW", "CREATE", "EDIT", "DELETE", "MANAGE", "EXECUTE"];
+        for (const permAction of values) {
+          if (containsAny(keywordProvider(permAction), action)) {
+            return permAction;
+          }
+        }
+
+        return null;
+      }
+
+      function containsAny(values, search) {
+        if (typeof search === "string") {
+          for (const value of values) {
+            if (value === search) {
+              return true;
+            }
+          }
+          return false;
+        }
+
+        const valueSet = new Set(values);
+        for (const item of search) {
+          if (valueSet.has(item)) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function startsWithAny(value, prefixes) {
+        for (const prefix of prefixes) {
+          if (value.startsWith(prefix)) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function endWithAny(value, suffixes) {
+        for (const suffix of suffixes) {
+          if (value.endsWith(suffix)) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function splitByDelimiterLikeCommonsLang(value, delimiter) {
+        if (value === "") {
+          return [];
+        }
+        return value.split(delimiter).filter((token) => token.length > 0);
+      }
+
+      function toUpperKebabCase(kebabCaseString) {
+        if (!kebabCaseString.includes("-")) {
+          return capitalize(kebabCaseString);
+        }
+
+        return splitByDelimiterLikeCommonsLang(kebabCaseString, "-")
+          .map((segment) => capitalize(segment))
+          .join("-");
+      }
+
+      function capitalize(value) {
+        if (value.length === 0) {
+          return "";
+        }
+        const first = value[0];
+        return `${first.toUpperCase()}${value.slice(1)}`;
+      }
+
+      const input = document.querySelector("#permissionInput");
+      const statusDot = document.querySelector("#statusDot");
+      const error = document.querySelector("#error");
+      const result = document.querySelector("#result");
+      const outType = document.querySelector("#outType");
+      const outAction = document.querySelector("#outAction");
+      const outResource = document.querySelector("#outResource");
+      const outCapability = document.querySelector("#outCapability");
+      const statusRoot = statusDot ? statusDot.parentElement : null;
+
+      if (!input || !statusDot || !statusRoot || !error || !result || !outType || !outAction || !outResource || !outCapability) {
+        throw new Error("Missing required DOM nodes for permission checker UI");
+      }
+
+      function clearStatus() {
+        statusRoot.classList.remove(statusClassName.valid, statusClassName.invalid);
+      }
+
+      function setValidStatus() {
+        statusRoot.classList.add(statusClassName.valid);
+        statusRoot.classList.remove(statusClassName.invalid);
+      }
+
+      function setInvalidStatus() {
+        statusRoot.classList.add(statusClassName.invalid);
+        statusRoot.classList.remove(statusClassName.valid);
+      }
+
+      function clearOutput() {
+        outType.textContent = "";
+        outAction.textContent = "";
+        outResource.textContent = "";
+        outCapability.textContent = "";
+      }
+
+      function update() {
+        const permission = input.value.trim();
+
+        if (!permission) {
+          clearStatus();
+          error.hidden = true;
+          result.hidden = true;
+          clearOutput();
+          return;
+        }
+
+        const permissionData = extractPermissionData(permission);
+        if (hasNoRequiredFields(permissionData)) {
+          setInvalidStatus();
+          error.textContent = defaultErrorMessage;
+          error.hidden = false;
+          result.hidden = true;
+          clearOutput();
+          return;
+        }
+
+        setValidStatus();
+        error.hidden = true;
+        result.hidden = false;
+        outType.textContent = permissionData.type || "";
+        outAction.textContent = permissionData.action || "";
+        outResource.textContent = permissionData.resource || "";
+
+        if (permissionData.resource && permissionData.action) {
+          const resourceKey = permissionData.resource.toLowerCase().replace(/\s+/g, "_");
+          const actionValue = actionValueMap[permissionData.action];
+          outCapability.textContent = `${resourceKey}.${actionValue}`;
+        } else {
+          outCapability.textContent = "";
+        }
+      }
+
+      input.addEventListener("input", update);
+      update();
+    </script>
+  </body>
+</html>
