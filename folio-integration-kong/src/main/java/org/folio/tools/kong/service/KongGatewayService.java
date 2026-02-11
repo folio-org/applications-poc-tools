@@ -110,7 +110,6 @@ public class KongGatewayService {
         .filter(Objects::nonNull)
         .filter(route -> isNotBlank(route.getExpression()))
         .toList();
-
       if (routes.isEmpty()) {
         log.warn("No routes found for module [{}]", moduleId);
         return;
@@ -144,7 +143,6 @@ public class KongGatewayService {
         .filter(Objects::nonNull)
         .filter(route -> isNotBlank(route.getExpression()))
         .toList();
-
       if (routes.isEmpty()) {
         log.warn("No routes found for module [{}]", moduleId);
         return;
