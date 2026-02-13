@@ -102,7 +102,7 @@
         </exclusion>
         <exclusion>
           <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-web</artifactId>
+          <artifactId>spring-boot-starter-restclient</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.springframework.boot</groupId>
