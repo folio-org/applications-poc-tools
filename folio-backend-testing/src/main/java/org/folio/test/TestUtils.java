@@ -33,7 +33,7 @@ public class TestUtils {
   public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
     .rebuild()
     .enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
-    .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(Include.NON_EMPTY))
+    .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(Include.NON_NULL))
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
     .build();
