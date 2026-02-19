@@ -28,7 +28,6 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -36,6 +35,7 @@ import org.springframework.kafka.KafkaException;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @UnitTest
 @Import(TestContextConfiguration.class)
@@ -45,7 +45,7 @@ class KafkaAdminServiceTest {
 
   @Autowired private KafkaAdminService kafkaAdminService;
   @Autowired private ApplicationContext applicationContext;
-  @MockBean private KafkaAdmin kafkaAdmin;
+  @MockitoBean private KafkaAdmin kafkaAdmin;
 
   @Test
   void createKafkaTopics_positive_newTopic() {

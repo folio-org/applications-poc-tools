@@ -1,11 +1,7 @@
 package org.folio.security.integration.keycloak.configuration;
 
-import static org.folio.common.utils.tls.FeignClientTlsUtils.buildTargetFeignClient;
+import static org.folio.common.utils.tls.HttpClientTlsUtils.buildHttpServiceClient;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import feign.Contract;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
 import lombok.RequiredArgsConstructor;
 import org.folio.jwt.openid.JsonWebTokenParser;
 import org.folio.jwt.openid.OpenidJwtParserProvider;
@@ -19,15 +15,14 @@ import org.folio.security.service.RoutingEntryMatcher;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.openfeign.FeignClientsConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UrlPathHelper;
+import tools.jackson.databind.ObjectMapper;
 
 @ConditionalOnProperty({"application.security.enabled", "application.keycloak.enabled"})
-@Import(FeignClientsConfiguration.class)
 @EnableConfigurationProperties(KeycloakProperties.class)
 @RequiredArgsConstructor
 public class KeycloakSecurityConfiguration {
@@ -35,9 +30,8 @@ public class KeycloakSecurityConfiguration {
   private final KeycloakProperties properties;
 
   @Bean
-  public KeycloakAuthClient keycloakAuthClient(okhttp3.OkHttpClient okHttpClient, Contract contract, Encoder encoder,
-    Decoder decoder) {
-    return buildTargetFeignClient(okHttpClient, contract, encoder, decoder, properties.getTls(), properties.getUrl(),
+  public KeycloakAuthClient keycloakAuthClient(RestClient.Builder restClientBuilder) {
+    return buildHttpServiceClient(restClientBuilder, properties.getTls(), properties.getUrl(),
       KeycloakAuthClient.class);
   }
 

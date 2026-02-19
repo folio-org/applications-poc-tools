@@ -11,7 +11,6 @@ import static org.folio.tools.store.impl.Validation.validateValue;
 import static org.folio.tools.store.utils.TlsUtils.IS_HOSTNAME_VERIFICATION_DISABLED;
 import static org.folio.tools.store.utils.TlsUtils.buildSslContext;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -38,6 +37,7 @@ import org.folio.tools.store.exception.SecureStoreServiceException;
 import org.folio.tools.store.properties.FsspConfigProperties;
 import org.folio.tools.store.utils.TlsProperties;
 import org.folio.tools.store.utils.TlsProperties.Store;
+import tools.jackson.databind.ObjectMapper;
 
 @Log4j2
 public class FsspStore implements SecureStore {
@@ -169,7 +169,7 @@ public class FsspStore implements SecureStore {
     return OBJECT_MAPPER.readValue(entity.getContent(), SecureStoreEntry.class);
   }
 
-  private static HttpEntity serializeSecureStoreEntry(SecureStoreEntry entry) throws IOException {
+  private static HttpEntity serializeSecureStoreEntry(SecureStoreEntry entry) {
     return new StringEntity(OBJECT_MAPPER.writeValueAsString(entry), APPLICATION_JSON);
   }
 

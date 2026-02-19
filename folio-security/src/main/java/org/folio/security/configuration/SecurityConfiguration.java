@@ -4,15 +4,14 @@ import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.apache.commons.lang3.StringUtils.removeStart;
 import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.folio.security.filter.ExceptionHandlerFilter;
 import org.folio.security.integration.authtoken.configuration.OkapiSecurityConfiguration;
 import org.folio.security.integration.keycloak.configuration.KeycloakSecurityConfiguration;
 import org.folio.security.service.AuthorizationService;
-import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -27,6 +26,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import tools.jackson.databind.ObjectMapper;
 
 @EnableWebSecurity
 @RequiredArgsConstructor

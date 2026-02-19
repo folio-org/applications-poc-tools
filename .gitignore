@@ -35,3 +35,7 @@ build/
 ### Mac DS_Store ###
 .DS_Store
 **/.DS_Store
+
+### Agents ###
+.claude/
+.codemie/

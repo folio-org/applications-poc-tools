@@ -11,13 +11,15 @@ import lombok.NoArgsConstructor;
 import org.folio.tools.kong.model.Route;
 import org.folio.tools.kong.model.Service;
 import org.folio.tools.kong.service.KongGatewayService;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.DeleteExchange;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PutExchange;
 
+@HttpExchange
 public interface KongAdminClient {
 
   /**
@@ -26,7 +28,7 @@ public interface KongAdminClient {
    * @param serviceIdOrName - kong service id or name
    * @return retrieved {@link Service} object
    */
-  @GetMapping("/services/{serviceIdOrName}")
+  @GetExchange("/services/{serviceIdOrName}")
   Service getService(@PathVariable("serviceIdOrName") String serviceIdOrName);
 
   /**
@@ -36,7 +38,7 @@ public interface KongAdminClient {
    * @param service - service descriptor
    * @return created {@link Service} object
    */
-  @PutMapping("/services/{serviceId}")
+  @PutExchange("/services/{serviceId}")
   Service upsertService(@PathVariable("serviceId") String serviceId, @RequestBody Service service);
 
   /**
@@ -44,7 +46,7 @@ public interface KongAdminClient {
    *
    * @param serviceId - service name or id
    */
-  @DeleteMapping("/services/{serviceId}")
+  @DeleteExchange("/services/{serviceId}")
   void deleteService(@PathVariable("serviceId") String serviceId);
 
   /**
@@ -54,7 +56,7 @@ public interface KongAdminClient {
    * @param route - route descriptor
    * @return created {@link Route} object
    */
-  @PutMapping("/services/{serviceId}/routes/{routeId}")
+  @PutExchange("/services/{serviceId}/routes/{routeId}")
   Route upsertRoute(
     @PathVariable("serviceId") String serviceId,
     @PathVariable("routeId") String routeId,
@@ -66,7 +68,7 @@ public interface KongAdminClient {
    * @param serviceId - service id or name
    * @param routeIdOrName - route id or name
    */
-  @DeleteMapping("/services/{serviceId}/routes/{routeIdOrName}")
+  @DeleteExchange("/services/{serviceId}/routes/{routeIdOrName}")
   void deleteRoute(@PathVariable("serviceId") String serviceId, @PathVariable("routeIdOrName") String routeIdOrName);
 
   /**
@@ -75,7 +77,7 @@ public interface KongAdminClient {
    * @param tags - list of tags to search for
    * @return List of {@link Route} objects and offset
    */
-  @GetMapping("/routes")
+  @GetExchange("/routes")
   KongResultList<Route> getRoutesByTag(
     @RequestParam("tags") String tags,
     @RequestParam(value = "offset", required = false) String offset);
@@ -86,7 +88,7 @@ public interface KongAdminClient {
    * @param serviceId - Kong service ID or name
    * @return List of {@link Route} objects and offset
    */
-  @GetMapping("/services/{serviceId}/routes")
+  @GetExchange("/services/{serviceId}/routes")
   KongResultList<Route> getServiceRoutes(
     @RequestParam("serviceId") String serviceId,
     @RequestParam(value = "offset", required = false) Integer offset);

@@ -5,14 +5,14 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.7</version>
+    <version>4.0.2</version>
     <relativePath />
   </parent>
 
   <name>applications-poc-tools</name>
   <groupId>org.folio</groupId>
   <artifactId>applications-poc-tools</artifactId>
-  <version>3.1.0-SNAPSHOT</version>
+  <version>4.0.0-SNAPSHOT</version>
   <description>Library with general purpose classes to help with FOLIO backend development and testing</description>
   <packaging>pom</packaging>
 
@@ -40,17 +40,14 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <lombok.version>1.18.42</lombok.version>
-    <spring-boot.version>3.5.7</spring-boot.version>
+    <spring-boot.version>4.0.2</spring-boot.version>
     <apache-commons-collections4.version>4.5.0</apache-commons-collections4.version>
-    <spring-kafka.version>3.3.10</spring-kafka.version>
-    <spring-boot-starter-validation.version>3.0.4</spring-boot-starter-validation.version>
     <apache-commons-lang3.version>3.19.0</apache-commons-lang3.version>
-    <feign-okhttp.version>13.6</feign-okhttp.version>
     <keycloak-admin-client.version>26.0.8</keycloak-admin-client.version>
 
     <!-- Test dependencies versions -->
     <mockito.version>5.20.0</mockito.version>
-    <testcontainer.version>2.0.1</testcontainer.version>
+    <testcontainer.version>2.0.3</testcontainer.version>
     <instancio.version>5.5.1</instancio.version>
 
     <!-- Plugins versions -->
@@ -77,18 +74,6 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
         <version>${apache-commons-lang3.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.github.openfeign</groupId>
-        <artifactId>feign-okhttp</artifactId>
-        <version>${feign-okhttp.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.springframework.kafka</groupId>
-        <artifactId>spring-kafka</artifactId>
-        <version>${spring-kafka.version}</version>
       </dependency>
 
       <dependency>

@@ -4,7 +4,6 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.folio.test.TestUtils.parse;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,13 +14,14 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.CommonLoggingErrorHandler;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.type.TypeReference;
 
 @Log4j2
 @Component
@@ -87,8 +87,8 @@ public class FakeKafkaConsumer {
   }
 
   private KafkaMessageListenerContainer<String, String> createContainer(String topic) {
-    var consumer = new DefaultKafkaConsumerFactory<String, String>(kafkaProperties.buildConsumerProperties(null));
-    log.info("Consumer config: {}", kafkaProperties.buildConsumerProperties(null));
+    var consumer = new DefaultKafkaConsumerFactory<String, String>(kafkaProperties.buildConsumerProperties());
+    log.info("Consumer config: {}", kafkaProperties.buildConsumerProperties());
 
     configureDeserializers(consumer);
 
