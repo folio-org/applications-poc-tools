@@ -1,7 +1,6 @@
 package org.folio.security.integration.keycloak.client;
 
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import org.folio.security.integration.keycloak.model.TokenResponse;
 import org.keycloak.jose.jwk.JSONWebKeySet;
