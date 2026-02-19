@@ -17,12 +17,12 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.folio.common.configuration.properties.TlsProperties;
 import org.folio.common.utils.exception.SslInitializationException;
 import org.springframework.util.ResourceUtils;
 
-@Slf4j
+@Log4j2
 @UtilityClass
 public class Utils {
 
