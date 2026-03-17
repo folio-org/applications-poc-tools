@@ -18,6 +18,7 @@
 * Register JacksonProvider in ResteasyClient Keycloak for TLS connections (KEYCLOAK-90)
 * Upgrade Keycloak testcontainers to 26.5.2, keycloak-admin-client to 26.0.8 (KEYCLOAK-95)
 * Upgrade module to SpringBoot4.0 and Spring7.0 (APPPOCTOOL-78)
+* Use GitHub Workflows for Maven (APPPOCTOOL-81)
 
 ### Migration:
 * Replace KeycloakSecretUtils with SecureStoreKeyProvider, add `application.secret-store.environment=${SECURE_STORE_ENV:folio}` to application.yaml (for Ramsons and Sunflower: add `application.secret-store.environment=${SECURE_STORE_ENV:${ENV:folio}}` to application.yaml).
