@@ -15,9 +15,9 @@
     <jwks-rsa.version>0.23.0</jwks-rsa.version>
 
     <sonar.exclusions>
-      src/main/java/**/configuration/**/*,
-      src/main/java/**/integration/**/model/**/*,
-      src/main/java/**/domain/**/model/**/*
+      src/main/java/**/configuration/**,
+      src/main/java/**/integration/**/model/**,
+      src/main/java/**/domain/**/model/**
     </sonar.exclusions>
   </properties>
 
