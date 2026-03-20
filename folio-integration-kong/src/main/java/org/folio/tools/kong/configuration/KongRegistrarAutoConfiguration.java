@@ -23,15 +23,13 @@ public class KongRegistrarAutoConfiguration {
   /**
    * Creates a {@link KongAdminClient} HTTP Service Client for integration with Kong Admin API.
    *
-   * @param restClientBuilder - Spring RestClient builder
    * @param properties - kong configuration properties with required data
    * @return created {@link KongAdminClient} component
    */
   @Bean(name = "folioKongAdminClient")
   @ConditionalOnMissingBean(KongAdminClient.class)
-  public KongAdminClient folioKongIntegrationClient(RestClient.Builder restClientBuilder,
-    KongConfigurationProperties properties) {
-    return buildHttpServiceClient(restClientBuilder, properties.getTls(), properties.getUrl(),
+  public KongAdminClient folioKongIntegrationClient(KongConfigurationProperties properties) {
+    return buildHttpServiceClient(RestClient.builder(), properties.getTls(), properties.getUrl(),
       KongAdminClient.class);
   }
 

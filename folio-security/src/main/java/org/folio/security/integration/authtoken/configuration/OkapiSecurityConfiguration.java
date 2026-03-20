@@ -30,8 +30,8 @@ public class OkapiSecurityConfiguration {
   private final OkapiProperties properties;
 
   @Bean
-  public AuthtokenClient authtokenClient(RestClient.Builder restClientBuilder) {
-    var restClient = restClientBuilder
+  public AuthtokenClient authtokenClient() {
+    var restClient = RestClient.builder()
       .baseUrl(properties.getModAuthtokenUrl())
       .build();
 

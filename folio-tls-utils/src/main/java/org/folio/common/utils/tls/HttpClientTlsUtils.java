@@ -1,12 +1,13 @@
 package org.folio.common.utils.tls;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.common.utils.tls.Utils.buildSslContext;
 
 import java.net.http.HttpClient;
 import lombok.experimental.UtilityClass;
 import org.folio.common.configuration.properties.TlsProperties;
+import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -46,7 +47,7 @@ public class HttpClientTlsUtils {
    * }
    * }</pre>
    *
-   * @param restClientBuilder Spring's RestClient.Builder (injected from context)
+   * @param restClientBuilder Spring's RestClient.Builder
    * @param tls TLS configuration properties (optional, can be null for no custom TLS)
    * @param baseUrl Base URL for the HTTP client
    * @param clientClass Interface class annotated with @HttpExchange
@@ -60,19 +61,10 @@ public class HttpClientTlsUtils {
       String baseUrl,
       Class<T> clientClass) {
 
-    var httpClientBuilder = HttpClient.newBuilder();
-
-    // Configure TLS if enabled with custom truststore
-    if (tls != null && tls.isEnabled() && isNotBlank(tls.getTrustStorePath())) {
-      httpClientBuilder.sslContext(buildSslContext(tls));
-    }
-
-    var httpClient = httpClientBuilder.build();
-
-    // Build RestClient with TLS-configured HTTP client
+    // Build RestClient with appropriate request factory based on TLS configuration
     var restClient = restClientBuilder
         .baseUrl(baseUrl)
-        .requestFactory(new JdkClientHttpRequestFactory(httpClient))
+        .requestFactory(getRequestFactory(tls))
         .build();
 
     // Create HTTP Service Client proxy from interface
@@ -80,5 +72,14 @@ public class HttpClientTlsUtils {
     var factory = HttpServiceProxyFactory.builderFor(adapter).build();
 
     return factory.createClient(clientClass);
+  }
+
+  static ClientHttpRequestFactory getRequestFactory(TlsProperties tls) {
+    if (tls != null && tls.isEnabled()) {
+      var httpClientBuilder = HttpClient.newBuilder();
+      httpClientBuilder.sslContext(buildSslContext(tls));
+      return new JdkClientHttpRequestFactory(httpClientBuilder.build());
+    }
+    return new SimpleClientHttpRequestFactory();
   }
 }
