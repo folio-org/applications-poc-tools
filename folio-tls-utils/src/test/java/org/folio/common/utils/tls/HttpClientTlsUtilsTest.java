@@ -55,21 +55,17 @@ class HttpClientTlsUtilsTest {
   @Test
   void buildHttpServiceClient_negative_tlsEnabledWithBlankTruststorePath() {
     var tls = TlsProperties.of(true, "", null, null);
-    assertThrows(SslInitializationException.class, () -> buildHttpServiceClient(
-      RestClient.builder(),
-      tls,
-      "https://localhost:8443",
-      TestClient.class));
+    var builder = RestClient.builder();
+    assertThrows(SslInitializationException.class, () -> buildHttpServiceClient(builder, tls,
+      "https://localhost:8443", TestClient.class));
   }
 
   @Test
   void buildHttpServiceClient_negative_invalidTruststorePath() {
     var invalidTlsProperties = getInvalidTlsProperties();
-    assertThrows(SslInitializationException.class, () -> buildHttpServiceClient(
-      RestClient.builder(),
-      invalidTlsProperties,
-      "https://localhost:8443",
-      TestClient.class));
+    var builder = RestClient.builder();
+    assertThrows(SslInitializationException.class, () -> buildHttpServiceClient(builder, invalidTlsProperties,
+      "https://localhost:8443", TestClient.class));
   }
 
   @Test
