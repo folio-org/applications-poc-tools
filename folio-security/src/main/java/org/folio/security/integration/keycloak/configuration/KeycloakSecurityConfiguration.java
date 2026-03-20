@@ -30,8 +30,8 @@ public class KeycloakSecurityConfiguration {
   private final KeycloakProperties properties;
 
   @Bean
-  public KeycloakAuthClient keycloakAuthClient(RestClient.Builder restClientBuilder) {
-    return buildHttpServiceClient(restClientBuilder, properties.getTls(), properties.getUrl(),
+  public KeycloakAuthClient keycloakAuthClient() {
+    return buildHttpServiceClient(RestClient.builder(), properties.getTls(), properties.getUrl(),
       KeycloakAuthClient.class);
   }
 
