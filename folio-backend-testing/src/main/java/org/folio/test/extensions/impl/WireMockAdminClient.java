@@ -2,16 +2,6 @@ package org.folio.test.extensions.impl;
 
 import static org.folio.test.TestUtils.asJsonString;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
-import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,6 +18,17 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.test.TestUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.exc.InvalidFormatException;
+import tools.jackson.databind.ser.std.StdSerializer;
 
 @Log4j2
 public class WireMockAdminClient {
@@ -183,31 +184,32 @@ public class WireMockAdminClient {
     private HttpMethod method;
   }
 
-  private static class HttpMethodSerializer extends StdScalarSerializer<HttpMethod> {
+  private static class HttpMethodSerializer extends StdSerializer<HttpMethod> {
 
     HttpMethodSerializer() {
       super(HttpMethod.class);
     }
 
     @Override
-    public void serialize(HttpMethod value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+    public void serialize(HttpMethod value, JsonGenerator gen, SerializationContext ctxt) throws JacksonException {
       gen.writeString(value.name());
     }
   }
 
-  private static class HttpMethodDeserializer extends StdScalarDeserializer<HttpMethod> {
+  private static class HttpMethodDeserializer extends StdDeserializer<HttpMethod> {
 
     HttpMethodDeserializer() {
       super(HttpMethod.class);
     }
 
     @Override
-    public HttpMethod deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    public HttpMethod deserialize(JsonParser p, DeserializationContext ctxt) throws JacksonException {
       if (p.hasToken(JsonToken.VALUE_STRING)) {
-        var s = p.getText();
+        var s = p.getString();
         return HttpMethod.valueOf(s);
       }
-      throw new JsonParseException(p, "Cannot deserialize HttpMethod from value: " + p.getValueAsString());
+      throw new InvalidFormatException(p, "Cannot deserialize HttpMethod from value: " + p.getValueAsString(),
+        p.currentValue(), HttpMethod.class);
     }
   }
 }
