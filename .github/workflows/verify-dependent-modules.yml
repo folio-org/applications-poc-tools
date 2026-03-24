@@ -52,12 +52,12 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
           submodules: recursive
       - name: Set up Temurin JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -66,7 +66,7 @@ jobs:
       - name: Build library (install to local repository)
         run: mvn ${MAVEN_ARGS} clean install -DskipTests
       - name: Upload Maven org/folio artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lib-m2-org-folio
           path: ~/.m2/repository/org/folio
@@ -87,18 +87,18 @@ jobs:
       matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
     steps:
       - name: Checkout ${{ matrix.name }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ matrix.repo }}
           path: module
           fetch-depth: 1
       - name: Set up Temurin JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
       - name: Cache Maven repository
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.m2/repository
           key: maven-${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('module/pom.xml') }}
@@ -106,7 +106,7 @@ jobs:
       - name: Clear cached org/folio artifacts
         run: rm -rf ~/.m2/repository/org/folio
       - name: Download library artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: lib-m2-org-folio
           path: ~/.m2/repository/org/folio
@@ -147,7 +147,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Post PR summary
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           BUILD_LIBRARY_RESULT: ${{ needs.build-library.result }}
           DEPENDENT_MATRIX: ${{ env.DEPENDENT_MATRIX }}
