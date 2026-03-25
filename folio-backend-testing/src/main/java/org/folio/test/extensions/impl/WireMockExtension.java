@@ -2,6 +2,7 @@ package org.folio.test.extensions.impl;
 
 import static java.lang.System.clearProperty;
 import static java.lang.System.setProperty;
+import static org.folio.test.extensions.impl.DockerImageRegistry.getWiremockImageName;
 import static org.springframework.util.ReflectionUtils.findField;
 import static org.springframework.util.ReflectionUtils.makeAccessible;
 import static org.springframework.util.ReflectionUtils.setField;
@@ -30,7 +31,7 @@ public class WireMockExtension implements BeforeAllCallback, AfterAllCallback {
   public static final String WM_NETWORK_ALIAS = UUID.randomUUID().toString();
   public static final String WM_URL_PROPERTY = "wm.url";
 
-  private static final DockerImageName WM_IMAGE = DockerImageName.parse("wiremock/wiremock:2.35.0");
+  private static final DockerImageName WM_IMAGE = DockerImageName.parse(getWiremockImageName());
   private static final String WM_URL_VARS_FILE = "wiremock-url.vars";
 
   @SuppressWarnings("resource")
