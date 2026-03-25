@@ -8,6 +8,7 @@ import static org.apache.http.ssl.SSLContextBuilder.create;
 import static org.folio.test.TestUtils.parse;
 import static org.folio.test.TestUtils.readString;
 import static org.folio.test.TestUtils.readToFile;
+import static org.folio.test.extensions.impl.DockerImageRegistry.getKeycloakImageName;
 import static org.springframework.util.ResourceUtils.getFile;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
@@ -29,7 +30,6 @@ import org.keycloak.representations.idm.PartialImportRepresentation;
 @Log4j2
 public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
-  private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:26.5.2";
   private static final String REALM_JSON = "json/keycloak/master-realm.json";
   private static final String IMPORTED_CLIENT_ID = "folio-backend-admin-client";
   private static final String IMPORTED_CLIENT_SECRET = "supersecret";
@@ -38,7 +38,7 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   private static final String SSL_TRUSTSTORE_PATH = "classpath:certificates/test.truststore.jks";
   private static final String SSL_KEYSTORE_PASSWORD = "secretpassword";
 
-  private static final KeycloakContainer CONTAINER = keycloakContainer();
+  private static final KeycloakContainer CONTAINER = keycloakContainer(getKeycloakImageName());
 
   private static Keycloak ADMIN_CLIENT;
 
@@ -107,8 +107,8 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   }
 
   @SuppressWarnings("resource")
-  private static KeycloakContainer keycloakContainer() {
-    return new KeycloakContainer(KEYCLOAK_IMAGE)
+  private static KeycloakContainer keycloakContainer(String keycloakImageName) {
+    return new KeycloakContainer(keycloakImageName)
       .withFeaturesEnabled("scripts:v1", "token-exchange:v1", "admin-fine-grained-authz:v1")
       .withAdminUsername("keycloak-test-admin")
       .withAdminPassword(RandomStringUtils.secure().next(20, true, true))
