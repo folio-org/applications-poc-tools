@@ -14,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -211,7 +212,7 @@ class OkapiAuthorizationServiceTest {
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
     doThrow(HttpClientErrorException.Forbidden.class).when(client)
-      .checkAuthToken(PATH, reqPerms, null, modPerms, TOKEN, SUPERTENANT_ID, null);
+      .checkAuthToken(URI.create(PATH), reqPerms, null, modPerms, TOKEN, SUPERTENANT_ID, null);
 
     assertThrows(ForbiddenException.class, () -> service.authorize(request, TOKEN));
   }
@@ -232,7 +233,7 @@ class OkapiAuthorizationServiceTest {
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
     doThrow(HttpClientErrorException.Unauthorized.class).when(client)
-      .checkAuthToken(PATH, reqPerms, null, modPerms, TOKEN, SUPERTENANT_ID, null);
+      .checkAuthToken(URI.create(PATH), reqPerms, null, modPerms, TOKEN, SUPERTENANT_ID, null);
 
     assertThrows(NotAuthorizedException.class, () -> service.authorize(request, TOKEN));
   }
@@ -251,7 +252,7 @@ class OkapiAuthorizationServiceTest {
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
     doThrow(HttpServerErrorException.InternalServerError.class).when(client)
-      .checkAuthToken(eq(PATH), anyString(), eq(null), any(), eq(TOKEN), eq(SUPERTENANT_ID), eq(null));
+      .checkAuthToken(eq(URI.create(PATH)), anyString(), eq(null), any(), eq(TOKEN), eq(SUPERTENANT_ID), eq(null));
 
     assertThrows(HttpServerErrorException.InternalServerError.class, () -> service.authorize(request, TOKEN));
   }
@@ -270,7 +271,7 @@ class OkapiAuthorizationServiceTest {
     when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
     when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
     doThrow(ResourceAccessException.class).when(client)
-      .checkAuthToken(eq(PATH), anyString(), eq(null), any(), eq(TOKEN), eq(SUPERTENANT_ID), eq(null));
+      .checkAuthToken(eq(URI.create(PATH)), anyString(), eq(null), any(), eq(TOKEN), eq(SUPERTENANT_ID), eq(null));
 
     assertThrows(ResourceAccessException.class, () -> service.authorize(request, TOKEN));
   }

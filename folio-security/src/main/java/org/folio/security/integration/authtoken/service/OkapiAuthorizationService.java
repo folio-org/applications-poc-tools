@@ -5,6 +5,7 @@ import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.folio.common.utils.OkapiHeaders.SUPERTENANT_ID;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.net.URI;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -54,7 +55,7 @@ public class OkapiAuthorizationService extends AbstractAuthorizationService {
     var modulePermissions = extractModulePermissions(routingEntry);
 
     try {
-      authtokenClient.checkAuthToken(path, requiredPermissions, desiredPermissions, modulePermissions,
+      authtokenClient.checkAuthToken(URI.create(path), requiredPermissions, desiredPermissions, modulePermissions,
         token, SUPERTENANT_ID, okapiUrl);
     } catch (HttpClientErrorException.Forbidden e) {
       throw new ForbiddenException("Access forbidden");
