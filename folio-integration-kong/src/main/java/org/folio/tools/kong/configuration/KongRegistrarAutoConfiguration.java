@@ -12,8 +12,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 @ConditionalOnProperty("application.kong.enabled")
@@ -26,10 +28,16 @@ public class KongRegistrarAutoConfiguration {
    * @param properties - kong configuration properties with required data
    * @return created {@link KongAdminClient} component
    */
-  @Bean(name = "folioKongAdminClient")
+  @Bean
   @ConditionalOnMissingBean(KongAdminClient.class)
-  public KongAdminClient folioKongIntegrationClient(KongConfigurationProperties properties) {
-    return buildHttpServiceClient(RestClient.builder(), properties.getTls(), properties.getUrl(),
+  public KongAdminClient folioKongIntegrationClient(KongConfigurationProperties properties,
+    JsonMapper jsonMapper) {
+    var restClientBuilder = RestClient.builder()
+      .configureMessageConverters(converters -> converters
+        .registerDefaults()
+        .withJsonConverter(new JacksonJsonHttpMessageConverter(jsonMapper)));
+
+    return buildHttpServiceClient(restClientBuilder, properties.getTls(), properties.getUrl(),
       KongAdminClient.class);
   }
 
