@@ -90,7 +90,7 @@ public interface KongAdminClient {
    */
   @GetExchange("/services/{serviceId}/routes")
   KongResultList<Route> getServiceRoutes(
-    @RequestParam("serviceId") String serviceId,
+    @PathVariable("serviceId") String serviceId,
     @RequestParam(value = "offset", required = false) Integer offset);
 
   /**
