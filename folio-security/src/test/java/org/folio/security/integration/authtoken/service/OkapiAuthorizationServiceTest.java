@@ -127,6 +127,34 @@ class OkapiAuthorizationServiceTest {
     verify(objectMapper).readValue(TOKEN_CONTENT, OkapiAccessToken.class);
   }
 
+  @Test
+  void authorize_positive_withDesiredPermissions() {
+    var permissionsRequired = List.of(PERMISSION_1, PERMISSION_2);
+    var permissionsDesired = List.of("desired1", "desired2");
+    var modulePermissions = List.of(MODULE_PERMISSION_1, MODULE_PERMISSION_2);
+    var routingEntry = new RoutingEntry().path(PATH).methods(List.of(METHOD))
+      .permissionsRequired(permissionsRequired)
+      .permissionsDesired(permissionsDesired)
+      .modulePermissions(modulePermissions);
+    var moduleDescriptor = new ModuleDescriptor().id(MODULE_ID);
+    var reqPerms = String.join(",", permissionsRequired);
+    var desiredPerms = String.join(",", permissionsDesired);
+    var modPerms = Map.of(MODULE_ID, modulePermissions);
+
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("/");
+    when(request.getMethod()).thenReturn(METHOD);
+    when(urlPathHelper.getPathWithinApplication(request)).thenReturn(PATH);
+    when(routingEntryMatcher.lookup(METHOD, PATH)).thenReturn(Optional.of(routingEntry));
+    when(descriptorProvider.getModuleDescriptor()).thenReturn(moduleDescriptor);
+
+    var auth = service.authorize(request, TOKEN);
+
+    assertThat(auth).isInstanceOf(PreAuthenticatedAuthenticationToken.class);
+    assertThat(auth.getPrincipal()).isEqualTo(authUserPrincipal());
+    verify(client).checkAuthToken(URI.create(PATH), reqPerms, desiredPerms, modPerms, TOKEN, SUPERTENANT_ID, null);
+    verify(objectMapper).readValue(TOKEN_CONTENT, OkapiAccessToken.class);
+  }
+
   @ParameterizedTest
   @ValueSource(strings = { "", "token", "token.token.token.token", })
   @DisplayName("authorize_parameterized_invalidAmountOfSegments")
