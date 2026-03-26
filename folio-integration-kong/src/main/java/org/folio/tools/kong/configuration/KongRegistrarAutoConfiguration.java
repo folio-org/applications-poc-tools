@@ -28,7 +28,7 @@ public class KongRegistrarAutoConfiguration {
    * @param properties - kong configuration properties with required data
    * @return created {@link KongAdminClient} component
    */
-  @Bean
+  @Bean(name = "folioKongAdminClient")
   @ConditionalOnMissingBean(KongAdminClient.class)
   public KongAdminClient folioKongIntegrationClient(KongConfigurationProperties properties,
     JsonMapper jsonMapper) {
