@@ -58,6 +58,8 @@
     <maven-release-plugin.version>3.3.1</maven-release-plugin.version>
     <folio-java-checkstyle.version>1.2.0</folio-java-checkstyle.version>
 
+    <sonar.coverage.exclusions>**/src/main/java/**/configuration/**/*</sonar.coverage.exclusions>
+
     <argLine/>
   </properties>
 
