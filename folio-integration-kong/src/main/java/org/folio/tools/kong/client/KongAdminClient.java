@@ -4,6 +4,7 @@ import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,11 +26,15 @@ public interface KongAdminClient {
   /**
    * Retrieves {@link KongGatewayService} object by its id or name.
    *
-   * @param serviceIdOrName - kong service id or name
+   * @param serviceIdOrName - kong service id or name, {@code null} is treated as {@code ""}
    * @return retrieved {@link Service} object
    */
+  default Service getService(String serviceIdOrName) {
+    return getServiceByIdOrName(Objects.toString(serviceIdOrName, ""));
+  }
+
   @GetExchange("/services/{serviceIdOrName}")
-  Service getService(@PathVariable("serviceIdOrName") String serviceIdOrName);
+  Service getServiceByIdOrName(@PathVariable("serviceIdOrName") String serviceIdOrName);
 
   /**
    * Updates a service in Kong gateway.
