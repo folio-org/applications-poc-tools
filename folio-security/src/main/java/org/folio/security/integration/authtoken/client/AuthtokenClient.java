@@ -19,7 +19,7 @@ public interface AuthtokenClient {
 
   @GetExchange
   void checkAuthToken(URI requestUri,
-    @RequestHeader(PERMISSIONS_REQUIRED) String requiredPermissions,
+    @RequestHeader(value = PERMISSIONS_REQUIRED, required = false) String requiredPermissions,
     @RequestHeader(value = PERMISSIONS_DESIRED, required = false) String desiredPermissions,
     @RequestHeader(MODULE_PERMISSIONS) Map<String, List<String>> modulePermissions,
     @RequestHeader(TOKEN) String accessToken,
