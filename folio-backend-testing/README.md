@@ -29,7 +29,7 @@ changing source code.
 |:------------------------------------|:----------------------------------------|------------|
 | `TESTCONTAINERS_POSTGRES_IMAGE`     | `postgres:16-alpine`                    | PostgreSQL |
 | `TESTCONTAINERS_KAFKA_IMAGE`        | `apache/kafka-native:3.8.0`             | Kafka      |
-| `TESTCONTAINERS_KEYCLOAK_IMAGE`     | `quay.io/keycloak/keycloak:26.5.6`      | Keycloak   |
+| `TESTCONTAINERS_KEYCLOAK_IMAGE`     | `quay.io/keycloak/keycloak:26.5.7`      | Keycloak   |
 | `TESTCONTAINERS_WIREMOCK_IMAGE`     | `wiremock/3.13.2-2-alpine`              | WireMock   |
 
 Example — redirect all containers to a private registry:
@@ -37,7 +37,7 @@ Example — redirect all containers to a private registry:
 ```shell
 export TESTCONTAINERS_POSTGRES_IMAGE=registry.example.com/postgres:16-alpine
 export TESTCONTAINERS_KAFKA_IMAGE=registry.example.com/apache/kafka-native:3.8.0
-export TESTCONTAINERS_KEYCLOAK_IMAGE=registry.example.com/keycloak/keycloak:26.5.6
+export TESTCONTAINERS_KEYCLOAK_IMAGE=registry.example.com/keycloak/keycloak:26.5.7
 export TESTCONTAINERS_WIREMOCK_IMAGE=registry.example.com/wiremock:3.13.2-2-alpine
 ```
 
