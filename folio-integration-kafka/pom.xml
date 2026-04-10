@@ -6,9 +6,16 @@
     <artifactId>applications-poc-tools</artifactId>
     <version>4.0.0-SNAPSHOT</version>
   </parent>
+  <packaging>pom</packaging>
 
   <name>folio-integration-kafka</name>
   <artifactId>folio-integration-kafka</artifactId>
+
+  <modules>
+    <module>folio-kafka-common</module>
+    <module>folio-kafka-producer</module>
+    <module>folio-kafka-consumer</module>
+  </modules>
 
   <dependencies>
 
