@@ -10,6 +10,19 @@ import org.folio.integration.kafka.consumer.filter.mmd.configuration.ModuleMetad
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
 
+/**
+ * Meta-annotation that activates the full Kafka consumer infrastructure for a Spring application.
+ *
+ * <p>Placing this annotation on any {@code @Configuration} class will:
+ * <ul>
+ *   <li>import {@link KafkaConsumerFilteringConfiguration} to register the
+ *       {@code tenantAwareMessageFilter} bean;</li>
+ *   <li>import {@link ModuleMetadataConfiguration} to register the
+ *       {@link org.folio.integration.kafka.consumer.filter.mmd.ModuleMetadata} bean;</li>
+ *   <li>bind {@link KafkaConsumerProperties} from
+ *       {@code application.kafka.consumer.*} configuration properties.</li>
+ * </ul>
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Import({KafkaConsumerFilteringConfiguration.class, ModuleMetadataConfiguration.class})

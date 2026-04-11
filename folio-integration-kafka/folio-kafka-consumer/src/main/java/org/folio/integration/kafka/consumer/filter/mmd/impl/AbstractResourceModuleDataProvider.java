@@ -5,6 +5,14 @@ import org.folio.integration.kafka.consumer.filter.mmd.ModuleData;
 import org.folio.integration.kafka.consumer.filter.mmd.ModuleDataProvider;
 import org.jspecify.annotations.Nullable;
 
+/**
+ * Base class for {@link ModuleDataProvider} implementations that read module metadata from
+ * a classpath resource embedded in the primary JAR.
+ *
+ * <p>Delegates the actual loading to the {@link #load()} template method and caches the result
+ * (or the failure) after the first invocation using a double-checked-locking pattern to avoid
+ * redundant I/O on subsequent calls.
+ */
 abstract class AbstractResourceModuleDataProvider implements ModuleDataProvider {
 
   protected volatile @Nullable Pair<@Nullable IllegalStateException, @Nullable ModuleData> data;
@@ -32,5 +40,11 @@ abstract class AbstractResourceModuleDataProvider implements ModuleDataProvider 
     return data.getRight();
   }
 
+  /**
+   * Loads the module name and version from the underlying source.
+   *
+   * @return the loaded module data
+   * @throws IllegalStateException if the source is missing, unreadable, or incomplete
+   */
   protected abstract ModuleData load();
 }

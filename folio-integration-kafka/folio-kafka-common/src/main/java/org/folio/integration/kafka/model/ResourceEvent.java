@@ -5,6 +5,16 @@ import lombok.Builder;
 import lombok.Data;
 import org.jspecify.annotations.Nullable;
 
+/**
+ * Generic Kafka event envelope carrying metadata and an optional resource payload.
+ *
+ * <p>The type parameter {@code T} represents the domain-specific resource type. Both
+ * {@link #newValue} and {@link #oldValue} are optional: a {@link ResourceEventType#CREATE CREATE}
+ * event carries only {@link #newValue}, a {@link ResourceEventType#DELETE DELETE} event carries
+ * only {@link #oldValue}, and an {@link ResourceEventType#UPDATE UPDATE} event may carry both.
+ *
+ * @param <T> the domain resource type carried in this event
+ */
 @Data
 @Builder
 public class ResourceEvent<T> {

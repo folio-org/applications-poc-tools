@@ -6,6 +6,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/**
+ * Configuration properties for the Kafka producer, bound from
+ * {@code application.kafka.producer.*}.
+ *
+ * <p>The main entry point is the {@link #topics} list, which defines the Kafka topics that
+ * {@link KafkaTopicConfiguration} will ensure exist on startup.
+ */
 @Data
 @ConfigurationProperties("application.kafka.producer")
 public class KafkaProducerProperties {
@@ -15,6 +22,9 @@ public class KafkaProducerProperties {
    */
   private List<KafkaTopic> topics;
 
+  /**
+   * Descriptor for a single Kafka topic to be created on application startup.
+   */
   @Data
   @NoArgsConstructor
   @AllArgsConstructor(staticName = "of")

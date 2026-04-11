@@ -8,6 +8,14 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.integration.kafka.consumer.filter.mmd.ModuleData;
 import org.folio.integration.kafka.consumer.filter.mmd.ModuleDataProvider;
 
+/**
+ * {@link ModuleDataProvider} that chains a list of delegates and returns the first
+ * successfully loaded {@link ModuleData}.
+ *
+ * <p>Providers are tried in the order they are supplied. If a provider throws an
+ * {@link IllegalStateException}, the exception is logged at {@code INFO} level and the next
+ * provider is attempted. If all providers fail, an {@link IllegalStateException} is thrown.
+ */
 @Log4j2
 public class CompositeModuleDataProvider implements ModuleDataProvider {
 

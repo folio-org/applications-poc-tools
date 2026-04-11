@@ -7,6 +7,14 @@ import lombok.NoArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.folio.common.configuration.properties.FolioEnvironment;
 
+/**
+ * Utility methods for constructing Kafka topic names and {@link NewTopic} descriptors.
+ *
+ * <p>Topic names in FOLIO follow the convention
+ * {@code {env}.{topic}} or {@code {env}.{tenant}.{topic}}, where {@code {env}} is the value
+ * of the {@code ENV} environment variable resolved by
+ * {@link org.folio.common.configuration.properties.FolioEnvironment}.
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class KafkaUtils {
 

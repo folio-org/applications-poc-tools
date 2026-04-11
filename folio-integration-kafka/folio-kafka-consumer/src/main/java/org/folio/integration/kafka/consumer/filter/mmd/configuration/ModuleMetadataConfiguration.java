@@ -18,6 +18,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ResourceLoader;
 
+/**
+ * Spring {@link Configuration} that registers the {@link ModuleMetadata} bean and the ordered
+ * chain of {@link ModuleDataProvider} delegates used to resolve it.
+ *
+ * <p>Providers are registered with ascending {@link org.springframework.core.annotation.Order}
+ * values so that {@link AppPropertiesModuleDataProvider} is tried first, followed by
+ * {@link ManifestModuleDataProvider}, {@link PomModuleDataProvider}, and finally
+ * {@link ModulePropertiesModuleDataProvider}.
+ *
+ * <p>A custom {@code moduleDataProvider} bean may be supplied by the consuming application
+ * to override the default {@link CompositeModuleDataProvider}.
+ */
 @Log4j2
 @Configuration
 public class ModuleMetadataConfiguration {

@@ -22,6 +22,18 @@ import org.springframework.kafka.KafkaException;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.stereotype.Service;
 
+/**
+ * Spring service for managing Kafka topics at runtime.
+ *
+ * <p>Wraps {@link KafkaAdmin} and an {@link AdminClient} to support:
+ * <ul>
+ *   <li>registering a {@link NewTopic} bean in the Spring context and creating the topic
+ *       in Kafka if it does not yet exist ({@link #createTopic});</li>
+ *   <li>deleting topics by name, skipping any that do not exist ({@link #deleteTopics});</li>
+ *   <li>finding which of the requested topic names currently exist in Kafka
+ *       ({@link #findTopics}).</li>
+ * </ul>
+ */
 @Log4j2
 @Service
 @RequiredArgsConstructor

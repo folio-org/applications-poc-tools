@@ -5,6 +5,13 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import org.folio.integration.kafka.consumer.filter.mmd.ModuleData;
 import org.folio.integration.kafka.consumer.filter.mmd.ModuleDataProvider;
 
+/**
+ * {@link ModuleDataProvider} that reads the module name and version from the
+ * {@code spring.application.name} and {@code spring.application.version} properties
+ * supplied at construction time.
+ *
+ * <p>Throws {@link IllegalStateException} if either value is blank.
+ */
 public class AppPropertiesModuleDataProvider implements ModuleDataProvider {
 
   private final String applicationName;

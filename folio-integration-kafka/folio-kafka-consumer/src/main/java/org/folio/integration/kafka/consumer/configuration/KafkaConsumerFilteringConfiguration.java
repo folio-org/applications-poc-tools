@@ -14,6 +14,21 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.listener.adapter.RecordFilterStrategy;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
+/**
+ * Spring {@link Configuration} that registers the {@code tenantAwareMessageFilter} bean.
+ *
+ * <p>Two mutually exclusive inner configurations are provided:
+ * <ul>
+ *   <li>{@link TenantFilterConfiguration} — active when
+ *       {@code application.kafka.consumer.filtering.tenant-filter.enabled=true}; connects to the
+ *       tenant-entitlement service and registers a real {@link EnabledTenantMessageFilter}.</li>
+ *   <li>{@link DisabledTenantFilterConfiguration} — active when the property is {@code false}
+ *       or absent; registers a no-op pass-through filter that accepts every record.</li>
+ * </ul>
+ *
+ * <p>Activate this configuration via {@link org.folio.integration.kafka.consumer.EnableKafkaConsumer}
+ * or by importing it directly.
+ */
 @Log4j2
 @Configuration
 public class KafkaConsumerFilteringConfiguration {
@@ -63,6 +78,12 @@ public class KafkaConsumerFilteringConfiguration {
     }
   }
 
+  /**
+   * Registers a no-op {@code tenantAwareMessageFilter} that accepts all records.
+   *
+   * <p>Active when {@code application.kafka.consumer.filtering.tenant-filter.enabled} is
+   * {@code false} or the property is absent.
+   */
   @Configuration
   @ConditionalOnProperty(value = "application.kafka.consumer.filtering.tenant-filter.enabled",
     havingValue = "false",

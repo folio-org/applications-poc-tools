@@ -4,6 +4,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import lombok.Getter;
 
+/**
+ * Thrown when a specific tenant is not entitled to receive messages for the current module
+ * and the active {@link DisabledTenantStrategy} is {@link DisabledTenantStrategy#FAIL FAIL}.
+ */
 @Getter
 public final class TenantIsDisabledException extends RuntimeException {
 
@@ -19,6 +23,13 @@ public final class TenantIsDisabledException extends RuntimeException {
     this.moduleId = moduleId;
   }
 
+  /**
+   * Creates a new exception for the given tenant and module.
+   *
+   * @param tenant   the tenant identifier; must not be blank
+   * @param moduleId the module identifier; must not be blank
+   * @throws IllegalArgumentException if {@code tenant} or {@code moduleId} is blank
+   */
   public static TenantIsDisabledException of(String tenant, String moduleId) {
     if (isBlank(tenant)) {
       throw new IllegalArgumentException("Tenant must not be blank");

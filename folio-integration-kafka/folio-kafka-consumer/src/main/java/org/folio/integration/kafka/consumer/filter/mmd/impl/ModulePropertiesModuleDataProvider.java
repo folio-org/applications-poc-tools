@@ -11,6 +11,14 @@ import org.folio.integration.kafka.consumer.filter.mmd.ModuleData;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
+/**
+ * {@link ModuleDataProvider} that reads module metadata from a {@code module.properties} file
+ * on the classpath.
+ *
+ * <p>The expected property keys are {@code module.name} and {@code module.version}.
+ * The default resource location is {@code classpath:module.properties}; an alternative path
+ * can be provided at construction time. If the supplied location is blank, the default is used.
+ */
 @Log4j2
 public class ModulePropertiesModuleDataProvider extends AbstractResourceModuleDataProvider {
 

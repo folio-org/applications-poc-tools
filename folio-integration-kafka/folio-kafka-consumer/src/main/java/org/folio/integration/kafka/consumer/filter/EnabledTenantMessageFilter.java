@@ -12,6 +12,22 @@ import org.folio.integration.kafka.consumer.filter.te.TenantEntitlementService;
 import org.folio.integration.kafka.model.ResourceEvent;
 import org.springframework.kafka.listener.adapter.RecordFilterStrategy;
 
+/**
+ * {@link RecordFilterStrategy} that accepts only records whose tenant is currently entitled
+ * to receive messages for the current module.
+ *
+ * <p>On each call to {@link #filter}, the entitled-tenant set is fetched via
+ * {@link TenantEntitlementService#getEnabledTenants()}, and the configured
+ * {@link DisabledTenantStrategy strategies} are applied:
+ * <ul>
+ *   <li>{@code tenantDisabledStrategy} — used when the tenant set is non-empty but does not
+ *       contain the record's tenant;</li>
+ *   <li>{@code allTenantsDisabledStrategy} — used when no tenants are entitled at all.</li>
+ * </ul>
+ *
+ * @param <K> the Kafka record key type
+ * @param <V> the record value type; must extend {@link ResourceEvent}
+ */
 @Log4j2
 public class EnabledTenantMessageFilter<K, V extends ResourceEvent<?>> implements RecordFilterStrategy<K, V> {
 
@@ -21,6 +37,16 @@ public class EnabledTenantMessageFilter<K, V extends ResourceEvent<?>> implement
   private final DisabledTenantStrategy tenantDisabledStrategy;
   private final DisabledTenantStrategy allTenantsDisabledStrategy;
 
+  /**
+   * Creates a new filter instance.
+   *
+   * @param moduleId                   the current module identifier; must not be blank
+   * @param tenantEntitlementService   service used to resolve the entitled-tenant set
+   * @param ignoreEmptyBatch           whether to signal Kafka to skip delivery on empty batches
+   * @param tenantDisabledStrategy     strategy when a single tenant is not entitled
+   * @param allTenantsDisabledStrategy strategy when no tenants are entitled
+   * @throws IllegalArgumentException if {@code moduleId} is blank
+   */
   public EnabledTenantMessageFilter(String moduleId, TenantEntitlementService tenantEntitlementService,
     boolean ignoreEmptyBatch, DisabledTenantStrategy tenantDisabledStrategy,
     DisabledTenantStrategy allTenantsDisabledStrategy) {
