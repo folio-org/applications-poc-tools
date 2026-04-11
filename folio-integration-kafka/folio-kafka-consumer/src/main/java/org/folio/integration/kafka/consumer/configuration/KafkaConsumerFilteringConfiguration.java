@@ -7,6 +7,7 @@ import org.folio.integration.kafka.consumer.filter.mmd.ModuleMetadata;
 import org.folio.integration.kafka.consumer.filter.te.TenantEntitlementClient;
 import org.folio.integration.kafka.consumer.filter.te.TenantEntitlementService;
 import org.folio.integration.kafka.model.ResourceEvent;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,6 +50,7 @@ public class KafkaConsumerFilteringConfiguration {
     }
 
     @Bean("tenantAwareMessageFilter")
+    @ConditionalOnMissingBean(name = "tenantAwareMessageFilter")
     public <K, V extends ResourceEvent<?>> RecordFilterStrategy<K, V> enabledTenantMessageFilter(
       TenantEntitlementService tenantEntitlementService) {
       return new EnabledTenantMessageFilter<>(
@@ -68,6 +70,7 @@ public class KafkaConsumerFilteringConfiguration {
   public static class DisabledTenantFilterConfiguration {
 
     @Bean("tenantAwareMessageFilter")
+    @ConditionalOnMissingBean(name = "tenantAwareMessageFilter")
     public <K, V extends ResourceEvent<?>> RecordFilterStrategy<K, V> disabledTenantMessageFilter() {
       return consumerRecord -> false;
     }
