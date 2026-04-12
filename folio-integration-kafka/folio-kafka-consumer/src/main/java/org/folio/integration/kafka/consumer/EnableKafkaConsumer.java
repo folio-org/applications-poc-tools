@@ -5,9 +5,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.folio.integration.kafka.consumer.configuration.KafkaConsumerFilteringConfiguration;
-import org.folio.integration.kafka.consumer.configuration.KafkaConsumerProperties;
+import org.folio.integration.kafka.consumer.configuration.KafkaConsumerPropertiesConfiguration;
 import org.folio.integration.kafka.consumer.filter.mmd.configuration.ModuleMetadataConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
 
 /**
@@ -19,12 +18,19 @@ import org.springframework.context.annotation.Import;
  *       {@code tenantAwareMessageFilter} bean;</li>
  *   <li>import {@link ModuleMetadataConfiguration} to register the
  *       {@link org.folio.integration.kafka.consumer.filter.mmd.ModuleMetadata} bean;</li>
- *   <li>bind {@link KafkaConsumerProperties} from
- *       {@code application.kafka.consumer.*} configuration properties.</li>
+ *   <li>import {@link KafkaConsumerPropertiesConfiguration} to register the
+ *       {@code kafkaConsumerProperties} bean bound to
+ *       {@code application.kafka.consumer.*}; using an explicit {@code @Bean} method ensures the
+ *       bean name is predictable so that SpEL expressions such as
+ *       {@code #{kafkaConsumerProperties}} resolve correctly regardless of the consuming
+ *       application's component-scan path.</li>
  * </ul>
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({KafkaConsumerFilteringConfiguration.class, ModuleMetadataConfiguration.class})
-@EnableConfigurationProperties(KafkaConsumerProperties.class)
+@Import({
+  KafkaConsumerFilteringConfiguration.class,
+  KafkaConsumerPropertiesConfiguration.class,
+  ModuleMetadataConfiguration.class
+})
 public @interface EnableKafkaConsumer {}

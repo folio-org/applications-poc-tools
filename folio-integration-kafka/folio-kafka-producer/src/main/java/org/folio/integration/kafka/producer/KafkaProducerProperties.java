@@ -4,7 +4,6 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Configuration properties for the Kafka producer, bound from
@@ -12,9 +11,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p>The main entry point is the {@link #topics} list, which defines the Kafka topics that
  * {@link KafkaTopicConfiguration} will ensure exist on startup.
+ *
+ * <p>This class is registered as a Spring bean by {@link KafkaProducerPropertiesConfiguration}
+ * under the name {@code kafkaProducerProperties}.
  */
 @Data
-@ConfigurationProperties("application.kafka.producer")
 public class KafkaProducerProperties {
 
   /**
