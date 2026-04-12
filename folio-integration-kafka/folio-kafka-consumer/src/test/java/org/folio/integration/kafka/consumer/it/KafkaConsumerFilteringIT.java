@@ -15,7 +15,7 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.folio.integration.kafka.consumer.configuration.KafkaConsumerFilteringConfiguration;
-import org.folio.integration.kafka.consumer.configuration.KafkaConsumerProperties;
+import org.folio.integration.kafka.consumer.configuration.KafkaConsumerPropertiesConfiguration;
 import org.folio.integration.kafka.consumer.filter.mmd.configuration.ModuleMetadataConfiguration;
 import org.folio.integration.kafka.model.ResourceEvent;
 import org.folio.test.TestUtils;
@@ -51,6 +51,7 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 @SpringBootTest(
   classes = {
     KafkaConsumerFilteringConfiguration.class,
+    KafkaConsumerPropertiesConfiguration.class,
     ModuleMetadataConfiguration.class,
     KafkaConsumerFilteringIT.TestConfig.class
   },
@@ -102,7 +103,7 @@ class KafkaConsumerFilteringIT {
 
   @org.springframework.kafka.annotation.EnableKafka
   @TestConfiguration
-  @EnableConfigurationProperties({KafkaConsumerProperties.class, KafkaProperties.class})
+  @EnableConfigurationProperties({KafkaProperties.class})
   static class TestConfig {
 
     @Value("${wm.url}")
@@ -160,8 +161,8 @@ class KafkaConsumerFilteringIT {
 
     @KafkaListener(topics = TOPIC, containerFactory = "resourceEventContainerFactory",
       filter = "tenantAwareMessageFilter", groupId = "it-filter-group")
-    void consume(ConsumerRecord<String, ResourceEvent<Object>> record) {
-      events.add(record);
+    void consume(ConsumerRecord<String, ResourceEvent<Object>> rec) {
+      events.add(rec);
     }
 
     List<ConsumerRecord<String, ResourceEvent<Object>>> getEvents() {

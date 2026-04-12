@@ -97,9 +97,9 @@ class EnabledTenantMessageFilterTest {
   void filter_negative_disabledTenant_failStrategy_throwsTenantIsDisabledException() {
     var filter = createFilter(false, FAIL, SKIP);
     when(tenantEntitlementService.getEnabledTenants()).thenReturn(ENABLED_TENANTS);
-    var record = consumerRecord("key-1", OTHER_TENANT);
+    var rec = consumerRecord("key-1", OTHER_TENANT);
 
-    assertThatThrownBy(() -> filter.filter(record))
+    assertThatThrownBy(() -> filter.filter(rec))
       .isInstanceOf(TenantIsDisabledException.class)
       .hasMessageContaining(OTHER_TENANT)
       .hasMessageContaining(MODULE_ID);
@@ -129,9 +129,9 @@ class EnabledTenantMessageFilterTest {
   void filter_negative_allTenantsDisabled_failStrategy_throwsTenantsAreDisabledException() {
     var filter = createFilter(false, SKIP, FAIL);
     when(tenantEntitlementService.getEnabledTenants()).thenReturn(Set.of());
-    var record = consumerRecord("key-1", TENANT);
+    var rec = consumerRecord("key-1", TENANT);
 
-    assertThatThrownBy(() -> filter.filter(record))
+    assertThatThrownBy(() -> filter.filter(rec))
       .isInstanceOf(TenantsAreDisabledException.class)
       .hasMessageContaining(MODULE_ID);
   }

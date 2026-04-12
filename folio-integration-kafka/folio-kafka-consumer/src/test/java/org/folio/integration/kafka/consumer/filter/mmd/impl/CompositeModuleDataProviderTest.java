@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
 import org.folio.integration.kafka.consumer.filter.mmd.ModuleData;
 import org.folio.integration.kafka.consumer.filter.mmd.ModuleDataProvider;
@@ -37,7 +38,8 @@ class CompositeModuleDataProviderTest {
 
   @Test
   void constructor_negative_emptyDelegates() {
-    assertThatThrownBy(() -> new CompositeModuleDataProvider(List.of()))
+    var delegates = Collections.<ModuleDataProvider>emptyList();
+    assertThatThrownBy(() -> new CompositeModuleDataProvider(delegates))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining(EMPTY_DELEGATES_MSG);
   }
