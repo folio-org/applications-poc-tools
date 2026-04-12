@@ -15,11 +15,13 @@ import org.jspecify.annotations.Nullable;
  */
 abstract class AbstractResourceModuleDataProvider implements ModuleDataProvider {
 
+  @SuppressWarnings("java:S3077")
   protected volatile @Nullable Pair<@Nullable IllegalStateException, @Nullable ModuleData> data;
 
   /**
    * Returns the module data, loading it from the primary JAR on the first call.
    */
+  @SuppressWarnings("java:S2637")
   public ModuleData getModuleData() {
     if (data == null) {
       synchronized (this) {
