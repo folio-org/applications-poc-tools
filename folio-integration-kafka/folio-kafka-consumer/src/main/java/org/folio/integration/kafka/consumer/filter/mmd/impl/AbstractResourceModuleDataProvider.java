@@ -1,5 +1,7 @@
 package org.folio.integration.kafka.consumer.filter.mmd.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.integration.kafka.consumer.filter.mmd.ModuleData;
 import org.folio.integration.kafka.consumer.filter.mmd.ModuleDataProvider;
@@ -42,11 +44,30 @@ abstract class AbstractResourceModuleDataProvider implements ModuleDataProvider 
     return data.getRight();
   }
 
+  protected abstract InputStream openResourceStream() throws IOException;
+
+  /**
+   * Extracts {@link ModuleData} from the already-opened resource stream.
+   *
+   * @param resourceStream the open stream to read from; the caller closes it
+   * @return the extracted {@link ModuleData}
+   * @throws IOException if reading from the stream fails
+   */
+  protected abstract ModuleData readFromResource(InputStream resourceStream) throws IOException;
+
   /**
    * Loads the module name and version from the underlying source.
    *
    * @return the loaded module data
    * @throws IllegalStateException if the source is missing, unreadable, or incomplete
    */
-  protected abstract ModuleData load();
+  private ModuleData load() {
+    try (var resourceStream = openResourceStream()) {
+      return readFromResource(resourceStream);
+    } catch (IllegalStateException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to read module data from resource: " + e.getMessage(), e);
+    }
+  }
 }

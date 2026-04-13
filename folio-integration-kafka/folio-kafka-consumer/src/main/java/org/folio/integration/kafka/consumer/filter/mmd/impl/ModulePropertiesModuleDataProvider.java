@@ -9,7 +9,6 @@ import java.util.Properties;
 import lombok.extern.log4j.Log4j2;
 import org.folio.integration.kafka.consumer.filter.mmd.ModuleData;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 /**
  * {@link ModuleDataProvider} that reads module metadata from a {@code module.properties} file
@@ -26,10 +25,6 @@ public class ModulePropertiesModuleDataProvider extends AbstractResourceModuleDa
 
   private final ResourceLoader resourceLoader;
   private final String modulePropertiesLocation;
-
-  public ModulePropertiesModuleDataProvider() {
-    this(new PathMatchingResourcePatternResolver(), DEFAULT_MODULE_PROPERTIES_FILE);
-  }
 
   public ModulePropertiesModuleDataProvider(ResourceLoader resourceLoader) {
     this(resourceLoader, DEFAULT_MODULE_PROPERTIES_FILE);
@@ -48,18 +43,23 @@ public class ModulePropertiesModuleDataProvider extends AbstractResourceModuleDa
   }
 
   @Override
-  protected ModuleData load() {
-    Properties props = new Properties();
-    try (InputStream is = resourceLoader.getResource(modulePropertiesLocation).getInputStream()) {
-      props.load(is);
+  protected InputStream openResourceStream() throws IOException {
+    return resourceLoader.getResource(modulePropertiesLocation).getInputStream();
+  }
 
-      return new ModuleData(
-        requireProperty(props, "module.name", modulePropertiesLocation),
-        requireProperty(props, "module.version", modulePropertiesLocation)
-      );
+  @Override
+  protected ModuleData readFromResource(InputStream resourceStream) {
+    Properties props = new Properties();
+    try {
+      props.load(resourceStream);
     } catch (IOException e) {
       throw new IllegalStateException("Failed to load module properties from resource: " + modulePropertiesLocation, e);
     }
+
+    return new ModuleData(
+      requireProperty(props, "module.name", modulePropertiesLocation),
+      requireProperty(props, "module.version", modulePropertiesLocation)
+    );
   }
 
   private static String requireProperty(Properties props, String key, String file) {

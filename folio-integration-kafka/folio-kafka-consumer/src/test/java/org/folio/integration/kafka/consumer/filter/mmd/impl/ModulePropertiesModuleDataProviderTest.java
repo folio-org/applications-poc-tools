@@ -28,7 +28,7 @@ class ModulePropertiesModuleDataProviderTest {
   private static final String CUSTOM_LOCATION = "classpath:custom/module.properties";
   private static final String MODULE_NAME = "my-module";
   private static final String MODULE_VERSION = "1.2.3";
-  private static final String LOAD_FAIL_MSG = "Failed to load module properties from resource: " + DEFAULT_LOCATION;
+  private static final String LOAD_FAIL_MSG = "Failed to read module data from resource:";
 
   @Mock private ResourceLoader resourceLoader;
   @Mock private Resource resource;

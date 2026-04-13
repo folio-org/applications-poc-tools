@@ -133,12 +133,13 @@ application:
 `ModuleMetadataConfiguration` resolves the current module's name and version through an ordered
 chain of providers. The first provider that succeeds determines the result.
 
-| Priority | Provider                          | Source                                                                              |
-|:---------|:----------------------------------|:------------------------------------------------------------------------------------|
-| 1        | `AppPropertiesModuleDataProvider` | `spring.application.name` and `spring.application.version` properties              |
-| 10       | `ManifestModuleDataProvider`      | `Implementation-Title` / `Implementation-Version` in `META-INF/MANIFEST.MF`        |
-| 20       | `PomModuleDataProvider`           | `artifactId` / `version` in `META-INF/maven/<groupId>/<artifactId>/pom.properties` |
-| 30       | `ModulePropertiesModuleDataProvider` | `module.name` / `module.version` in `classpath:module.properties`               |
+| Priority | Provider                             | Source                                                                              | Condition                              |
+|:---------|:-------------------------------------|:------------------------------------------------------------------------------------|:---------------------------------------|
+| 1        | `AppPropertiesModuleDataProvider`    | `spring.application.name` and `spring.application.version` properties              | Always registered                      |
+| 10       | `BuildPropertiesModuleDataProvider`  | `build.artifact` / `build.version` from `META-INF/build-info.properties`           | Only when `BuildProperties` bean exists |
+| 20       | `ManifestModuleDataProvider`         | `Implementation-Title` / `Implementation-Version` in `META-INF/MANIFEST.MF`        | Always registered                      |
+| 30       | `PomModuleDataProvider`              | `artifactId` / `version` in `META-INF/maven/<groupId>/<artifactId>/pom.properties` | Always registered                      |
+| 40       | `ModulePropertiesModuleDataProvider` | `module.name` / `module.version` in `classpath:module.properties`                  | Always registered                      |
 
 The location of `module.properties` can be overridden:
 
