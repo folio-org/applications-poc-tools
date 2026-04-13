@@ -88,7 +88,8 @@ class PomModuleDataProviderTest {
   void readFromResource_negative_missingArtifactId() {
     var provider = new PomModuleDataProvider(APP_NAME, resolver);
 
-    assertThatThrownBy(() -> provider.readFromResource(pomPropertiesStream(null, MODULE_VERSION)))
+    var stream = pomPropertiesStream(null, MODULE_VERSION);
+    assertThatThrownBy(() -> provider.readFromResource(stream))
       .isInstanceOf(IllegalStateException.class)
       .hasMessageContaining("artifactId");
   }
@@ -97,7 +98,8 @@ class PomModuleDataProviderTest {
   void readFromResource_negative_missingVersion() {
     var provider = new PomModuleDataProvider(APP_NAME, resolver);
 
-    assertThatThrownBy(() -> provider.readFromResource(pomPropertiesStream(APP_NAME, null)))
+    var stream = pomPropertiesStream(APP_NAME, null);
+    assertThatThrownBy(() -> provider.readFromResource(stream))
       .isInstanceOf(IllegalStateException.class)
       .hasMessageContaining("version");
   }

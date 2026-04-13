@@ -34,7 +34,8 @@ class ManifestModuleDataProviderTest {
   void readFromResource_negative_missingTitleAttribute() {
     var provider = new ManifestModuleDataProvider();
 
-    assertThatThrownBy(() -> provider.readFromResource(manifestStream(null, MODULE_VERSION)))
+    var stream = manifestStream(null, MODULE_VERSION);
+    assertThatThrownBy(() -> provider.readFromResource(stream))
       .isInstanceOf(IllegalStateException.class)
       .hasMessageContaining(TITLE_ATTRIBUTE);
   }
@@ -43,7 +44,8 @@ class ManifestModuleDataProviderTest {
   void readFromResource_negative_missingVersionAttribute() {
     var provider = new ManifestModuleDataProvider();
 
-    assertThatThrownBy(() -> provider.readFromResource(manifestStream(MODULE_NAME, null)))
+    var stream = manifestStream(MODULE_NAME, null);
+    assertThatThrownBy(() -> provider.readFromResource(stream))
       .isInstanceOf(IllegalStateException.class)
       .hasMessageContaining(VERSION_ATTRIBUTE);
   }
