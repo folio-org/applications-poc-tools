@@ -155,9 +155,9 @@ class EnabledTenantMessageFilterTest {
     when(tenantEntitlementService.getEnabledTenants()).thenReturn(ENABLED_TENANTS);
 
     TenantAwareEvent customEvent = () -> TENANT;
-    var record = new ConsumerRecord<>("test-topic", 0, 0L, "key-1", customEvent);
+    var rec = new ConsumerRecord<>("test-topic", 0, 0L, "key-1", customEvent);
 
-    assertThat(filter.filter(record)).isFalse();
+    assertThat(filter.filter(rec)).isFalse();
   }
 
   @Test
