@@ -17,7 +17,7 @@ import org.jspecify.annotations.Nullable;
  */
 @Data
 @Builder
-public class ResourceEvent<T> {
+public class ResourceEvent<T> implements TenantAwareEvent {
 
   /**
    * Resource identifier.

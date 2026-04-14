@@ -48,6 +48,7 @@ application:
         items:
           topic-pattern: trillium\..*\.inventory\.items   # regex
           group-id: mod-my-service-items-group
+          concurrency: 3                                  # default: 1
         orders:
           topic-pattern: trillium\..*\.orders
           group-id: mod-my-service-orders-group
@@ -78,7 +79,8 @@ Set `application.kafka.consumer.filtering.tenant-filter.enabled=true` to activat
 
 When enabled, `EnabledTenantMessageFilter` intercepts every incoming record:
 
-1. Extracts the `tenant` field from the `ResourceEvent` payload.
+1. Calls `getTenant()` on the `TenantAwareEvent` payload. If the value is blank or `null`, the
+   record is accepted immediately and a warning is logged — no entitlement check is performed.
 2. Calls the tenant-entitlement service to fetch the set of tenants currently entitled for this
    module (result is cached per poll cycle).
 3. If the entitled set is **non-empty** but does not contain the record's tenant, the
@@ -199,6 +201,7 @@ so a custom `RecordFilterStrategy` bean with that name takes precedence.
 |:----------------------------------------------------------------------------------|:----------|:---------|:--------------------------------------------------------|
 | `application.kafka.consumer.listener.<name>.topic-pattern`                        | `String`  | —        | Regex topic-name pattern for the named listener         |
 | `application.kafka.consumer.listener.<name>.group-id`                             | `String`  | —        | Consumer group ID for the named listener                |
+| `application.kafka.consumer.listener.<name>.concurrency`                          | `Integer` | `1`      | Number of concurrent consumer threads for the listener  |
 | `application.kafka.consumer.filtering.tenant-filter.enabled`                      | `boolean` | `false`  | Activate real tenant-entitlement filtering              |
 | `application.kafka.consumer.filtering.tenant-filter.ignore-empty-batch`           | `boolean` | `true`   | Signal Kafka to skip delivery on empty poll batches     |
 | `application.kafka.consumer.filtering.tenant-filter.tenant-disabled-strategy`     | `String`  | `SKIP`   | Strategy when a record's tenant is not entitled         |

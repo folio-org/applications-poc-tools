@@ -12,6 +12,7 @@ import java.util.Set;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.integration.kafka.consumer.filter.te.TenantEntitlementService;
 import org.folio.integration.kafka.model.ResourceEvent;
+import org.folio.integration.kafka.model.TenantAwareEvent;
 import org.folio.test.types.UnitTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -134,6 +135,29 @@ class EnabledTenantMessageFilterTest {
     assertThatThrownBy(() -> filter.filter(rec))
       .isInstanceOf(TenantsAreDisabledException.class)
       .hasMessageContaining(MODULE_ID);
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = " ")
+  void filter_positive_blankTenant_returnsAccepted(String blankTenant) {
+    var filter = createFilter(false, SKIP, SKIP);
+
+    var result = filter.filter(consumerRecord("key-1", blankTenant));
+
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void filter_positive_customTenantAwareEvent_enabledTenant_returnsAccepted() {
+    var filter = new EnabledTenantMessageFilter<String, TenantAwareEvent>(
+      MODULE_ID, tenantEntitlementService, false, SKIP, SKIP);
+    when(tenantEntitlementService.getEnabledTenants()).thenReturn(ENABLED_TENANTS);
+
+    TenantAwareEvent customEvent = () -> TENANT;
+    var rec = new ConsumerRecord<>("test-topic", 0, 0L, "key-1", customEvent);
+
+    assertThat(filter.filter(rec)).isFalse();
   }
 
   @Test

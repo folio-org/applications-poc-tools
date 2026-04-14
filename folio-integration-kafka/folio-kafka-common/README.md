@@ -6,6 +6,7 @@ operation enum used by both Kafka producers and consumers across all FOLIO modul
 ## Table of Contents
 
 - [Event Model](#event-model)
+- [Tenant-Aware Contract](#tenant-aware-contract)
 - [Event Types](#event-types)
 
 ---
@@ -38,6 +39,24 @@ ResourceEvent<Item> event = ResourceEvent.<Item>builder()
     .newValue(item)
     .build();
 ```
+
+---
+
+## Tenant-Aware Contract
+
+### `TenantAwareEvent`
+
+A lightweight interface for event payloads that carry a tenant identifier. Implement it to make a
+custom event type work with the consumer-side tenant filter without depending on `ResourceEvent`.
+
+```java
+public interface TenantAwareEvent {
+    @Nullable String getTenant();
+}
+```
+
+`ResourceEvent<T>` implements this interface out of the box, so no change is required for existing
+listeners that already use `ResourceEvent`.
 
 ---
 

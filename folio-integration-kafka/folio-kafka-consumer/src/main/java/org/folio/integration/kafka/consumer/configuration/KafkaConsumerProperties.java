@@ -39,5 +39,10 @@ public class KafkaConsumerProperties {
      * Consumer group identifier; overrides the global {@code spring.kafka.consumer.group-id}.
      */
     private String groupId;
+
+    /**
+     * Number of concurrent consumers in service.
+     */
+    private Integer concurrency = 1;
   }
 }
