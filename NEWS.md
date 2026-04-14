@@ -1,4 +1,4 @@
-## Version `v3.1.0` (in progress)
+## Version `v4.0.0` (14.04.2026)
 ### Changes:
 * Support find topics by name in KafkaAdminService (MGRENTITLE-135)
 * Validate semver when getting name or version from artifact id (MGRENTITLE-113)
