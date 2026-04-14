@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.integration.kafka.consumer.filter.te.TenantEntitlementService;
-import org.folio.integration.kafka.model.ResourceEvent;
+import org.folio.integration.kafka.model.TenantAwareEvent;
 import org.springframework.kafka.listener.adapter.RecordFilterStrategy;
 
 /**
@@ -26,10 +26,10 @@ import org.springframework.kafka.listener.adapter.RecordFilterStrategy;
  * </ul>
  *
  * @param <K> the Kafka record key type
- * @param <V> the record value type; must extend {@link ResourceEvent}
+ * @param <V> the record value type; must implement {@link TenantAwareEvent}
  */
 @Log4j2
-public class EnabledTenantMessageFilter<K, V extends ResourceEvent<?>> implements RecordFilterStrategy<K, V> {
+public class EnabledTenantMessageFilter<K, V extends TenantAwareEvent> implements RecordFilterStrategy<K, V> {
 
   private final String moduleId;
   private final TenantEntitlementService tenantEntitlementService;
@@ -69,6 +69,12 @@ public class EnabledTenantMessageFilter<K, V extends ResourceEvent<?>> implement
     var key = consumerRecord.key();
     var value = consumerRecord.value();
     var tenant = value.getTenant();
+
+    if (isBlank(tenant)) {
+      log.warn("Received message with blank tenant: messageKey = {}, tenant = '{}'. Filter won't be applied.",
+        key, tenant);
+      return false;
+    }
 
     log.debug("Filtering message for tenant: messageKey = {}, tenant = {}", key, tenant);
 
