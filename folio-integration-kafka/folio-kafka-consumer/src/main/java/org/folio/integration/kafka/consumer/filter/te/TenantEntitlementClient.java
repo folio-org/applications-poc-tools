@@ -11,8 +11,7 @@ import org.springframework.web.service.annotation.HttpExchange;
  * Spring HTTP interface client for the tenant-entitlement service.
  *
  * <p>All requests are sent to the {@code /entitlements} resource path relative to the base URL
- * configured on the {@link org.springframework.web.service.invoker.HttpServiceProxyFactory}
- * used to create this client.
+ * configured via the {@code okapi.url} application property.
  */
 @HttpExchange(url = "entitlements", contentType = APPLICATION_JSON_VALUE)
 public interface TenantEntitlementClient {

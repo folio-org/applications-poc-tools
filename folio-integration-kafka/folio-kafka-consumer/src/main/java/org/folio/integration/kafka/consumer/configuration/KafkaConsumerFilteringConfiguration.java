@@ -47,9 +47,9 @@ public class KafkaConsumerFilteringConfiguration {
    *
    * <p>Enabled when {@code application.kafka.consumer.filtering.tenant-filter.enabled=true}.
    *
-   * <p><strong>Required bean:</strong> the consuming application must expose an
-   * {@link org.springframework.web.service.invoker.HttpServiceProxyFactory} bean configured
-   * with the base URL of the tenant-entitlement service. Without it, context startup will fail.
+   * <p><strong>Required property:</strong> the consuming application must provide the
+   * {@code okapi.url} property with the base URL of the tenant-entitlement service.
+   * Without it, context startup will fail.
    */
   @Configuration
   @ConditionalOnProperty(value = "application.kafka.consumer.filtering.tenant-filter.enabled", havingValue = "true")
