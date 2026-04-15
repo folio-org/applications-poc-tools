@@ -64,6 +64,16 @@ public class KafkaConsumerFilteringConfiguration {
       this.tenantFilter = kafkaProperties.getFiltering().getTenantFilter();
     }
 
+    /**
+     * Rest Client configuration for the tenant entitlement client.
+     *
+     * @param okapiUrl the base URL for the tenant entitlement client, provided via application properties;
+     *                 must not be blank
+     * @param jsonMapper the Jackson JSON mapper to use for message conversion; auto-configured by Spring Boot
+     * @param loggingInterceptor logging interceptor from folio-spring-support, if available;
+     *                           auto-configured by folio-spring-support when the library is on the classpath
+     * @return rest client configurer for kafka-filter-entitlement-client group
+     */
     @Bean
     public RestClientHttpServiceGroupConfigurer tenantEntitlementClientGroupConfigurer(
       @Value("${okapi.url}") @NotBlank String okapiUrl, JsonMapper jsonMapper,
@@ -80,6 +90,7 @@ public class KafkaConsumerFilteringConfiguration {
               .addCustomConverter(new JacksonJsonHttpMessageConverter(jsonMapper))
               .addCustomConverter(new StringHttpMessageConverter()));
 
+        // utilize logging interceptor from folio-spring-support lib, if available
         if (loggingInterceptor != null) {
           builder
             .bufferContent((uri, httpMethod) -> true)
