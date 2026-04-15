@@ -26,7 +26,6 @@ import org.folio.test.types.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,9 +39,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.support.RestClientAdapter;
-import org.springframework.web.service.invoker.HttpServiceProxyFactory;
+import tools.jackson.databind.json.JsonMapper;
 
 @IntegrationTest
 @EnableKafka
@@ -106,13 +103,9 @@ class KafkaConsumerFilteringIT {
   @EnableConfigurationProperties({KafkaProperties.class})
   static class TestConfig {
 
-    @Value("${wm.url}")
-    private String wmUrl;
-
     @Bean
-    HttpServiceProxyFactory httpServiceProxyFactory() {
-      var restClient = RestClient.builder().baseUrl(wmUrl).build();
-      return HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient)).build();
+    JsonMapper jsonMapper() {
+      return new JsonMapper();
     }
 
     @Bean
