@@ -98,21 +98,17 @@ When enabled, `EnabledTenantMessageFilter` intercepts every incoming record:
 
 ### Tenant entitlement service
 
-When `tenant-filter.enabled=true`, the application context must expose an
-`HttpServiceProxyFactory` bean configured with the base URL of the tenant-entitlement service.
-The library creates the `TenantEntitlementClient` from it automatically.
+When `tenant-filter.enabled=true`, the library creates and configures the `TenantEntitlementClient`
+automatically. The consuming application only needs to supply the base URL via the `okapi.url`
+property — no manually created beans are required.
 
-```java
-@Bean
-public HttpServiceProxyFactory httpServiceProxyFactory(RestClient.Builder restClientBuilder) {
-    RestClient restClient = restClientBuilder
-        .baseUrl("http://mgr-tenant-entitlements:8080")
-        .build();
-    return HttpServiceProxyFactory
-        .builderFor(RestClientAdapter.create(restClient))
-        .build();
-}
+```yaml
+okapi:
+  url: http://mgr-tenant-entitlements:8080
 ```
+
+If the `loggingInterceptor` bean from `folio-spring-support` is present on the classpath, it is
+picked up automatically and applied to every request made by the entitlement client.
 
 ### Filtering configuration
 
