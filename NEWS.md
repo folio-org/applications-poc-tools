@@ -1,3 +1,7 @@
+## Version `v4.0.1` (16.04.2026)
+### Changes:
+* Auto-configure tenant entitlement client from okapi.url (APPPOCTOOL-85)
+
 ## Version `v4.0.0` (14.04.2026)
 ### Changes:
 * Support find topics by name in KafkaAdminService (MGRENTITLE-135)
