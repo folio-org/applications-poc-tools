@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/entitlements/modules/mod-test-1.0.0"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": ["entitled-tenant"]
+  }
+}
