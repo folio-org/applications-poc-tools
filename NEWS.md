@@ -1,3 +1,7 @@
+## Version `v3.0.10` (22.04.2026)
+* Support tenant-aware Kafka message filtering (APPPOCTOOL-87)
+---
+
 ## Version `v3.0.9` (12.12.2025)
 * Upgrade Keycloak to 26.4.6 (KEYCLOAK-73)
 * Register JacksonProvider in ResteasyClient Keycloak for TLS connections (KEYCLOAK-90)
