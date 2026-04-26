@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.0.5</version>
+    <version>4.0.6</version>
     <relativePath />
   </parent>
 
@@ -39,15 +39,15 @@
     <java.version>21</java.version>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
-    <lombok.version>1.18.44</lombok.version>
-    <spring-boot.version>4.0.5</spring-boot.version>
+    <lombok.version>1.18.46</lombok.version>
+    <spring-boot.version>4.0.6</spring-boot.version>
     <apache-commons-collections4.version>4.5.0</apache-commons-collections4.version>
     <apache-commons-lang3.version>3.20.0</apache-commons-lang3.version>
     <keycloak-admin-client.version>26.0.8</keycloak-admin-client.version>
 
     <!-- Test dependencies versions -->
     <mockito.version>5.23.0</mockito.version>
-    <testcontainer.version>2.0.4</testcontainer.version>
+    <testcontainer.version>2.0.5</testcontainer.version>
     <instancio.version>5.5.1</instancio.version>
 
     <!-- Plugins versions -->

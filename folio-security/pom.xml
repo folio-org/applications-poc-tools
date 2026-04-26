@@ -12,7 +12,7 @@
 
   <properties>
     <spring-cloud-bom.version>2025.1.1</spring-cloud-bom.version>
-    <jwks-rsa.version>0.23.0</jwks-rsa.version>
+    <jwks-rsa.version>0.23.1</jwks-rsa.version>
 
     <sonar.exclusions>
       src/main/java/**/configuration/**/*,
