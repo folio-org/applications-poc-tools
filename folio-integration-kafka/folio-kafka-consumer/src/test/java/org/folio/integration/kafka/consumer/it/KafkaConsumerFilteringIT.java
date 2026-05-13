@@ -69,6 +69,7 @@ class KafkaConsumerFilteringIT {
 
   @Autowired private KafkaTemplate<String, String> kafkaTemplate;
   @Autowired private TestEventCollector eventCollector;
+  private ConcurrentKafkaListenerContainerFactory<String, ResourceEvent<Object>> resourceEventContainerFactory;
 
   @BeforeEach
   void setUp() {
@@ -77,7 +78,7 @@ class KafkaConsumerFilteringIT {
 
   @Test
   void filter_positive_entitledTenant_messageAccepted() throws Exception {
-    kafkaTemplate.send(TOPIC, asJsonString(new ResourceEvent<>().tenant(ENTITLED_TENANT))).get();
+    kafkaTemplate.send(TOPIC, asJsonString(resourceEvent(ENTITLED_TENANT))).get();
 
     var events = eventCollector.getEvents();
     await().atMost(10, SECONDS).untilAsserted(() ->
@@ -88,14 +89,20 @@ class KafkaConsumerFilteringIT {
 
   @Test
   void filter_positive_nonEntitledTenant_messageFiltered() throws Exception {
-    kafkaTemplate.send(TOPIC, asJsonString(new ResourceEvent<>().tenant(NON_ENTITLED_TENANT))).get();
-    kafkaTemplate.send(TOPIC, asJsonString(new ResourceEvent<>().tenant(ENTITLED_TENANT))).get();
+    kafkaTemplate.send(TOPIC, asJsonString(resourceEvent(NON_ENTITLED_TENANT))).get();
+    kafkaTemplate.send(TOPIC, asJsonString(resourceEvent(ENTITLED_TENANT))).get();
 
     var events = eventCollector.getEvents();
     await().atMost(10, SECONDS).untilAsserted(() ->
       assertThat(events).hasSize(1)
     );
     assertThat(events.getFirst().value().getTenant()).isEqualTo(ENTITLED_TENANT);
+  }
+
+  private static Object resourceEvent(String tenant) {
+    var event = new ResourceEvent<>();
+    event.setTenant(tenant);
+    return event;
   }
 
   @org.springframework.kafka.annotation.EnableKafka
