@@ -77,7 +77,7 @@ class KafkaConsumerFilteringIT {
 
   @Test
   void filter_positive_entitledTenant_messageAccepted() throws Exception {
-    kafkaTemplate.send(TOPIC, asJsonString(ResourceEvent.builder().tenant(ENTITLED_TENANT).build())).get();
+    kafkaTemplate.send(TOPIC, asJsonString(new ResourceEvent<>().tenant(ENTITLED_TENANT))).get();
 
     var events = eventCollector.getEvents();
     await().atMost(10, SECONDS).untilAsserted(() ->
@@ -88,8 +88,8 @@ class KafkaConsumerFilteringIT {
 
   @Test
   void filter_positive_nonEntitledTenant_messageFiltered() throws Exception {
-    kafkaTemplate.send(TOPIC, asJsonString(ResourceEvent.builder().tenant(NON_ENTITLED_TENANT).build())).get();
-    kafkaTemplate.send(TOPIC, asJsonString(ResourceEvent.builder().tenant(ENTITLED_TENANT).build())).get();
+    kafkaTemplate.send(TOPIC, asJsonString(new ResourceEvent<>().tenant(NON_ENTITLED_TENANT))).get();
+    kafkaTemplate.send(TOPIC, asJsonString(new ResourceEvent<>().tenant(ENTITLED_TENANT))).get();
 
     var events = eventCollector.getEvents();
     await().atMost(10, SECONDS).untilAsserted(() ->

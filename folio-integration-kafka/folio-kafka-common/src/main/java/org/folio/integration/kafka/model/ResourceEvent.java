@@ -1,7 +1,6 @@
 package org.folio.integration.kafka.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
 import lombok.Data;
 import org.jspecify.annotations.Nullable;
 
@@ -16,7 +15,6 @@ import org.jspecify.annotations.Nullable;
  * @param <T> the domain resource type carried in this event
  */
 @Data
-@Builder
 public class ResourceEvent<T> implements TenantAwareEvent {
 
   /**
@@ -52,4 +50,34 @@ public class ResourceEvent<T> implements TenantAwareEvent {
   @Nullable
   @JsonProperty("old")
   private T oldValue;
+
+  public ResourceEvent<T> id(String id) {
+    this.id = id;
+    return this;
+  }
+
+  public ResourceEvent<T> type(ResourceEventType type) {
+    this.type = type;
+    return this;
+  }
+
+  public ResourceEvent<T> tenant(String tenant) {
+    this.tenant = tenant;
+    return this;
+  }
+
+  public ResourceEvent<T> resourceName(String resourceName) {
+    this.resourceName = resourceName;
+    return this;
+  }
+
+  public ResourceEvent<T> newValue(T newValue) {
+    this.newValue = newValue;
+    return this;
+  }
+
+  public ResourceEvent<T> oldValue(T oldValue) {
+    this.oldValue = oldValue;
+    return this;
+  }
 }
