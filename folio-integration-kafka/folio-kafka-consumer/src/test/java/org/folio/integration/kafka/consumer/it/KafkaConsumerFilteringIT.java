@@ -69,7 +69,6 @@ class KafkaConsumerFilteringIT {
 
   @Autowired private KafkaTemplate<String, String> kafkaTemplate;
   @Autowired private TestEventCollector eventCollector;
-  private ConcurrentKafkaListenerContainerFactory<String, ResourceEvent<Object>> resourceEventContainerFactory;
 
   @BeforeEach
   void setUp() {
