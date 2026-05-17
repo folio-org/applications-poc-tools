@@ -181,7 +181,8 @@ class EnabledTenantMessageFilterTest {
   }
 
   private static ConsumerRecord<String, ResourceEvent<Object>> consumerRecord(String key, String tenant) {
-    var event = ResourceEvent.builder().tenant(tenant).build();
+    var event = new ResourceEvent<>();
+    event.setTenant(tenant);
     return new ConsumerRecord<>("test-topic", 0, 0L, key, event);
   }
 }
