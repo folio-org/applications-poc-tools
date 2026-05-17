@@ -2,6 +2,7 @@ package org.folio.integration.kafka.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -19,6 +20,7 @@ import org.jspecify.annotations.Nullable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder(builderMethodName = "baseBuilder")
 public class ResourceEvent<T> implements TenantAwareEvent {
 
   /**
