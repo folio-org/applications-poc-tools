@@ -1,4 +1,8 @@
-## Version `v3.1.0` (in progress)
+## Version `4.1.0` (In Progress)
+### Changes:
+* Upgrade Keycloak testcontainers to 26.6.2, keycloak-admin-client to 26.0.9 (KEYCLOAK-112)
+
+## Version `v4.0.0` (14.04.2026)
 ### Changes:
 * Support find topics by name in KafkaAdminService (MGRENTITLE-135)
 * Validate semver when getting name or version from artifact id (MGRENTITLE-113)
