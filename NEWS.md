@@ -1,3 +1,7 @@
+## Version `v4.0.2` (22.05.2026)
+### Changes:
+* Add Jackson deserialization support to ResourceEvent alongside builder (MODUSERSKC-154)
+
 ## Version `v4.0.1` (16.04.2026)
 ### Changes:
 * Auto-configure tenant entitlement client from okapi.url (APPPOCTOOL-85)
