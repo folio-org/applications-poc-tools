@@ -1,3 +1,7 @@
+## Version `4.0.3` (29.05.2026)
+### Changes:
+* Upgrade Keycloak testcontainers to 26.6.2, keycloak-admin-client to 26.0.9 (KEYCLOAK-112)
+
 ## Version `v4.0.2` (22.05.2026)
 ### Changes:
 * Add Jackson deserialization support to ResourceEvent alongside builder (MODUSERSKC-154)
