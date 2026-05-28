@@ -1,3 +1,6 @@
+## Version `v3.0.11` (28.05.2026)
+* Upgrade Keycloak testcontainers to 26.6.2, keycloak-admin-client to 26.0.9 (KEYCLOAK-112)
+
 ## Version `v3.0.10` (22.04.2026)
 * Support tenant-aware Kafka message filtering (APPPOCTOOL-87)
 ---
