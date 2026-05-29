@@ -44,6 +44,7 @@
     <apache-commons-collections4.version>4.5.0</apache-commons-collections4.version>
     <apache-commons-lang3.version>3.20.0</apache-commons-lang3.version>
     <keycloak-admin-client.version>26.0.9</keycloak-admin-client.version>
+    <kafka.version>4.2.0</kafka.version> <!-- can be removed once Spring Boot migrates to this version -->
 
     <!-- Test dependencies versions -->
     <mockito.version>5.23.0</mockito.version>

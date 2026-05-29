@@ -1,6 +1,9 @@
-## Version `4.1.0` (In Progress)
+## Version `v4.1.0` (in progress)
 ### Changes:
 * Upgrade Keycloak testcontainers to 26.6.2, keycloak-admin-client to 26.0.9 (KEYCLOAK-112)
+* Upgrade dependencies for Kafka 4.2 compatibility in applications-poc-tools (APPPOCTOOL-90)
+
+-------
 
 ## Version `v4.0.0` (14.04.2026)
 ### Changes:
@@ -26,6 +29,3 @@
 * Bump Spring Boot from 4.0.3 to 4.0.4 fixing Jackson vulns (APPPOCTOOL-83)
 * Upgrade Keycloak testcontainers to 26.5.7 (KEYCLOAK-102)
 * Support tenant-aware Kafka message filtering (APPPOCTOOL-85)
-
-### Migration:
-* Replace KeycloakSecretUtils with SecureStoreKeyProvider, add `application.secret-store.environment=${SECURE_STORE_ENV:folio}` to application.yaml (for Ramsons and Sunflower: add `application.secret-store.environment=${SECURE_STORE_ENV:${ENV:folio}}` to application.yaml).

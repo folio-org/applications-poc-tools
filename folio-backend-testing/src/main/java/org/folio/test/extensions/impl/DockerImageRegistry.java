@@ -13,7 +13,7 @@ public class DockerImageRegistry {
   public static final String POSTGRES_DEFAULT_IMAGE = "postgres:16-alpine";
   public static final String WIREMOCK_DEFAULT_IMAGE = "wiremock/wiremock:3.13.2-2";
   public static final String KEYCLOAK_DEFAULT_IMAGE = "quay.io/keycloak/keycloak:26.6.2";
-  public static final String KAFKA_DEFAULT_IMAGE    = "apache/kafka-native:3.8.0";
+  public static final String KAFKA_DEFAULT_IMAGE    = "apache/kafka-native:4.2.0";
 
   public static String getPostgresImageName() {
     return getImageName(POSTGRES_IMAGE_ENV, POSTGRES_DEFAULT_IMAGE);
