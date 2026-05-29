@@ -1,5 +1,6 @@
 ## Version `v4.1.0` (in progress)
 ### Changes:
+* Upgrade Keycloak testcontainers to 26.6.2, keycloak-admin-client to 26.0.9 (KEYCLOAK-112)
 * Upgrade dependencies for Kafka 4.2 compatibility in applications-poc-tools (APPPOCTOOL-90)
 
 -------
