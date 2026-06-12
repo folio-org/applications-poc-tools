@@ -1,223 +1,47 @@
-# AGENTS.md - Coding Agent Guidelines for applications-poc-tools
+# applications-poc-tools
 
-## Project Overview
+Multi-module Maven library of shared classes for FOLIO backend development and testing. Spring Boot 4.0.2, Java 21, Log4j2.
 
-This is **applications-poc-tools**, a multi-module Maven library providing general-purpose classes for FOLIO backend development and testing. It's built on Spring Boot 4.0.2 with Java 21 and uses Log4j2 for logging.
+## Build & Test
 
-## Build Commands
-
-### Build entire project
 ```bash
-mvn clean install
+mvn clean install              # full build
+mvn clean install -DskipTests  # skip tests
+mvn test                       # unit tests (groups=unit, surefire)
+mvn verify                     # integration tests (groups=integration, failsafe)
+mvn test -pl folio-security    # single module
+mvn test -Dtest=JsonWebTokenParserTest  # single class
+mvn checkstyle:check           # runs at process-classes; violations fail build
 ```
 
-### Build specific module
-```bash
-cd folio-backend-common
-mvn clean install
-```
+After API/dependency changes, run the "Verify Dependent Modules" GitHub Actions workflow. Dependents: mgr-applications, mgr-tenants, mgr-tenant-entitlements, mod-roles-keycloak, mod-login-keycloak, mod-users-keycloak, mod-scheduler, mod-consortia-keycloak, folio-module-sidecar.
 
-### Run unit tests only
-```bash
-mvn test
-```
-
-### Run integration tests
-```bash
-mvn verify
-```
-
-### Run tests for a specific module
-```bash
-mvn test -pl folio-security
-```
-
-### Run checkstyle
-```bash
-mvn checkstyle:check
-```
-
-### Skip tests during build
-```bash
-mvn clean install -DskipTests
-```
-
-### Run a single test class
-```bash
-mvn test -Dtest=JsonWebTokenParserTest
-```
-
-### Verify dependent modules (after API changes)
-Trigger the "Verify Dependent Modules" GitHub Actions workflow manually via GitHub UI or CLI.
-
-## Module Architecture
-
-### Core Modules and Dependencies
+## Modules
 
 ```
-folio-backend-common (foundation layer)
-  ├── folio-backend-testing (test infrastructure)
-  ├── folio-tls-utils (SSL/TLS utilities)
-  ├── folio-security (authentication/authorization)
-  │   ├── folio-auth-openid (JWT parsing)
-  │   ├── folio-secret-store (secret management)
-  │   └── folio-integration-kafka (event streaming)
-  ├── folio-integration-kong (API Gateway)
-  └── folio-permission-utils (permission parsing)
+folio-backend-common (foundation: ApplicationDescriptor, ModuleDescriptor, CqlQuery, OkapiHeaders)
+  ├── folio-backend-testing   TestContainers base (BaseBackendIntegrationTest); @EnablePostgres/@EnableKafka/@EnableKeycloakSecurity/@EnableWireMock; TestJwtGenerator
+  ├── folio-tls-utils          SSL/TLS for HTTP clients (HttpClientTlsUtils, ClientBuildUtils); PKCS12/JKS
+  ├── folio-security           Pluggable auth: Keycloak (OAuth2/OIDC) or Okapi (legacy); @EnableMgrSecurity; backend chosen by properties
+  │   ├── folio-auth-openid    JWT parsing (JsonWebTokenParser, OpenidJwtParserProvider); pure Java, Jackson 3
+  │   ├── folio-secret-store   Secrets: Vault/AWS-SSM/FsspStore/Ephemeral via SecureStoreFactory
+  │   └── folio-integration-kafka  Spring Kafka abstraction; @EnableKafka, KafkaAdminService
+  ├── folio-integration-kong   Kong Admin API: KongGatewayService, KongModuleRegistrar, route DSL
+  └── folio-permission-utils   Permission parsing (DATA/SETTINGS/PROCEDURAL; VIEW/CREATE/EDIT/DELETE/MANAGE/EXECUTE); pure Java
 ```
 
-### folio-backend-common
-Foundation module providing:
-- Domain models: `ApplicationDescriptor`, `ModuleDescriptor`, `Capability`, `Permission`
-- Utilities: `CqlQuery`, `SemverUtils`, `OkapiHeaders`, `UuidUtils`
-- Services: Transaction helpers, REST client support
-- Location: Root utilities used by all other modules
+## Conventions
 
-### folio-security
-Pluggable security framework with two authentication backends:
-- **Keycloak** (modern): OAuth2/OpenID Connect with JWT validation
-- **Okapi** (legacy): Token-based authentication for legacy FOLIO systems
-- Key classes: `AuthorizationFilter`, `KeycloakAuthorizationService`, `OkapiAuthorizationService`
-- HTTP clients: Uses Spring HTTP Service Clients (Spring Framework 6.1+) for remote API calls
-- Activation: Use `@EnableMgrSecurity` annotation to enable security configuration
-- Backend selection: Controlled via application properties at runtime
+- **Feature activation**: annotations (`@EnableMgrSecurity`, `@EnableKafka`) + properties (`application.kong.enabled`, `application.kong.register-module`).
+- **Tests**: tag `@UnitTest`/`@IntegrationTest`; surefire runs `groups=unit`, failsafe `groups=integration`. Mockito v5.
+- **Checkstyle**: `folio-java-checkstyle:1.2.0`; config/suppressions under `checkstyle/`.
+- **Jackson 3**: runtime in `tools.jackson.*`; annotations stay on `com.fasterxml.jackson.annotation.*`. ObjectMapper uses `.rebuild()...build()`. Jackson 2 also on classpath (JWT/Resteasy) — no conflict.
+- **HTTP clients**: Spring HTTP Service Clients (`@HttpExchange`) over RestClient; Resteasy only for Keycloak admin client.
+- **Null-safety**: JSpecify (`@Nullable`/`@NonNull`); Spring `org.springframework.lang.*` is deprecated.
+- **Secret store env var**: use `SECURE_STORE_ENV` (not `ENV`) → `application.secret-store.environment=${SECURE_STORE_ENV:folio}`.
+- **Security plugin**: both Keycloak and Okapi configs imported; active backend selected by `application.yaml` (no code change).
+- **Lombok**: configured via root `lombok.config`; processor declared in maven-compiler-plugin.
 
-### folio-auth-openid
-JWT token parsing and validation:
-- `JsonWebTokenParser`: Validates JWT structure and issuer claims
-- `OpenidJwtParserProvider`: Provides cached JWT parsers with automatic cache invalidation on key rotation
-- Uses Jackson 3 for JSON processing
-- No Spring dependencies (minimal library)
+## Repo
 
-### folio-secret-store
-Multi-backend secret management with factory pattern:
-- **Implementations**: VaultStore (HashiCorp Vault), AwsStore (AWS SSM), FsspStore (File System), EphemeralStore (in-memory)
-- **Common module**: Pure Java, no Spring dependencies
-- **Starter module**: Spring Boot auto-configuration bridge
-- `SecureStoreFactory`: Selects implementation based on type string
-
-### folio-backend-testing
-Test infrastructure with TestContainers:
-- Base class: `BaseBackendIntegrationTest`
-- Annotations: `@EnablePostgres`, `@EnableKafka`, `@EnableKeycloakSecurity`, `@EnableWireMock`
-- Test markers: `@IntegrationTest` (runs via maven-failsafe-plugin), `@UnitTest` (runs via maven-surefire-plugin)
-- Utilities: `TestJwtGenerator`, `FakeKafkaConsumer`
-- Uses Jackson 3 for JSON processing in tests
-
-### folio-integration-kafka
-Spring Kafka abstraction:
-- `@EnableKafka`: Activates topic configuration
-- `KafkaAdminService`: Topic management operations
-- `FolioKafkaProperties`: Externalized Kafka configuration
-- Uses Spring Boot 4 Kafka starter
-
-### folio-integration-kong
-Kong API Gateway integration:
-- `KongGatewayService`: Gateway operations
-- `KongModuleRegistrar`: Application registration lifecycle
-- `KongRouteTenantService`: Multi-tenant route management
-- Route DSL: Type-safe builders (`StringExpressionBuilder`, `IntExpressionBuilder`, `IpAddressOperator`)
-- HTTP clients: Uses Spring HTTP Service Clients for Kong Admin API communication
-
-### folio-tls-utils
-SSL/TLS configuration for HTTP clients:
-- `HttpClientTlsUtils`: Build SSL-enabled HTTP Service Clients with custom keystores
-- `ClientBuildUtils`: Build SSL-enabled Resteasy clients
-- Supports PKCS12, JKS keystores
-- Configurable hostname verification (supports debug mode)
-- Provides `Utils.buildSslContext()` for creating SSLContext from TLS properties
-
-### folio-permission-utils
-Permission string parsing and classification:
-- `extractPermissionData()`: Parses permission names into structured data
-- Types: DATA, SETTINGS, PROCEDURAL
-- Actions: VIEW, CREATE, EDIT, DELETE, MANAGE, EXECUTE
-- Pure Java utility (no Spring dependency)
-
-## Common Patterns
-
-### Annotation-Based Activation
-Modules use annotations to activate features:
-- `@EnableMgrSecurity` → SecurityConfiguration
-- `@EnableKafka` → KafkaTopicConfiguration
-- `@EnableKeycloakSecurity`, `@EnablePostgres` → Test extensions
-
-### Property-Driven Configuration
-Feature toggles via application properties:
-- `application.kong.enabled` → Gates Kong initialization
-- `application.kong.register-module` → Gates module registration
-- Security backend selection (Keycloak vs Okapi) → Runtime configuration
-
-### Testing Strategy
-- **Unit tests**: Annotated with `@UnitTest`, run via maven-surefire-plugin (groups=unit)
-- **Integration tests**: Annotated with `@IntegrationTest`, run via maven-failsafe-plugin (groups=integration)
-- TestContainers: Used for Postgres, Kafka, Keycloak, WireMock
-- Mockito v5.20.0 for mocking
-
-### Checkstyle
-- Uses FOLIO Java checkstyle rules (`folio-java-checkstyle:1.2.0`)
-- Configuration: `checkstyle/checkstyle.xml` (from folio-java-checkstyle)
-- Suppressions: `checkstyle/checkstyle-suppressions.xml`
-- Runs during `process-classes` phase
-- Violations cause build failure
-
-## Technology Stack
-
-### Spring Boot 4.0.2
-- Upgraded from Spring Boot 3.5.7
-- Uses Spring Framework 7.0
-- Jackson 3.x for JSON processing (`tools.jackson.*` package namespace)
-- Spring HTTP Service Clients for declarative HTTP APIs (replaces OpenFeign)
-
-### Jackson 3.x
-- Package namespace: `tools.jackson.core.*` and `tools.jackson.databind.*`
-- Annotations still use Jackson 2.x namespace: `com.fasterxml.jackson.annotation.*` (by design)
-- ObjectMapper uses builder pattern: `new ObjectMapper().rebuild()...build()`
-- Jackson 2.x also on classpath (from JWT/Resteasy libraries) - no conflicts due to different packages
-
-### HTTP Clients
-- **Spring HTTP Service Clients**: Modern declarative HTTP client using `@HttpExchange` annotations
-- **RestClient**: Underlying HTTP client for Spring HTTP Service Clients
-- **Resteasy**: Used by Keycloak admin client
-- All support SSL/TLS configuration via `HttpClientTlsUtils` and `ClientBuildUtils`
-
-### Null-Safety
-- Uses JSpecify annotations (`org.jspecify.annotations.*`)
-- `@Nullable`: Marks types that can be null
-- `@NonNull`: Marks types that cannot be null (explicit annotation)
-- Spring Framework 7 deprecated `org.springframework.lang.*` null-safety annotations
-
-## Important Notes
-
-### Security Architecture
-The security module implements a plugin pattern:
-- Both `KeycloakSecurityConfiguration` and `OkapiSecurityConfiguration` are imported
-- Spring creates beans only for the active backend based on properties
-- Switch backends by changing application.yaml (no code changes needed)
-
-### Secret Store Environment Variable
-- Use `SECURE_STORE_ENV` environment variable (NOT `ENV`)
-- Configuration: `application.secret-store.environment=${SECURE_STORE_ENV:folio}`
-- See NEWS.md for migration details
-
-### Test Categories
-Tests MUST be annotated with markers:
-- `@Tag("unit")` for unit tests
-- `@Tag("integration")` for integration tests
-- Maven surefire runs `groups=unit`, failsafe runs `groups=integration`
-
-### Lombok Configuration
-- `lombok.config` at root configures annotation processing
-- Lombok annotation processor declared in maven-compiler-plugin
-
-### Dependent Modules
-After API or dependency changes, verify dependent modules build successfully:
-- Dependent services: mgr-applications, mgr-tenants, mgr-tenant-entitlements, mod-roles-keycloak, mod-login-keycloak, mod-users-keycloak, mod-scheduler, mod-consortia-keycloak, folio-module-sidecar
-- Trigger "Verify Dependent Modules" workflow via GitHub Actions
-
-## Repository Information
-
-- GitHub: https://github.com/folio-org/applications-poc-tools
-- Main branch: `master`
-- Maven repositories: FOLIO Nexus (https://repository.folio.org/repository/maven-folio)
-- License: Apache License 2.0
+GitHub: https://github.com/folio-org/applications-poc-tools · branch `master` · Nexus: https://repository.folio.org/repository/maven-folio · Apache-2.0. Full env vars in `README.md`.
