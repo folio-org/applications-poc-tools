@@ -1,8 +1,12 @@
 package org.folio.integration.kafka.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -16,7 +20,9 @@ import org.jspecify.annotations.Nullable;
  * @param <T> the domain resource type carried in this event
  */
 @Data
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder(builderMethodName = "baseBuilder")
 public class ResourceEvent<T> implements TenantAwareEvent {
 
   /**
@@ -27,11 +33,13 @@ public class ResourceEvent<T> implements TenantAwareEvent {
   /**
    * Event type.
    */
+  @NotNull
   private ResourceEventType type;
 
   /**
    * Tenant identifier (name).
    */
+  @NotBlank
   private String tenant;
 
   /**
