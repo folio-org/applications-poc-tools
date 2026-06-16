@@ -7,12 +7,10 @@ import static org.apache.http.conn.ssl.NoopHostnameVerifier.INSTANCE;
 import static org.apache.http.ssl.SSLContextBuilder.create;
 import static org.folio.test.TestUtils.parse;
 import static org.folio.test.TestUtils.readString;
-import static org.folio.test.TestUtils.readToFile;
 import static org.folio.test.extensions.impl.DockerImageRegistry.getKeycloakImageName;
 import static org.springframework.util.ResourceUtils.getFile;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import java.util.List;
 import javax.net.ssl.SSLContext;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -30,13 +28,17 @@ import org.keycloak.representations.idm.PartialImportRepresentation;
 @Log4j2
 public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
-  private static final String REALM_JSON = "json/keycloak/master-realm.json";
-  private static final String IMPORTED_CLIENT_ID = "folio-backend-admin-client";
-  private static final String IMPORTED_CLIENT_SECRET = "supersecret";
+  private static final String RUN_MODE = "dev";
+  private static final String LOG_LEVEL = "INFO";
+  private static final String FOLIO_BACKEND_ADMIN_CLIENT = "folio-backend-admin-client";
+  private static final String FOLIO_BACKEND_ADMIN_CLIENT_SECRET = "supersecret";
 
   private static final String SSL_KEYSTORE_PATH = "certificates/test.keystore.jks";
   private static final String SSL_TRUSTSTORE_PATH = "classpath:certificates/test.truststore.jks";
   private static final String SSL_KEYSTORE_PASSWORD = "secretpassword";
+  private static final String SSL_KEYSTORE_TYPE = "JKS";
+
+  private static final String REALM_JSON = "json/keycloak/master-realm.json";
 
   private static final KeycloakContainer CONTAINER = keycloakContainer(getKeycloakImageName());
 
@@ -53,8 +55,8 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
     setupMasterRealm();
 
     System.setProperty("KC_URL", CONTAINER.getAuthServerUrl());
-    System.setProperty("KC_ADMIN_CLIENT_ID", IMPORTED_CLIENT_ID);
-    System.setProperty("KC_ADMIN_CLIENT_SECRET", IMPORTED_CLIENT_SECRET);
+    System.setProperty("KC_ADMIN_CLIENT_ID", FOLIO_BACKEND_ADMIN_CLIENT);
+    System.setProperty("KC_ADMIN_CLIENT_SECRET", FOLIO_BACKEND_ADMIN_CLIENT_SECRET);
     System.setProperty("KC_ADMIN_USERNAME", CONTAINER.getAdminUsername());
     System.setProperty("KC_ADMIN_PASSWORD", CONTAINER.getAdminPassword());
     System.setProperty("KC_ADMIN_GRANT_TYPE", OAuth2Constants.CLIENT_CREDENTIALS);
@@ -109,10 +111,14 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   @SuppressWarnings("resource")
   private static KeycloakContainer keycloakContainer(String keycloakImageName) {
     return new KeycloakContainer(keycloakImageName)
-      .withFeaturesEnabled("scripts:v1", "token-exchange:v1", "admin-fine-grained-authz:v1")
+      .withEnv("KC_RUN_MODE", RUN_MODE)
       .withAdminUsername("keycloak-test-admin")
       .withAdminPassword(RandomStringUtils.secure().next(20, true, true))
-      .withProviderLibsFrom(List.of(readToFile("keycloak/folio-scripts.jar", "folio-scripts", ".jar")))
+      .withEnv("KC_FOLIO_BE_ADMIN_CLIENT_ID", FOLIO_BACKEND_ADMIN_CLIENT)
+      .withEnv("KC_FOLIO_BE_ADMIN_CLIENT_SECRET", FOLIO_BACKEND_ADMIN_CLIENT_SECRET)
+      .withEnv("KC_HTTPS_KEY_STORE_TYPE", SSL_KEYSTORE_TYPE)
+      .withEnv("KC_LOG_LEVEL", LOG_LEVEL)
+      //.withVerboseOutput()
       .useTlsKeystore(SSL_KEYSTORE_PATH, SSL_KEYSTORE_PASSWORD);
   }
 
