@@ -37,6 +37,18 @@ To map additional system properties to the WireMock URL, create a `wiremock-url.
 - `@KeycloakRealms` -- specifies Keycloak realm JSON files to import
 
 ## Utilities
+### Readiness check
+
+The folio-keycloak image runs `configure-realms.sh` as a background process on startup (see
+`folio/start.sh` in [folio-org/folio-keycloak](https://github.com/folio-org/folio-keycloak)). That
+script calls `folio/setup-admin-client.sh`, which creates a `folio-backend-admin-client` with
+`admin` and `create-realm` roles in the master realm. This happens *after* Keycloak's HTTP endpoint
+is already healthy, so the standard Testcontainers wait strategy is not sufficient.
+
+`KeycloakContainerExtension` performs an additional wait after `start()` by polling the container
+logs until the success message from `setup-admin-client.sh` appears. Tests start only after this
+completes, ensuring the admin client is present. The wait is bounded by
+`TESTCONTAINERS_KEYCLOAK_READINESS_TIMEOUT` (default 60 s).
 
 - `TestUtils` -- JSON serialization helpers (`asJsonString`, `parse`, `readString`)
 - `TestConstants` -- shared test constants (e.g., `OKAPI_AUTH_TOKEN`)
