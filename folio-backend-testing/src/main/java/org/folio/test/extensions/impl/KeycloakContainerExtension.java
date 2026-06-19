@@ -38,8 +38,6 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   private static final String SSL_KEYSTORE_PASSWORD = "secretpassword";
   private static final String SSL_KEYSTORE_TYPE = "JKS";
 
-  private static final String REALM_JSON = "json/keycloak/master-realm.json";
-
   private static final KeycloakContainer CONTAINER = keycloakContainer(getKeycloakImageName());
 
   private static Keycloak ADMIN_CLIENT;
@@ -91,14 +89,6 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
 
   private static void setupMasterRealm() {
     log.info("Setting up master realm");
-    /*var realmJson = readString(REALM_JSON);
-    var realmPartialImport = parse(realmJson, PartialImportRepresentation.class);
-    var masterRealm = ADMIN_CLIENT.realm(MASTER_REALM);
-    try (var response = masterRealm.partialImport(realmPartialImport)) {
-      if (response.getStatus() >= 400) {
-        log.warn("Failed to partially import master realm: reason = {}", response.getEntity());
-      }
-    }*/
 
     var masterRealmRepresentation = ADMIN_CLIENT.realm(MASTER_REALM).toRepresentation();
     masterRealmRepresentation.setAccessTokenLifespan(900);
