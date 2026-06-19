@@ -28,8 +28,13 @@ import org.keycloak.admin.client.KeycloakBuilder;
 @Log4j2
 public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCallback {
 
+  private static final String ENV_KEYCLOAK_LOG_LEVEL = "TESTCONTAINERS_KEYCLOAK_LOG_LEVEL";
+  private static final String ENV_KEYCLOAK_READINESS_TIMEOUT = "TESTCONTAINERS_KEYCLOAK_READINESS_TIMEOUT";
+
+  private static final String DEFAULT_LOG_LEVEL = "INFO";
+  private static final long DEFAULT_CONTAINER_READINESS_TIMEOUT = 60; // in seconds
+
   private static final String RUN_MODE = "dev";
-  private static final String LOG_LEVEL = "INFO";
   private static final String FOLIO_BACKEND_ADMIN_CLIENT = "folio-backend-admin-client";
   private static final String FOLIO_BACKEND_ADMIN_CLIENT_SECRET = "supersecret";
 
@@ -38,21 +43,33 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   private static final String SSL_KEYSTORE_PASSWORD = "secretpassword";
   private static final String SSL_KEYSTORE_TYPE = "JKS";
 
-  private static final KeycloakContainer CONTAINER = keycloakContainer(getKeycloakImageName());
+  private static final String CONTAINER_LOG_LEVEL;
+  private static final long CONTAINER_READINESS_TIMEOUT;
+  private static final KeycloakContainer CONTAINER;
 
-  private static Keycloak ADMIN_CLIENT;
+  private static Keycloak adminClient;
+
+  static {
+    var env = System.getenv();
+
+    CONTAINER_LOG_LEVEL = env.getOrDefault(ENV_KEYCLOAK_LOG_LEVEL, DEFAULT_LOG_LEVEL);
+    CONTAINER_READINESS_TIMEOUT = Long.parseLong(
+      env.getOrDefault(ENV_KEYCLOAK_READINESS_TIMEOUT, String.valueOf(DEFAULT_CONTAINER_READINESS_TIMEOUT)));
+
+    CONTAINER = keycloakContainer(getKeycloakImageName());
+  }
 
   @Override
   public void beforeAll(ExtensionContext context) {
     if (!CONTAINER.isRunning()) {
       CONTAINER.start();
 
-      await().atMost(60, TimeUnit.SECONDS).until(
+      await().atMost(CONTAINER_READINESS_TIMEOUT, TimeUnit.SECONDS).until(
         () -> CONTAINER.isRunning() && containerIsReady()
       );
     }
 
-    ADMIN_CLIENT = keycloakAdminClient();
+    adminClient = keycloakAdminClient();
 
     setupMasterRealm();
 
@@ -62,11 +79,6 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
     System.setProperty("KC_ADMIN_USERNAME", CONTAINER.getAdminUsername());
     System.setProperty("KC_ADMIN_PASSWORD", CONTAINER.getAdminPassword());
     System.setProperty("KC_ADMIN_GRANT_TYPE", OAuth2Constants.CLIENT_CREDENTIALS);
-  }
-
-  private static boolean containerIsReady() {
-    return CONTAINER.getLogs()
-      .contains(format("Admin client '%s' has been created successfully", FOLIO_BACKEND_ADMIN_CLIENT));
   }
 
   @Override
@@ -80,19 +92,24 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   }
 
   public static Keycloak getKeycloakAdminClient() {
-    if (ADMIN_CLIENT == null) {
+    if (adminClient == null) {
       throw new IllegalStateException("Keycloak admin client isn't initialized");
     }
 
-    return ADMIN_CLIENT;
+    return adminClient;
+  }
+
+  private static boolean containerIsReady() {
+    return CONTAINER.getLogs()
+      .contains(format("Admin client '%s' has been created successfully", FOLIO_BACKEND_ADMIN_CLIENT));
   }
 
   private static void setupMasterRealm() {
     log.info("Setting up master realm");
 
-    var masterRealmRepresentation = ADMIN_CLIENT.realm(MASTER_REALM).toRepresentation();
+    var masterRealmRepresentation = adminClient.realm(MASTER_REALM).toRepresentation();
     masterRealmRepresentation.setAccessTokenLifespan(900);
-    ADMIN_CLIENT.realm(MASTER_REALM).update(masterRealmRepresentation);
+    adminClient.realm(MASTER_REALM).update(masterRealmRepresentation);
   }
 
   private static Keycloak keycloakAdminClient() {
@@ -116,8 +133,7 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
       .withEnv("KC_FOLIO_BE_ADMIN_CLIENT_ID", FOLIO_BACKEND_ADMIN_CLIENT)
       .withEnv("KC_FOLIO_BE_ADMIN_CLIENT_SECRET", FOLIO_BACKEND_ADMIN_CLIENT_SECRET)
       .withEnv("KC_HTTPS_KEY_STORE_TYPE", SSL_KEYSTORE_TYPE)
-      .withEnv("KC_LOG_LEVEL", LOG_LEVEL)
-      .withFeaturesEnabled("scripts:v1", "token-exchange:v1", "admin-fine-grained-authz:v1")
+      .withEnv("KC_LOG_LEVEL", CONTAINER_LOG_LEVEL)
       //.withVerboseOutput()
       .useTlsKeystore(SSL_KEYSTORE_PATH, SSL_KEYSTORE_PASSWORD);
   }
