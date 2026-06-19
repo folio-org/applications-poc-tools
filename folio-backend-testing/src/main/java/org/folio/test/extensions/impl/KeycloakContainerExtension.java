@@ -64,6 +64,11 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
     if (!CONTAINER.isRunning()) {
       CONTAINER.start();
 
+      // CONTAINER.start() returns as soon as Keycloak's HTTP endpoint responds, but the folio-keycloak
+      // image runs configure-realms.sh in the background (see folio/start.sh in folio-org/folio-keycloak).
+      // That script creates the folio-backend-admin-client via setup-admin-client.sh, which must complete
+      // before any test can authenticate. The extra await below blocks until setup-admin-client.sh logs
+      // its success message, confirming all custom initialization is done.
       await().atMost(CONTAINER_READINESS_TIMEOUT, TimeUnit.SECONDS).until(
         () -> CONTAINER.isRunning() && containerIsReady()
       );
@@ -99,6 +104,11 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
     return adminClient;
   }
 
+  // Checks for the success log line emitted by folio/setup-admin-client.sh in folio-org/folio-keycloak
+  // once the admin client has been fully created. Log-scanning is the only available signal because
+  // configure-realms.sh is launched as a background process and has no hook into the Keycloak wait strategy.
+  // NOTE: if the log message in setup-admin-client.sh is ever changed, this check will silently
+  // time out — update the expected string here accordingly.
   private static boolean containerIsReady() {
     return CONTAINER.getLogs()
       .contains(format("Admin client '%s' has been created successfully", FOLIO_BACKEND_ADMIN_CLIENT));

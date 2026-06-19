@@ -25,19 +25,21 @@ All Testcontainers images can be overridden via environment variables. This is t
 point tests at images from a private Docker registry or to use a newer image version without
 changing source code.
 
-| Environment variable                | Default image                      | Container  |
-|:------------------------------------|:-----------------------------------|------------|
-| `TESTCONTAINERS_POSTGRES_IMAGE`     | `postgres:16-alpine`               | PostgreSQL |
-| `TESTCONTAINERS_KAFKA_IMAGE`        | `apache/kafka-native:4.2.0`        | Kafka      |
-| `TESTCONTAINERS_KEYCLOAK_IMAGE`     | `quay.io/keycloak/keycloak:26.6.3` | Keycloak   |
-| `TESTCONTAINERS_WIREMOCK_IMAGE`     | `wiremock/3.13.2-2-alpine`         | WireMock   |
+| Environment variable                        | Default                            | Description                              |
+|:--------------------------------------------|:-----------------------------------|:-----------------------------------------|
+| `TESTCONTAINERS_POSTGRES_IMAGE`             | `postgres:16-alpine`               | PostgreSQL image                         |
+| `TESTCONTAINERS_KAFKA_IMAGE`                | `apache/kafka-native:4.2.0`        | Kafka image                              |
+| `TESTCONTAINERS_KEYCLOAK_IMAGE`             | `folioci/folio-keycloak:latest`    | Keycloak image                           |
+| `TESTCONTAINERS_WIREMOCK_IMAGE`             | `wiremock/3.13.2-2-alpine`         | WireMock image                           |
+| `TESTCONTAINERS_KEYCLOAK_LOG_LEVEL`         | `INFO`                             | Keycloak container log level             |
+| `TESTCONTAINERS_KEYCLOAK_READINESS_TIMEOUT` | `60`                               | Seconds to wait for Keycloak custom-init |
 
 Example — redirect all containers to a private registry:
 
 ```shell
 export TESTCONTAINERS_POSTGRES_IMAGE=registry.example.com/postgres:16-alpine
 export TESTCONTAINERS_KAFKA_IMAGE=registry.example.com/apache/kafka-native:4.2.0
-export TESTCONTAINERS_KEYCLOAK_IMAGE=registry.example.com/keycloak/keycloak:26.6.3
+export TESTCONTAINERS_KEYCLOAK_IMAGE=registry.example.com/folioci/folio-keycloak:latest
 export TESTCONTAINERS_WIREMOCK_IMAGE=registry.example.com/wiremock:3.13.2-2-alpine
 ```
 
@@ -275,8 +277,18 @@ class MyTest {
 Keycloak starts with TLS enabled, a random admin password, and the following pre-configured
 features: `scripts:v1`, `token-exchange:v1`, `admin-fine-grained-authz:v1`.
 
-A `folio-backend-admin-client` (secret: `supersecret`) with `admin` and `create-realm` roles is
-imported into the master realm on first startup.
+### Readiness check
+
+The folio-keycloak image runs `configure-realms.sh` as a background process on startup (see
+`folio/start.sh` in [folio-org/folio-keycloak](https://github.com/folio-org/folio-keycloak)). That
+script calls `folio/setup-admin-client.sh`, which creates a `folio-backend-admin-client` with
+`admin` and `create-realm` roles in the master realm. This happens *after* Keycloak's HTTP endpoint
+is already healthy, so the standard Testcontainers wait strategy is not sufficient.
+
+`KeycloakContainerExtension` performs an additional wait after `start()` by polling the container
+logs until the success message from `setup-admin-client.sh` appears. Tests start only after this
+completes, ensuring the admin client is present. The wait is bounded by
+`TESTCONTAINERS_KEYCLOAK_READINESS_TIMEOUT` (default 60 s).
 
 ```java
 @IntegrationTest
