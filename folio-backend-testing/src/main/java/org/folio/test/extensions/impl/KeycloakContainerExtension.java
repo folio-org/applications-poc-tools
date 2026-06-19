@@ -3,14 +3,17 @@ package org.folio.test.extensions.impl;
 import static dasniko.testcontainers.keycloak.ExtendableKeycloakContainer.ADMIN_CLI_CLIENT;
 import static dasniko.testcontainers.keycloak.ExtendableKeycloakContainer.MASTER_REALM;
 import static jakarta.ws.rs.client.ClientBuilder.newBuilder;
+import static java.lang.String.format;
 import static org.apache.http.conn.ssl.NoopHostnameVerifier.INSTANCE;
 import static org.apache.http.ssl.SSLContextBuilder.create;
+import static org.awaitility.Awaitility.await;
 import static org.folio.test.TestUtils.parse;
 import static org.folio.test.TestUtils.readString;
 import static org.folio.test.extensions.impl.DockerImageRegistry.getKeycloakImageName;
 import static org.springframework.util.ResourceUtils.getFile;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -48,6 +51,10 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
   public void beforeAll(ExtensionContext context) {
     if (!CONTAINER.isRunning()) {
       CONTAINER.start();
+
+      await().atMost(60, TimeUnit.SECONDS).until(
+        () -> CONTAINER.isRunning() && containerIsReady()
+      );
     }
 
     ADMIN_CLIENT = keycloakAdminClient();
@@ -60,6 +67,11 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
     System.setProperty("KC_ADMIN_USERNAME", CONTAINER.getAdminUsername());
     System.setProperty("KC_ADMIN_PASSWORD", CONTAINER.getAdminPassword());
     System.setProperty("KC_ADMIN_GRANT_TYPE", OAuth2Constants.CLIENT_CREDENTIALS);
+  }
+
+  private static boolean containerIsReady() {
+    return CONTAINER.getLogs()
+      .contains(format("Admin client '%s' has been created successfully", FOLIO_BACKEND_ADMIN_CLIENT));
   }
 
   @Override
