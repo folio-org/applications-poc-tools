@@ -7,8 +7,6 @@ import static java.lang.String.format;
 import static org.apache.http.conn.ssl.NoopHostnameVerifier.INSTANCE;
 import static org.apache.http.ssl.SSLContextBuilder.create;
 import static org.awaitility.Awaitility.await;
-import static org.folio.test.TestUtils.parse;
-import static org.folio.test.TestUtils.readString;
 import static org.folio.test.extensions.impl.DockerImageRegistry.getKeycloakImageName;
 import static org.springframework.util.ResourceUtils.getFile;
 
@@ -26,7 +24,6 @@ import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.JacksonProvider;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.representations.idm.PartialImportRepresentation;
 
 @Log4j2
 public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCallback {
@@ -94,14 +91,14 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
 
   private static void setupMasterRealm() {
     log.info("Setting up master realm");
-    var realmJson = readString(REALM_JSON);
+    /*var realmJson = readString(REALM_JSON);
     var realmPartialImport = parse(realmJson, PartialImportRepresentation.class);
     var masterRealm = ADMIN_CLIENT.realm(MASTER_REALM);
     try (var response = masterRealm.partialImport(realmPartialImport)) {
       if (response.getStatus() >= 400) {
         log.warn("Failed to partially import master realm: reason = {}", response.getEntity());
       }
-    }
+    }*/
 
     var masterRealmRepresentation = ADMIN_CLIENT.realm(MASTER_REALM).toRepresentation();
     masterRealmRepresentation.setAccessTokenLifespan(900);
