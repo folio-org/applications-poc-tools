@@ -134,6 +134,7 @@ public class KeycloakContainerExtension implements BeforeAllCallback, AfterAllCa
       .withEnv("KC_FOLIO_BE_ADMIN_CLIENT_SECRET", FOLIO_BACKEND_ADMIN_CLIENT_SECRET)
       .withEnv("KC_HTTPS_KEY_STORE_TYPE", SSL_KEYSTORE_TYPE)
       .withEnv("KC_LOG_LEVEL", CONTAINER_LOG_LEVEL)
+      .withFeaturesEnabled("scripts:v1", "token-exchange:v1", "admin-fine-grained-authz:v1")
       //.withVerboseOutput()
       .useTlsKeystore(SSL_KEYSTORE_PATH, SSL_KEYSTORE_PASSWORD);
   }
