@@ -4,6 +4,7 @@
 * Upgrade dependencies for Kafka 4.2 compatibility in applications-poc-tools (APPPOCTOOL-90)
 * Upgrade Keycloak testcontainers to 26.6.3 (KEYCLOAK-116)
 * Replace upstream Keycloak container with folio-keycloak in integration tests (APPPOCTOOL-37)
+* Register Kong container image in DockerImageRegistry (APPPOCTOOL-37)
 
 -------
 
