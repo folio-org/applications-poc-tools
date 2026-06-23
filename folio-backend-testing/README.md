@@ -15,6 +15,7 @@ infrastructure without additional scope configuration.
 - [Base Test Class](#base-test-class)
 - [WireMock Integration](#wiremock-integration)
 - [Keycloak Integration](#keycloak-integration)
+- [Kong Integration](#kong-integration)
 - [Kafka Integration](#kafka-integration)
 
 ---
@@ -33,6 +34,8 @@ changing source code.
 | `TESTCONTAINERS_WIREMOCK_IMAGE`             | `wiremock/3.13.2-2-alpine`         | WireMock image                           |
 | `TESTCONTAINERS_KEYCLOAK_LOG_LEVEL`         | `INFO`                             | Keycloak container log level             |
 | `TESTCONTAINERS_KEYCLOAK_READINESS_TIMEOUT` | `60`                               | Seconds to wait for Keycloak custom-init |
+| `TESTCONTAINERS_KONG_IMAGE`                 | `folioci/folio-kong:latest`        | Kong image                               |
+| `TESTCONTAINERS_KONG_READINESS_TIMEOUT`     | `120`                              | Seconds to wait for Kong startup         |
 
 Example — redirect all containers to a private registry:
 
@@ -41,6 +44,7 @@ export TESTCONTAINERS_POSTGRES_IMAGE=registry.example.com/postgres:16-alpine
 export TESTCONTAINERS_KAFKA_IMAGE=registry.example.com/apache/kafka-native:4.2.0
 export TESTCONTAINERS_KEYCLOAK_IMAGE=registry.example.com/folioci/folio-keycloak:latest
 export TESTCONTAINERS_WIREMOCK_IMAGE=registry.example.com/wiremock:3.13.2-2-alpine
+export TESTCONTAINERS_KONG_IMAGE=registry.example.com/folioci/folio-kong:latest
 ```
 
 Image resolution is handled by `DockerImageRegistry`. Each `getXxxImageName()` method reads the
@@ -310,6 +314,23 @@ The Keycloak admin client is accessible statically for advanced scenarios:
 ```java
 Keycloak adminClient = KeycloakContainerExtension.getKeycloakAdminClient();
 ```
+
+---
+
+## Kong Integration
+
+The `folioci/folio-kong` image runs DB migrations, sets `KONG_ROUTER_FLAVOR=expressions`,
+installs the `auth-headers-manager` plugin, and applies a `deck sync` pass that loads the CORS
+policy and global plugins — all before Kong begins serving traffic. Module `KongGatewayExtension`
+implementations use this image via `DockerImageRegistry.getKongImageName()`.
+
+### Readiness check
+
+Because `deck sync` runs after Kong's HTTP endpoint is already reachable, a plain port-listening
+wait is not sufficient. Module extensions use an HTTP wait strategy that polls `GET /status` on
+port 8001 until it responds with HTTP 200. Tests start only after the full startup sequence —
+migrations and deck sync — is complete. The wait is bounded by
+`TESTCONTAINERS_KONG_READINESS_TIMEOUT` (default 120 s).
 
 ---
 
