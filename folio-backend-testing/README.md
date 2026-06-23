@@ -68,6 +68,26 @@ completes, ensuring the admin client is present. The wait is bounded by
 ```
 
 ### Transitive Test Dependencies
+---
+
+## Kong Integration
+
+The `folioci/folio-kong` image runs DB migrations, sets `KONG_ROUTER_FLAVOR=expressions`,
+installs the `auth-headers-manager` plugin, and applies a `deck sync` pass that loads the CORS
+policy and global plugins — all before Kong begins serving traffic. Module `KongGatewayExtension`
+implementations use this image via `DockerImageRegistry.getKongImageName()`.
+
+### Readiness check
+
+Because `deck sync` runs after Kong's HTTP endpoint is already reachable, a plain port-listening
+wait is not sufficient. Module extensions use an HTTP wait strategy that polls `GET /status` on
+port 8001 until it responds with HTTP 200. Tests start only after the full startup sequence —
+migrations and deck sync — is complete. The wait is bounded by
+`TESTCONTAINERS_KONG_READINESS_TIMEOUT` (default 120 s).
+
+---
+
+## Kafka Integration
 
 This module brings in:
 
