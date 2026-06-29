@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.folio</groupId>
     <artifactId>applications-poc-tools</artifactId>
-    <version>4.1.0-SNAPSHOT</version>
+    <version>4.1.0-NATIVE</version>
   </parent>
 
   <name>folio-security</name>
@@ -97,20 +97,16 @@
       <version>${jwks-rsa.version}</version>
     </dependency>
 
+    <!-- keycloak-client-common-synced supplies the org.keycloak.representations.* DTOs and the JWT/JWK
+         token-validation types (TokenVerifier, AccessToken, JWKParser, JSONWebKeySet, OAuth2Constants).
+         The reflective, RESTEasy/ServiceLoader-based keycloak-admin-client (and its
+         resteasy-multipart-provider) was removed for GraalVM native-image: admin REST access now goes
+         through the Spring HTTP Interface KeycloakAdminClient, reusing these representation POJOs as
+         request/response bodies. (In Keycloak 26 these classes ship in keycloak-client-common-synced,
+         not the no-longer-published keycloak-core.) -->
     <dependency>
       <groupId>org.keycloak</groupId>
-      <artifactId>keycloak-admin-client</artifactId>
-    </dependency>
-
-    <!-- Fix vulnerability in org.apache.james:apache-mime4j-core
-         https://www.cve.org/CVERecord?id=CVE-2024-21742
-         Remove this dependency when keycloak-admin-client ships with
-         resteasy-multipart-provider >= 6.2.10.Final
-    -->
-    <dependency>
-      <groupId>org.jboss.resteasy</groupId>
-      <artifactId>resteasy-multipart-provider</artifactId>
-      <version>7.0.2.Final</version>
+      <artifactId>keycloak-client-common-synced</artifactId>
     </dependency>
 
     <!-- Test dependencies -->

@@ -19,6 +19,14 @@ public interface KeycloakAuthClient {
   TokenResponse evaluatePermissions(@RequestBody MultiValueMap<String, String> formData,
     @RequestHeader("Authorization") String authToken);
 
+  /**
+   * Obtains an access token from the {@code master} realm token endpoint using the supplied OAuth2 form
+   * grant (no prior bearer required). Used to acquire the admin token for {@link KeycloakAdminClient} calls,
+   * replacing the token management previously handled internally by {@code keycloak-admin-client}.
+   */
+  @PostExchange(value = "/realms/master/protocol/openid-connect/token", contentType = APPLICATION_FORM_URLENCODED_VALUE)
+  TokenResponse obtainToken(@RequestBody MultiValueMap<String, String> formData);
+
   @GetExchange(value = "/realms/{realm}/protocol/openid-connect/certs")
   JSONWebKeySet retrieveJwk(@PathVariable String realm);
 }

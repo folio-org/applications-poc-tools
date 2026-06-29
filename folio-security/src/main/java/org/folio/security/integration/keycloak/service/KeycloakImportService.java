@@ -1,11 +1,8 @@
 package org.folio.security.integration.keycloak.service;
 
 import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
-import static org.apache.http.HttpStatus.SC_CONFLICT;
 import static org.folio.common.utils.UuidUtils.randomId;
 
-import jakarta.ws.rs.ClientErrorException;
-import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -18,20 +15,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.folio.security.integration.keycloak.client.KeycloakAdminClient;
 import org.folio.security.integration.keycloak.configuration.properties.KeycloakProperties;
 import org.folio.security.integration.keycloak.model.KeycloakMappings;
 import org.folio.security.service.InternalModuleDescriptorProvider;
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.resource.AuthorizationResource;
-import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.admin.client.resource.RoleMappingResource;
-import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.representations.idm.authorization.RolePolicyRepresentation;
 import org.keycloak.representations.idm.authorization.ScopePermissionRepresentation;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -42,7 +37,7 @@ public class KeycloakImportService {
   public static final String REALM = "master";
   public static final String CLIENT_AUTH_TYPE = "client-secret";
 
-  private final Keycloak keycloakClient;
+  private final KeycloakAdminClient kc;
   private final KeycloakProperties props;
   private final InternalModuleDescriptorProvider descriptorProvider;
   private final KeycloakModuleDescriptorMapper mapper;
@@ -53,117 +48,101 @@ public class KeycloakImportService {
     var descriptorHash = descriptor.hashCode();
     var mappings = mapper.map(descriptor, false);
     var clientId = props.getClient().getClientId();
-    var realmResource = keycloakClient.realm(REALM);
-    var client = getClientIfExists(realmResource, clientId);
+    var client = getClientIfExists(clientId);
     if (client != null) {
       if (isClientOutdated(client, descriptorHash)) {
         log.info("Existing client '{}' is outdated. Removing...", clientId);
-        removeClient(realmResource, client);
-        removeOutdatedClientRoles(realmResource, clientId, mappings);
+        removeClient(client);
+        removeOutdatedClientRoles(clientId, mappings);
       } else {
         log.info("Client '{}' already exist. Skipping import...", clientId);
-        assignRolesToAdminClient(realmResource, mappings);
+        assignRolesToAdminClient(mappings);
         return;
       }
     }
     client = prepareClient(mappings, descriptorHash);
-    createRecords(realmResource, client, mappings);
-    assignRolesToAdminClient(realmResource, mappings);
+    createRecords(client, mappings);
+    assignRolesToAdminClient(mappings);
   }
 
-  private void assignRolesToAdminClient(RealmResource realm, KeycloakMappings mappings) {
+  private void assignRolesToAdminClient(KeycloakMappings mappings) {
     var adminClientId = props.getAdmin().getClientId();
-    var adminClient = getClientIfExists(realm, adminClientId);
-    if (adminClient == null) {
+    var adminClientRep = getClientIfExists(adminClientId);
+    if (adminClientRep == null) {
       throw new RuntimeException("Admin client is not found by clientId: " + adminClientId);
     }
 
-    findServiceAccountUserId(adminClient).ifPresent(serviceAccountUserId -> {
+    findServiceAccountUserId(adminClientRep).ifPresent(serviceAccountUserId -> {
       log.info("Assigning mapped roles to service account user of admin client: {}", adminClientId);
-      var roleMappingsResource = roleMappingResource(serviceAccountUserId);
-      var availableRoles = roleMappingsResource.realmLevel().listAvailable();
+      var availableRoles = kc.listAvailableRealmRoleMappings(REALM, serviceAccountUserId);
       var mappedRoles = mappings.getRoles();
-      var rolesToAssign = availableRoles.stream()
+      var rolesToAssign = emptyIfNull(availableRoles).stream()
         .filter(availableRole -> mappedRoles.stream()
           .anyMatch(mappedRole -> Objects.equals(availableRole.getName(), mappedRole.getName())))
         .collect(Collectors.toList());
 
-      roleMappingsResource.realmLevel().add(rolesToAssign);
+      kc.addRealmRoleMappings(REALM, serviceAccountUserId, rolesToAssign);
     });
   }
 
-  private void createRecords(RealmResource realmResource, ClientRepresentation client, KeycloakMappings mappings) {
+  private void createRecords(ClientRepresentation client, KeycloakMappings mappings) {
     log.info("Importing data to Keycloak");
-    var authResource = getAuthorizationResource(client);
+    var clientUuid = client.getId();
 
-    createClient(realmResource, client);
-
-    createRoles(realmResource, client, mappings.getRoles());
-
-    createRolePolicies(authResource, mappings.getRolePolicies());
-
-    createPermissions(authResource, mappings.getScopePermissions());
+    createClient(client);
+    createRoles(client, mappings.getRoles());
+    createRolePolicies(clientUuid, mappings.getRolePolicies());
+    createPermissions(clientUuid, mappings.getScopePermissions());
 
     log.info("Finished importing");
   }
 
-  private static void createClient(RealmResource realm, ClientRepresentation client) {
-    try (var response = realm.clients().create(client)) {
-      log.info("Creating client '{}', response: {}", client.getClientId(), response.getStatus());
-    }
+  private void createClient(ClientRepresentation client) {
+    log.info("Creating client '{}'", client.getClientId());
+    kc.createClient(REALM, client);
   }
 
-  private static void createRoles(RealmResource realm, ClientRepresentation client,
-    Collection<RoleRepresentation> roles) {
+  private void createRoles(ClientRepresentation client, Collection<RoleRepresentation> roles) {
     roles.forEach(role -> {
       role.singleAttribute(CLIENT_ID_ATTR, client.getClientId());
-      createRoleIgnoringConflict(realm, role);
+      createRoleIgnoringConflict(role);
     });
   }
 
-  private static void createRoleIgnoringConflict(RealmResource realm, RoleRepresentation role) {
+  private void createRoleIgnoringConflict(RoleRepresentation role) {
     try {
       log.info("Creating role '{}'", role.getName());
-      realm.roles().create(role);
-    } catch (ClientErrorException exception) {
-      if (exception.getResponse().getStatus() == SC_CONFLICT) {
-        log.info("Role already exist");
-      } else {
-        throw exception;
-      }
+      kc.createRole(REALM, role);
+    } catch (HttpClientErrorException.Conflict e) {
+      log.info("Role '{}' already exist", role.getName());
     }
   }
 
-  private static void createRolePolicies(AuthorizationResource authResource,
-    Collection<RolePolicyRepresentation> rolePolicies) {
+  private void createRolePolicies(String clientUuid, Collection<RolePolicyRepresentation> rolePolicies) {
     rolePolicies.forEach(policy -> {
-      try (var resp = authResource.policies().role().create(policy)) {
-        log.info("Creating policy '{}', response: {}", policy.getName(), resp.getStatus());
-      }
+      log.info("Creating policy '{}'", policy.getName());
+      kc.createRolePolicy(REALM, clientUuid, policy);
     });
   }
 
-  private static void createPermissions(AuthorizationResource authResource,
-    Collection<ScopePermissionRepresentation> permissions) {
+  private void createPermissions(String clientUuid, Collection<ScopePermissionRepresentation> permissions) {
     permissions.forEach(permission -> {
-      try (var resp = authResource.permissions().scope().create(permission)) {
-        log.info("Creating permission '{}', response: {}", permission.getName(), resp.getStatus());
-      }
+      log.info("Creating permission '{}'", permission.getName());
+      kc.createScopePermission(REALM, clientUuid, permission);
     });
   }
 
-  private static void removeClient(RealmResource realmResource, ClientRepresentation client) {
-    realmResource.clients().get(client.getId()).remove();
+  private void removeClient(ClientRepresentation client) {
+    kc.deleteClient(REALM, client.getId());
   }
 
-  private static void removeOutdatedClientRoles(RealmResource realmResource, String clientId,
-    KeycloakMappings mappings) {
-    var existingRoles = emptyIfNull(realmResource.roles().list(false));
+  private void removeOutdatedClientRoles(String clientId, KeycloakMappings mappings) {
+    var existingRoles = emptyIfNull(kc.listRoles(REALM, false));
     var mappedRoles = mappings.getRoles();
 
     existingRoles.stream().filter(isOutdatedClientRole(clientId, mappedRoles)).forEach(existingRole -> {
       log.info("Removing outdated role '{}'", existingRole.getName());
-      realmResource.rolesById().deleteRole(existingRole.getId());
+      kc.deleteRoleById(REALM, existingRole.getId());
     });
   }
 
@@ -201,8 +180,8 @@ public class KeycloakImportService {
     return mappedRoles.stream().map(RoleRepresentation::getName).noneMatch(existingName::equals);
   }
 
-  private ClientRepresentation getClientIfExists(RealmResource realm, String clientId) {
-    var resultList = realm.clients().findByClientId(clientId);
+  private ClientRepresentation getClientIfExists(String clientId) {
+    var resultList = kc.findClientsByClientId(REALM, clientId);
     return CollectionUtils.isNotEmpty(resultList) ? resultList.get(0) : null;
   }
 
@@ -212,37 +191,12 @@ public class KeycloakImportService {
   }
 
   private Optional<String> findServiceAccountUserId(ClientRepresentation client) {
-    String userId = null;
     try {
-      var userResource = keycloakClient.proxy(UserResource.class, serviceAccountUserResourceUri(client));
-      userId = userResource.toRepresentation().getId();
+      var user = kc.getServiceAccountUser(REALM, client.getId());
+      return Optional.ofNullable(user).map(UserRepresentation::getId);
     } catch (Exception e) {
       log.warn("Failed to find service account user for client with clientId: {}", client.getClientId(), e);
+      return Optional.empty();
     }
-    return Optional.ofNullable(userId);
-  }
-
-  private AuthorizationResource getAuthorizationResource(ClientRepresentation client) {
-    return keycloakClient.proxy(AuthorizationResource.class, authorizationResourceUri(client));
-  }
-
-  private RoleMappingResource roleMappingResource(String userId) {
-    return keycloakClient.proxy(RoleMappingResource.class, roleMappingsResourceUri(userId));
-  }
-
-  private URI roleMappingsResourceUri(String userId) {
-    return URI.create(props.getUrl() + "/admin/realms/master/users/" + userId + "/role-mappings");
-  }
-
-  private URI authorizationResourceUri(ClientRepresentation client) {
-    return URI.create(getClientResourcePath(client) + "/authz/resource-server");
-  }
-
-  private URI serviceAccountUserResourceUri(ClientRepresentation client) {
-    return URI.create(getClientResourcePath(client) + "/service-account-user");
-  }
-
-  private String getClientResourcePath(ClientRepresentation client) {
-    return props.getUrl() + "/admin/realms/master/clients/" + client.getId();
   }
 }
