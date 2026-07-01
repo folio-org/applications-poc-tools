@@ -31,5 +31,10 @@ public class FolioSecurityRuntimeHints implements RuntimeHintsRegistrar {
           TypeReference.of(Advised.class),
           TypeReference.of(DecoratingProxy.class));
     }
+
+    // InternalModuleDescriptorProvider loads the module descriptor from classpath at runtime; native-image
+    // does not enumerate the classpath, so the resource must be declared. (ModuleDescriptor itself is
+    // registered for binding via @RegisterReflectionForBinding on the wiring auto-configuration.)
+    hints.resources().registerPattern("descriptors/ModuleDescriptor.json");
   }
 }

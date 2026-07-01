@@ -32,4 +32,9 @@ class FolioSecurityRuntimeHintsTest {
     assertThat(RuntimeHintsPredicates.proxies().forInterfaces(
       KeycloakAuthClient.class, SpringProxy.class, Advised.class, DecoratingProxy.class)).accepts(hints);
   }
+
+  @Test
+  void registerHints_positive_registersModuleDescriptorResource() {
+    assertThat(RuntimeHintsPredicates.resource().forResource("descriptors/ModuleDescriptor.json")).accepts(hints);
+  }
 }

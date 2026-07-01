@@ -27,7 +27,8 @@ import org.springframework.context.annotation.ImportRuntimeHints;
   org.keycloak.representations.idm.authorization.ScopeRepresentation.class,
   org.keycloak.representations.AccessToken.class,
   org.keycloak.jose.jwk.JSONWebKeySet.class,
-  org.folio.security.integration.keycloak.model.TokenResponse.class
+  org.folio.security.integration.keycloak.model.TokenResponse.class,
+  org.folio.common.domain.model.ModuleDescriptor.class
 })
 public class FolioSecurityNativeHintsAutoConfiguration {
 }

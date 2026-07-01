@@ -1,1 +1,2 @@
 org.folio.tools.kong.configuration.KongRegistrarAutoConfiguration
+org.folio.tools.kong.nativex.KongNativeHintsAutoConfiguration
