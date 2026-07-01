@@ -82,4 +82,10 @@ public class KeycloakSecurityConfiguration {
     ObjectMapper objectMapper) {
     return new InternalModuleDescriptorProvider(resourceLoader, objectMapper);
   }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public UrlPathHelper urlPathHelper() {
+    return new UrlPathHelper();
+  }
 }

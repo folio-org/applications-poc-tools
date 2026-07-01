@@ -6,7 +6,6 @@ import static org.springframework.security.web.util.matcher.RegexRequestMatcher.
 
 import lombok.RequiredArgsConstructor;
 import org.folio.security.filter.ExceptionHandlerFilter;
-import org.folio.security.integration.authtoken.configuration.OkapiSecurityConfiguration;
 import org.folio.security.integration.keycloak.configuration.KeycloakSecurityConfiguration;
 import org.folio.security.service.AuthorizationService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -30,7 +29,7 @@ import tools.jackson.databind.ObjectMapper;
 
 @EnableWebSecurity
 @RequiredArgsConstructor
-@Import({KeycloakSecurityConfiguration.class, OkapiSecurityConfiguration.class})
+@Import(KeycloakSecurityConfiguration.class)
 public class SecurityConfiguration implements WebSecurityCustomizer {
 
   public static final String ROUTER_PREFIX_PROPERTY = "application.router.path-prefix";
