@@ -1,2 +1,3 @@
 org.folio.security.integration.keycloak.configuration.KeycloakDataImportConfiguration
 org.folio.security.integration.keycloak.configuration.KeycloakSecureStoreKeyProviderConfiguration
+org.folio.security.nativex.FolioSecurityNativeHintsAutoConfiguration
