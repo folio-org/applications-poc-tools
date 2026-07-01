@@ -10,11 +10,21 @@ import org.folio.tools.store.properties.EphemeralProperties;
 import org.folio.tools.store.properties.FsspProperties;
 import org.folio.tools.store.properties.SecureStoreProperties;
 import org.folio.tools.store.properties.VaultProperties;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Secure-store auto-configuration.
+ *
+ * <p>Backend selection is done at <b>runtime</b> via {@code application.secret-store.type} instead of the
+ * previous build-time {@code @ConditionalOnProperty} beans. Build-time conditions are evaluated during Spring
+ * AOT / native-image processing, which would bake a single backend into the image and make the same binary
+ * unable to switch backends by configuration. All backend property beans are registered unconditionally, and
+ * the single {@link SecureStore} bean references every implementation (so all are reachable for native image)
+ * but constructs only the selected one — important because {@link VaultStore}/{@link FsspStore} build clients
+ * and validate configuration in their constructors and would fail if instantiated while unconfigured.</p>
+ */
 @Configuration
 public class SecureStoreAutoconfiguration {
 
@@ -25,54 +35,43 @@ public class SecureStoreAutoconfiguration {
   }
 
   @Bean
-  @ConditionalOnProperty(name = "application.secret-store.type", havingValue = "EPHEMERAL", matchIfMissing = true)
-  public SecureStore ephemeralStore(EphemeralProperties properties) {
-    return EphemeralStore.create(properties);
-  }
-
-  @Bean
-  @ConditionalOnProperty(name = "application.secret-store.type", havingValue = "EPHEMERAL", matchIfMissing = true)
   @ConfigurationProperties(prefix = "application.secret-store.ephemeral")
   public EphemeralProperties ephemeralProperties() {
     return new EphemeralProperties();
   }
 
   @Bean
-  @ConditionalOnProperty(name = "application.secret-store.type", havingValue = "AWS_SSM")
-  public SecureStore awsStore(AwsProperties properties) {
-    return AwsStore.create(properties);
-  }
-
-  @Bean
-  @ConditionalOnProperty(name = "application.secret-store.type", havingValue = "AWS_SSM")
   @ConfigurationProperties(prefix = "application.secret-store.aws-ssm")
   public AwsProperties awsProperties() {
     return new AwsProperties();
   }
 
   @Bean
-  @ConditionalOnProperty(name = "application.secret-store.type", havingValue = "VAULT")
-  public SecureStore vaultStore(VaultProperties properties) {
-    return VaultStore.create(properties);
-  }
-
-  @Bean
-  @ConditionalOnProperty(name = "application.secret-store.type", havingValue = "VAULT")
   @ConfigurationProperties(prefix = "application.secret-store.vault")
   public VaultProperties vaultProperties() {
     return new VaultProperties();
   }
 
   @Bean
-  @ConditionalOnProperty(name = "application.secret-store.type", havingValue = "FSSP")
-  public SecureStore fsspStore(FsspProperties properties) {
-    return new FsspStore(properties);
-  }
-
-  @Bean
-  @ConditionalOnProperty(name = "application.secret-store.type", havingValue = "FSSP")
   @ConfigurationProperties(prefix = "application.secret-store.fssp")
   public FsspProperties fsspProperties() {
     return new FsspProperties();
+  }
+
+  /**
+   * The active {@link SecureStore}, selected at runtime from {@code application.secret-store.type}. Only the
+   * chosen backend is instantiated; the other implementations remain reachable (in the native image) via the
+   * references in this method.
+   */
+  @Bean
+  public SecureStore secureStore(SecureStoreProperties secureStoreProperties,
+    EphemeralProperties ephemeralProperties, AwsProperties awsProperties,
+    VaultProperties vaultProperties, FsspProperties fsspProperties) {
+    return switch (secureStoreProperties.getType()) {
+      case AWS_SSM -> AwsStore.create(awsProperties);
+      case VAULT -> VaultStore.create(vaultProperties);
+      case FSSP -> new FsspStore(fsspProperties);
+      case EPHEMERAL -> EphemeralStore.create(ephemeralProperties);
+    };
   }
 }
