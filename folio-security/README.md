@@ -59,6 +59,8 @@ permits all requests (useful for local development).
 | `application.keycloak.admin.username`                                       | `String`  | Admin username                                           |
 | `application.keycloak.admin.password`                                       | `String`  | Admin password                                           |
 | `application.keycloak.admin.grant-type`                                     | `String`  | Admin grant type                                         |
+| `application.keycloak.admin.connect-timeout`                                | `Duration`| Admin client connect timeout (default: `10s`)            |
+| `application.keycloak.admin.read-timeout`                                   | `Duration`| Admin client read/socket timeout (default: `60s`)        |
 | `application.keycloak.client.client-id`                                     | `String`  | Backend service client ID                                |
 | `application.keycloak.tls.enabled`                                          | `boolean` | Enable TLS for Keycloak HTTP client                      |
 | `application.keycloak.tls.trust-store-path`                                 | `String`  | Truststore file path                                     |
@@ -67,6 +69,10 @@ permits all requests (useful for local development).
 | `application.keycloak.jwt-cache-configuration.validate-uri`                 | `boolean` | Validate token issuer against `keycloak.url`             |
 | `application.keycloak.jwt-cache-configuration.jwks-refresh-interval`        | `int`     | JWKS refresh interval in seconds (default: `60`)         |
 | `application.keycloak.jwt-cache-configuration.forced-jwks-refresh-interval` | `int`     | Forced JWKS refresh interval in seconds (default: `60`)  |
+
+When an admin client call exceeds `connect-timeout` or `read-timeout`, it fails with a `jakarta.ws.rs.ProcessingException`
+(wrapping a `ConnectTimeoutException` / `SocketTimeoutException`), releasing the caller thread so existing retry logic can
+observe it.
 
 ### Okapi properties
 
