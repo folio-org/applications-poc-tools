@@ -5,6 +5,7 @@
 * Upgrade Keycloak testcontainers to 26.6.3 (KEYCLOAK-116)
 * Replace upstream Keycloak container with folio-keycloak in integration tests (APPPOCTOOL-37)
 * Register Kong container image in DockerImageRegistry (APPPOCTOOL-37)
+* Add configurable connect/read timeouts for Keycloak admin client (APPPOCTOOL-95)
 
 -------
 
