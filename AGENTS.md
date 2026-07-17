@@ -1,6 +1,6 @@
 # applications-poc-tools
 
-Multi-module Maven library of shared classes for FOLIO backend development and testing. Spring Boot 4.0.2, Java 21, Log4j2.
+Multi-module Maven library of shared classes for FOLIO backend development and testing. Spring Boot 4.x, Java 21, Log4j2.
 
 ## Build & Test
 
