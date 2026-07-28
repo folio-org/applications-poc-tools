@@ -1,3 +1,8 @@
+## Version `4.0.4` (28.07.2026)
+### Changes:
+* Replace upstream Keycloak container with folio-keycloak in integration tests (APPPOCTOOL-37)
+* Register Kong container image in DockerImageRegistry (APPPOCTOOL-37)
+
 ## Version `4.0.3` (29.05.2026)
 ### Changes:
 * Upgrade Keycloak testcontainers to 26.6.2, keycloak-admin-client to 26.0.9 (KEYCLOAK-112)
