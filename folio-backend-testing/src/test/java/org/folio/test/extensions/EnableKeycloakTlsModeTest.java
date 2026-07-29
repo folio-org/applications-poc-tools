@@ -41,7 +41,7 @@ class EnableKeycloakTlsModeTest {
     var clients = adminClient.realm(MASTER_REALM).clients().findByClientId(FOLIO_BACKEND_ADMIN_CLIENT);
 
     assertThat(clients).hasSize(1);
-    assertThat(clients.getFirst().isServiceAccountsEnabled()).isTrue();
+    assertThat(clients.get(0).isServiceAccountsEnabled()).isTrue();
   }
 
   @Test
@@ -49,7 +49,8 @@ class EnableKeycloakTlsModeTest {
     var adminClient = KeycloakContainerExtension.getKeycloakAdminClient();
     var clients = adminClient.realm(MASTER_REALM).clients().findByClientId(FOLIO_BACKEND_ADMIN_CLIENT);
 
-    var clientUuid = clients.getFirst().getId();
+    assertThat(clients).hasSize(1);
+    var clientUuid = clients.get(0).getId();
     var serviceAccountUser = adminClient.realm(MASTER_REALM).clients().get(clientUuid).getServiceAccountUser();
     var roleNames = adminClient.realm(MASTER_REALM).users().get(serviceAccountUser.getId())
       .roles().realmLevel().listAll().stream()

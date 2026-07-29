@@ -7,6 +7,7 @@ import static org.folio.test.TestUtils.OBJECT_MAPPER;
 import static org.folio.test.TestUtils.readString;
 import static org.skyscreamer.jsonassert.JSONCompareMode.LENIENT;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.folio.security.integration.keycloak.configuration.KeycloakDataImportConfiguration;
@@ -52,7 +53,7 @@ class KeycloakImportServiceIT {
   @Autowired private Keycloak keycloakClient;
 
   @Test
-  void verifyDataImportedOnAppStartup() throws JSONException {
+  void verifyDataImportedOnAppStartup() throws JsonProcessingException, JSONException {
     var realm = keycloakClient.realm(REALM).partialExport(true, true);
     var createdRoles = getCreatedRoles(realm);
     var createdClient = getCreatedClient(realm);

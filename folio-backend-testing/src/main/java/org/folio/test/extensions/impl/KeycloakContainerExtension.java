@@ -8,7 +8,6 @@ import static org.apache.http.conn.ssl.NoopHostnameVerifier.INSTANCE;
 import static org.apache.http.ssl.SSLContextBuilder.create;
 import static org.awaitility.Awaitility.await;
 import static org.folio.test.extensions.impl.DockerImageRegistry.getKeycloakImageName;
-import static org.folio.test.TestUtils.readToFile;
 import static org.springframework.util.ResourceUtils.getFile;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
