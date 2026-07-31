@@ -1,5 +1,6 @@
-## Version `v3.0.12` (30.07.2026)
+## Version `v3.0.12` (31.07.2026)
 * Replace upstream Keycloak container with folio-keycloak in integration tests (APPPOCTOOL-37)
+* Use GitHub Workflows for Maven (APPPOCTOOL-81)
 
 ## Version `v3.0.11` (28.05.2026)
 * Upgrade Keycloak testcontainers to 26.6.2, keycloak-admin-client to 26.0.9 (KEYCLOAK-112)
