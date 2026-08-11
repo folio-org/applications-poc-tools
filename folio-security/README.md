@@ -1,17 +1,14 @@
 # folio-security
 
-Spring Security integration library for FOLIO backend modules. Provides a pluggable authorization
-filter chain supporting two security backends — Keycloak (JWT + UMA) and Okapi (`mod-authtoken`) —
-with automatic route matching against the module's own descriptor, Keycloak data import at startup,
-and a standardized JSON error response format.
+Spring Security integration library for FOLIO backend modules. Provides an authorization filter
+chain backed by Keycloak (JWT + UMA), with automatic route matching against the module's own
+descriptor, Keycloak data import at startup, and a standardized JSON error response format.
 
 ## Table of Contents
 
 - [Activation](#activation)
 - [Configuration](#configuration)
-- [Security Backends](#security-backends)
-  - [Keycloak](#keycloak)
-  - [Okapi](#okapi)
+- [Security Backend](#security-backend)
 - [Keycloak Data Import](#keycloak-data-import)
 - [Module Descriptor](#module-descriptor)
 - [Filter Chain](#filter-chain)
@@ -30,8 +27,8 @@ public class ApplicationConfiguration { }
 ```
 
 This imports `SecurityConfiguration`, which registers the Spring Security filter chain
-(stateless, CSRF-disabled) and wires either the Keycloak or Okapi authorization service
-depending on the active configuration properties.
+(stateless, CSRF-disabled) and wires the Keycloak authorization service when the corresponding
+configuration properties are active.
 
 When no `AuthorizationService` bean is present, a passthrough filter chain is registered that
 permits all requests (useful for local development).
@@ -74,17 +71,9 @@ When an admin client call exceeds `connect-timeout` or `read-timeout`, it fails 
 (wrapping a `ConnectTimeoutException` / `SocketTimeoutException`), releasing the caller thread so existing retry logic can
 observe it.
 
-### Okapi properties
-
-| Property                              | Type      | Description                  |
-|:--------------------------------------|:----------|:-----------------------------|
-| `application.okapi.enabled`           | `boolean` | Activate Okapi-mode security |
-| `application.okapi.url`               | `String`  | Base Okapi URL               |
-| `application.okapi.mod-authtoken-url` | `String`  | URL of `mod-authtoken`       |
-
 ---
 
-## Security Backends
+## Security Backend
 
 ### Keycloak
 
@@ -104,21 +93,6 @@ Activated when `application.security.enabled=true` and `application.keycloak.ena
 
 **Public key rotation:** When SmallRye JWT cannot find the signing key (key rotation), the per-realm
 parser cache is automatically evicted and the JWKS re-fetched on the next request.
-
-### Okapi
-
-Activated when `application.security.enabled=true`, `application.okapi.enabled=true`, and
-`application.keycloak.enabled=false`.
-
-**Authorization flow:**
-
-1. `AuthorizationFilter` extracts the bearer token.
-2. The matching `RoutingEntry` is resolved from the module descriptor.
-3. `permissionsRequired`, `permissionsDesired`, and `modulePermissions` are extracted from the entry.
-4. A call is delegated to `mod-authtoken` with those permission headers. Okapi validates the token
-   and checks the user's permissions.
-5. On success, the JWT payload is Base64-decoded (without re-verifying the signature) to extract the
-   `user_id` and `tenant` claims for the `AuthUserPrincipal`.
 
 ---
 
@@ -198,7 +172,7 @@ After successful authorization, the authenticated principal placed in `SecurityC
 |:-------------|:-------------------------------------------------------------------|
 | `userId`     | JWT `user_id` claim                                                |
 | `authUserId` | JWT `sub` claim                                                    |
-| `tenant`     | Last segment of JWT `iss` (Keycloak) or JWT `tenant` claim (Okapi) |
+| `tenant`     | Last segment of the JWT `iss` claim                                |
 
 ---
 

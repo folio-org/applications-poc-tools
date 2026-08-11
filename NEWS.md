@@ -7,6 +7,10 @@
 * Register Kong container image in DockerImageRegistry (APPPOCTOOL-37)
 * Add configurable connect/read timeouts for Keycloak admin client (APPPOCTOOL-95)
 * Update keycloak admin client to 26.0.11 (KEYCLOAK-124)
+* **Breaking:** Remove "Okapi integration" mode. The `mod-authtoken` security backend
+  (`org.folio.security.integration.authtoken`), `OkapiAccessToken` and the
+  `@EnableOkapiSecurity` test annotation are deleted; `application.okapi.*` properties are no
+  longer read. Keycloak is the only authorization backend (APPPOCTOOL-54)
 -------
 
 ## Version `v4.0.0` (14.04.2026)
