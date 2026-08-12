@@ -75,7 +75,6 @@ Combine them with the container annotations above.
 |:-----------------------------|:------------------------------------------------------------------------------------------------------------------------------|
 | `@EnableKeycloakSecurity`    | `application.keycloak.enabled=true`, `application.security.enabled=true`, `application.secret-store.environment=folio`        |
 | `@EnableKeycloakDataImport`  | `application.keycloak.enabled=true`, `application.keycloak.import.enabled=true`, `application.secure-store.environment=folio` |
-| `@EnableOkapiSecurity`       | `application.okapi.enabled=true`, `application.keycloak.enabled=false`, `application.security.enabled=true`                   |
 
 ### Test data
 

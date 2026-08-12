@@ -22,7 +22,7 @@ After API/dependency changes, run the "Verify Dependent Modules" GitHub Actions 
 folio-backend-common (foundation: ApplicationDescriptor, ModuleDescriptor, CqlQuery, OkapiHeaders)
   ├── folio-backend-testing   TestContainers base (BaseBackendIntegrationTest); @EnablePostgres/@EnableKafka/@EnableKeycloakSecurity/@EnableWireMock; TestJwtGenerator
   ├── folio-tls-utils          SSL/TLS for HTTP clients (HttpClientTlsUtils, ClientBuildUtils); PKCS12/JKS
-  ├── folio-security           Pluggable auth: Keycloak (OAuth2/OIDC) or Okapi (legacy); @EnableMgrSecurity; backend chosen by properties
+  ├── folio-security           Keycloak (OAuth2/OIDC) auth; @EnableMgrSecurity; activated by properties
   │   ├── folio-auth-openid    JWT parsing (JsonWebTokenParser, OpenidJwtParserProvider); pure Java, Jackson 3
   │   ├── folio-secret-store   Secrets: Vault/AWS-SSM/FsspStore/Ephemeral via SecureStoreFactory
   │   └── folio-integration-kafka  Spring Kafka abstraction; @EnableKafka, KafkaAdminService
@@ -39,7 +39,7 @@ folio-backend-common (foundation: ApplicationDescriptor, ModuleDescriptor, CqlQu
 - **HTTP clients**: Spring HTTP Service Clients (`@HttpExchange`) over RestClient; Resteasy only for Keycloak admin client.
 - **Null-safety**: JSpecify (`@Nullable`/`@NonNull`); Spring `org.springframework.lang.*` is deprecated.
 - **Secret store env var**: use `SECURE_STORE_ENV` (not `ENV`) → `application.secret-store.environment=${SECURE_STORE_ENV:folio}`.
-- **Security plugin**: both Keycloak and Okapi configs imported; active backend selected by `application.yaml` (no code change).
+- **Security plugin**: `KeycloakSecurityConfiguration` imported by `SecurityConfiguration`; activated by `application.yaml` (no code change). With no `AuthorizationService` bean, a permit-all chain is registered.
 - **Lombok**: configured via root `lombok.config`; processor declared in maven-compiler-plugin.
 
 ## Repo

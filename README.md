@@ -19,7 +19,7 @@ Library with general purpose classes to help with FOLIO backend development and 
 | [folio-backend-common](folio-backend-common/README.md)       | Shared domain model, error types, validation constraints, pagination utilities, and common helpers                |
 | [folio-backend-testing](folio-backend-testing/README.md)     | Reusable JUnit 5 extensions, Testcontainers wrappers, WireMock support, Kafka utilities, and MockMvc base classes |
 | [folio-auth-openid](folio-auth-openid/README.md)             | JWT parsing and validation against Keycloak JWKS with multi-tenant parser cache and key rotation support          |
-| [folio-security](folio-security/README.md)                   | Spring Security filter chain supporting Keycloak (JWT + UMA) and Okapi (`mod-authtoken`) authorization backends   |
+| [folio-security](folio-security/README.md)                   | Spring Security filter chain with Keycloak (JWT + UMA) authorization                                             |
 | [folio-integration-kafka](folio-integration-kafka/README.md) | Kafka producer and consumer infrastructure: topic lifecycle management, tenant-aware filtering, and multi-tenant naming conventions |
 | [folio-integration-kong](folio-integration-kong/README.md)   | Kong API Gateway integration: route lifecycle management, tenant access control, and expression DSL               |
 | [folio-secret-store](folio-secret-store/README.md)           | Pluggable secret store abstraction with AWS SSM, Vault, and environment-variable backends                         |
