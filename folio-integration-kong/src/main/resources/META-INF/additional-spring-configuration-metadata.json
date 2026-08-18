@@ -1,0 +1,112 @@
+{
+  "properties": [
+    {
+      "name": "application.kong.enabled",
+      "type": "java.lang.Boolean",
+      "deprecation": {
+        "replacement": "application.apigw.enabled",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    },
+    {
+      "name": "application.kong.url",
+      "type": "java.lang.String",
+      "deprecation": {
+        "replacement": "application.apigw.url",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    },
+    {
+      "name": "application.kong.module-self-url",
+      "type": "java.lang.String",
+      "deprecation": {
+        "replacement": "application.apigw.module-self-url",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    },
+    {
+      "name": "application.kong.register-module",
+      "type": "java.lang.Boolean",
+      "deprecation": {
+        "replacement": "application.apigw.register-module",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    },
+    {
+      "name": "application.kong.retries",
+      "type": "java.lang.Integer",
+      "deprecation": {
+        "replacement": "application.apigw.retries",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    },
+    {
+      "name": "application.kong.connect-timeout",
+      "type": "java.lang.Integer",
+      "deprecation": {
+        "replacement": "application.apigw.connect-timeout",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    },
+    {
+      "name": "application.kong.read-timeout",
+      "type": "java.lang.Integer",
+      "deprecation": {
+        "replacement": "application.apigw.read-timeout",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    },
+    {
+      "name": "application.kong.write-timeout",
+      "type": "java.lang.Integer",
+      "deprecation": {
+        "replacement": "application.apigw.write-timeout",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    },
+    {
+      "name": "application.kong.tls.enabled",
+      "type": "java.lang.Boolean",
+      "deprecation": {
+        "replacement": "application.apigw.tls.enabled",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    },
+    {
+      "name": "application.kong.tls.trust-store-path",
+      "type": "java.lang.String",
+      "deprecation": {
+        "replacement": "application.apigw.tls.trust-store-path",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    },
+    {
+      "name": "application.kong.tls.trust-store-password",
+      "type": "java.lang.String",
+      "deprecation": {
+        "replacement": "application.apigw.tls.trust-store-password",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    },
+    {
+      "name": "application.kong.tls.trust-store-type",
+      "type": "java.lang.String",
+      "deprecation": {
+        "replacement": "application.apigw.tls.trust-store-type",
+        "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
+        "level": "warning"
+      }
+    }
+  ]
+}
