@@ -8,6 +8,7 @@ operation enum used by both Kafka producers and consumers across all FOLIO modul
 - [Event Model](#event-model)
 - [Tenant-Aware Contract](#tenant-aware-contract)
 - [Event Types](#event-types)
+- [Result Event Model](#result-event-model)
 
 ---
 
@@ -70,3 +71,40 @@ listeners that already use `ResourceEvent`.
 | `UPDATE`     | `"UPDATE"`     | An existing resource instance was modified       |
 | `DELETE`     | `"DELETE"`     | A single resource instance was deleted           |
 | `DELETE_ALL` | `"DELETE_ALL"` | All instances of a resource were deleted in bulk |
+
+---
+
+## Result Event Model
+
+### `ResourceResultEvent`
+
+A Kafka event reporting the terminal outcome of a resource operation stage sent back to the
+entitlement orchestrator. Implements `TenantAwareEvent` so it passes through the shared
+consumer-side tenant filter without additional configuration.
+
+| Field          | JSON key       | Nullable | Description                                                       |
+|:---------------|:---------------|:---------|:------------------------------------------------------------------|
+| `id`           | `id`           | —        | Correlation identifier matching the originating `ResourceEvent`   |
+| `tenant`       | `tenant`       | —        | Tenant identifier (FOLIO tenant name)                             |
+| `resourceName` | `resourceName` | —        | Human-readable resource name                                      |
+| `status`       | `status`       | —        | Terminal result: `SUCCESS` or `FAILURE`                           |
+| `moduleId`     | `moduleId`     | yes      | Identifier of the module that processed the operation             |
+| `details`      | `details`      | yes      | Optional error detail or diagnostic message                       |
+
+```java
+ResourceResultEvent event = ResourceResultEvent.builder()
+    .id(originalEvent.getId())
+    .tenant("diku")
+    .resourceName("Item")
+    .status(ResourceResultStatus.SUCCESS)
+    .build();
+```
+
+---
+
+### `ResourceResultStatus`
+
+| Constant  | Description                                   |
+|:----------|:----------------------------------------------|
+| `SUCCESS` | The resource operation completed successfully |
+| `FAILURE` | The resource operation failed                 |
