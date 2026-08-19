@@ -48,8 +48,8 @@ public class ModuleMetadataConfiguration {
   @Bean
   @Order(APP_PROPERTIES_MDP_ORDER)
   public AppPropertiesModuleDataProvider appPropertiesModuleDataProvider(
-    @Value("${spring.application.name}") String applicationName,
-    @Value("${spring.application.version}") String applicationVersion) {
+    @Value("${spring.application.name:}") String applicationName,
+    @Value("${spring.application.version:}") String applicationVersion) {
     return new AppPropertiesModuleDataProvider(applicationName, applicationVersion);
   }
 
