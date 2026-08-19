@@ -5,6 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.integration.kafka.consumer.configuration.KafkaConsumerFiltering.TenantFilter;
 import org.folio.integration.kafka.consumer.filter.EnabledTenantMessageFilter;
 import org.folio.integration.kafka.consumer.filter.mmd.ModuleMetadata;
+import org.folio.integration.kafka.consumer.filter.mmd.configuration.ModuleMetadataConfiguration;
 import org.folio.integration.kafka.consumer.filter.te.TenantEntitlementClient;
 import org.folio.integration.kafka.consumer.filter.te.TenantEntitlementService;
 import org.folio.integration.kafka.model.ResourceEvent;
@@ -15,6 +16,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
@@ -54,6 +56,7 @@ public class KafkaConsumerFilteringConfiguration {
   @Configuration
   @ConditionalOnProperty(value = "application.kafka.consumer.filtering.tenant-filter.enabled", havingValue = "true")
   @ImportHttpServices(types = TenantEntitlementClient.class, group = "kafka-filter-entitlement-client")
+  @Import(ModuleMetadataConfiguration.class)
   public static class TenantFilterConfiguration {
 
     private final ModuleMetadata moduleMetadata;

@@ -6,7 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.folio.integration.kafka.consumer.configuration.KafkaConsumerFilteringConfiguration;
 import org.folio.integration.kafka.consumer.configuration.KafkaConsumerPropertiesConfiguration;
-import org.folio.integration.kafka.consumer.filter.mmd.configuration.ModuleMetadataConfiguration;
 import org.springframework.context.annotation.Import;
 
 /**
@@ -15,9 +14,9 @@ import org.springframework.context.annotation.Import;
  * <p>Placing this annotation on any {@code @Configuration} class will:
  * <ul>
  *   <li>import {@link KafkaConsumerFilteringConfiguration} to register the
- *       {@code tenantAwareMessageFilter} bean;</li>
- *   <li>import {@link ModuleMetadataConfiguration} to register the
- *       {@link org.folio.integration.kafka.consumer.filter.mmd.ModuleMetadata} bean;</li>
+ *       {@code tenantAwareMessageFilter} bean (and, when tenant-filter is enabled, the
+ *       {@link org.folio.integration.kafka.consumer.filter.mmd.ModuleMetadata} bean via
+ *       {@link org.folio.integration.kafka.consumer.filter.mmd.configuration.ModuleMetadataConfiguration});</li>
  *   <li>import {@link KafkaConsumerPropertiesConfiguration} to register the
  *       {@code kafkaConsumerProperties} bean bound to
  *       {@code application.kafka.consumer.*}; using an explicit {@code @Bean} method ensures the
@@ -31,6 +30,5 @@ import org.springframework.context.annotation.Import;
 @Import({
   KafkaConsumerFilteringConfiguration.class,
   KafkaConsumerPropertiesConfiguration.class,
-  ModuleMetadataConfiguration.class
 })
 public @interface EnableKafkaConsumer {}
