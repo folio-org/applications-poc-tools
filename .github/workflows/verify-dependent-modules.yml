@@ -6,12 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       keycloak-image:
-        description: 'folio-keycloak Docker image used by Testcontainers when running the dependent-module tests.'
-        type: string
-        required: false
-        default: 'folioci/folio-keycloak:latest'
-      modules:
-        description: 'Comma-separated subset of DEPENDENT_MATRIX module names to run. Empty runs all modules.'
+        description: 'folio-keycloak Docker image used by Testcontainers when running the dependent-module tests. Empty uses each module''s own default image.'
         type: string
         required: false
         default: ''
@@ -55,28 +50,10 @@ jobs:
       matrix: ${{ steps.emit.outputs.matrix }}
     steps:
       - id: emit
-        env:
-          MODULES_INPUT: ${{ inputs.modules || '' }}
         run: |
-          requested=$(printf '%s' "$MODULES_INPUT" | jq -Rs 'split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0))')
-
-          if [[ "$(printf '%s' "$requested" | jq 'length')" -eq 0 ]]; then
-            filtered="$DEPENDENT_MATRIX"
-          else
-            valid_names=$(printf '%s' "$DEPENDENT_MATRIX" | jq '[.include[].name]')
-
-            missing=$(jq -n --argjson requested "$requested" --argjson valid "$valid_names" '$requested - $valid')
-            if [[ "$(printf '%s' "$missing" | jq 'length')" -gt 0 ]]; then
-              echo "::error::Unknown module(s) in 'modules' input: $(printf '%s' "$missing" | jq -r 'join(", ")'). Valid modules: $(printf '%s' "$valid_names" | jq -r 'join(", ")')."
-              exit 1
-            fi
-
-            filtered=$(printf '%s' "$DEPENDENT_MATRIX" | jq --argjson requested "$requested" '{include: (.include | map(select(.name as $n | $requested | index($n) != null)))}')
-          fi
-
           {
             echo 'matrix<<EOF'
-            printf '%s\n' "$filtered"
+            printf '%s\n' "$DEPENDENT_MATRIX"
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
@@ -146,12 +123,15 @@ jobs:
         with:
           name: lib-m2-org-folio
           path: ~/.m2/repository/org/folio
+      - name: Resolve Keycloak image
+        if: inputs.keycloak-image != ''
+        env:
+          KEYCLOAK_IMAGE: ${{ inputs.keycloak-image }}
+        run: echo "TESTCONTAINERS_KEYCLOAK_IMAGE=$KEYCLOAK_IMAGE" >> "$GITHUB_ENV"
       - name: Build & test ${{ matrix.name }}
         working-directory: module
-        env:
-          TESTCONTAINERS_KEYCLOAK_IMAGE: ${{ inputs.keycloak-image || 'folioci/folio-keycloak:latest' }}
         run: |
-          echo "Using Keycloak image: $TESTCONTAINERS_KEYCLOAK_IMAGE"
+          echo "Using Keycloak image: ${TESTCONTAINERS_KEYCLOAK_IMAGE:-default}"
           mvn ${MAVEN_ARGS} clean verify
       - name: Publish failed test summary
         if: failure()
@@ -178,7 +158,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     needs:
-      - prepare-matrix
       - build-library
       - build-dependent-modules
     if: always()
@@ -192,8 +171,7 @@ jobs:
         env:
           BUILD_LIBRARY_RESULT: ${{ needs.build-library.result }}
           DEPENDENT_MATRIX: ${{ env.DEPENDENT_MATRIX }}
-          RUN_MATRIX: ${{ needs.prepare-matrix.outputs.matrix }}
-          KEYCLOAK_IMAGE: ${{ inputs.keycloak-image || 'folioci/folio-keycloak:latest' }}
+          KEYCLOAK_IMAGE: ${{ inputs.keycloak-image }}
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -238,10 +216,8 @@ jobs:
             const libraryJob = jobs.find((job) => job.name === 'Build applications-poc-tools' || job.name === 'build-library');
             const libraryStatus = (process.env.BUILD_LIBRARY_RESULT || libraryJob?.conclusion || 'unknown').toLowerCase();
 
-            // Prefer the matrix actually run (post modules filtering); fall back to the
-            // full DEPENDENT_MATRIX if prepare-matrix produced no output (e.g. it failed).
-            const runMatrixRaw = process.env.RUN_MATRIX ?? '';
-            const matrixEnv = JSON.parse(runMatrixRaw || process.env.DEPENDENT_MATRIX || '{}');
+            // Expand matrix names from shared env definition to build per-module rows.
+            const matrixEnv = JSON.parse(process.env.DEPENDENT_MATRIX ?? '{}');
             const matrixModules = (matrixEnv.include || []).map((entry) => entry.name).filter(Boolean);
 
             // Ensure we display best-effort statuses even if job list is incomplete.
@@ -301,7 +277,7 @@ jobs:
               return `| ${moduleName} | ${labelFor(status)} | ${detail} |`;
             });
 
-            const keycloakImage = process.env.KEYCLOAK_IMAGE || 'folioci/folio-keycloak:latest';
+            const keycloakImage = process.env.KEYCLOAK_IMAGE || 'default';
 
             const summaryLines = [
               '### Check dependent modules',
