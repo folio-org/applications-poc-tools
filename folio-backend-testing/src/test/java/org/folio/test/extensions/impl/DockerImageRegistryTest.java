@@ -26,7 +26,7 @@ class DockerImageRegistryTest {
   void getKeycloakImageName_positive_returnsDefaultImage() {
     var result = DockerImageRegistry.getKeycloakImageName();
 
-    assertThat(result).isEqualTo(DockerImageRegistry.KEYCLOAK_DEFAULT_IMAGE);
+    assertThat(result).isEqualTo(DockerImageRegistry.DEFAULT_KEYCLOAK_IMAGE);
   }
 
   @Test

@@ -14,7 +14,7 @@ public class DockerImageRegistry {
   public static final String POSTGRES_DEFAULT_IMAGE = "postgres:16-alpine";
   public static final String WIREMOCK_DEFAULT_IMAGE = "wiremock/wiremock:3.13.2-2";
   public static final String KAFKA_DEFAULT_IMAGE    = "apache/kafka-native:4.2.0";
-  public static final String KEYCLOAK_DEFAULT_IMAGE = "folioci/folio-keycloak:latest";
+  public static final String DEFAULT_KEYCLOAK_IMAGE = "folioci/folio-keycloak:latest";
   public static final String KONG_DEFAULT_IMAGE     = "folioci/folio-kong:latest";
 
   public static String getPostgresImageName() {
@@ -26,7 +26,7 @@ public class DockerImageRegistry {
   }
 
   public static String getKeycloakImageName() {
-    return getImageName(ENV_KEYCLOAK_IMAGE, KEYCLOAK_DEFAULT_IMAGE);
+    return getImageName(ENV_KEYCLOAK_IMAGE, DEFAULT_KEYCLOAK_IMAGE);
   }
 
   public static String getKafkaImageName() {
