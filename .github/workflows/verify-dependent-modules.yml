@@ -1,7 +1,20 @@
 name: Verify Dependent Modules
 
+run-name: Verify Dependent Modules${{ inputs.dispatch_id != '' && format(' [{0}]', inputs.dispatch_id) || '' }}
+
 on:
   workflow_dispatch:
+    inputs:
+      keycloak-image:
+        description: 'folio-keycloak Docker image used by Testcontainers when running the dependent-module tests. Empty uses each module''s own default image.'
+        type: string
+        required: false
+        default: ''
+      dispatch_id:
+        description: 'Tracking id set by an orchestrating workflow; echoed in the run name.'
+        type: string
+        required: false
+        default: ''
 
 concurrency:
   group: verify-dependent-modules-${{ github.ref }}
@@ -110,9 +123,16 @@ jobs:
         with:
           name: lib-m2-org-folio
           path: ~/.m2/repository/org/folio
+      - name: Resolve Keycloak image
+        if: inputs.keycloak-image != ''
+        env:
+          KEYCLOAK_IMAGE: ${{ inputs.keycloak-image }}
+        run: echo "TESTCONTAINERS_KEYCLOAK_IMAGE=$KEYCLOAK_IMAGE" >> "$GITHUB_ENV"
       - name: Build & test ${{ matrix.name }}
         working-directory: module
-        run: mvn ${MAVEN_ARGS} clean verify
+        run: |
+          echo "Using Keycloak image: ${TESTCONTAINERS_KEYCLOAK_IMAGE:-default}"
+          mvn ${MAVEN_ARGS} clean verify
       - name: Publish failed test summary
         if: failure()
         working-directory: module
@@ -151,6 +171,7 @@ jobs:
         env:
           BUILD_LIBRARY_RESULT: ${{ needs.build-library.result }}
           DEPENDENT_MATRIX: ${{ env.DEPENDENT_MATRIX }}
+          KEYCLOAK_IMAGE: ${{ inputs.keycloak-image }}
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -256,9 +277,12 @@ jobs:
               return `| ${moduleName} | ${labelFor(status)} | ${detail} |`;
             });
 
+            const keycloakImage = process.env.KEYCLOAK_IMAGE || 'default';
+
             const summaryLines = [
               '### Check dependent modules',
               `Commit: \`${commitSha.slice(0, 7)}\``,
+              `Keycloak image: \`${keycloakImage}\``,
               '',
               '| Module | Result | Details |',
               '| --- | --- | --- |',
