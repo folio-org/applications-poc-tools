@@ -172,6 +172,7 @@ jobs:
           BUILD_LIBRARY_RESULT: ${{ needs.build-library.result }}
           DEPENDENT_MATRIX: ${{ env.DEPENDENT_MATRIX }}
           KEYCLOAK_IMAGE: ${{ inputs.keycloak-image }}
+          DISPATCH_ID: ${{ inputs.dispatch_id }}
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -291,6 +292,15 @@ jobs:
               ''
             ];
             await core.summary.addRaw(summaryLines.join('\n')).write();
+
+            // An orchestrating workflow in another repository sets dispatch_id. Such a run is not
+            // attached to a pull request here: its commit is the head of master, which belongs to
+            // the pull request that merged last. Commenting would target an unrelated PR, so leave
+            // reporting to the caller. The run summary above is still written.
+            if (process.env.DISPATCH_ID) {
+              core.info('Externally dispatched run; the caller reports the result. Skipping PR comment.');
+              return;
+            }
 
             // Resolve PR associated with this commit; skip comment when run is detached from PRs.
             const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({ owner, repo, commit_sha: commitSha });
