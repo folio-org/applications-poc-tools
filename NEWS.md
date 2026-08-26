@@ -11,6 +11,7 @@
   `@EnableOkapiSecurity` test annotation are deleted; `application.okapi.*` properties are no longer read. Keycloak is the only authorization backend (APPPOCTOOL-54)
 * Add ResourceResultEvent and ResourceResultStatus Kafka models for async entitlement processing feedback (MGRENTITLE-158)
 * Scope ModuleMetadataConfiguration to tenant-filter activation; makes `spring.application.name` and `spring.application.version` optional in appPropertiesModuleDataProvider (MGRENTITLE-158)
+* **Breaking:** Rename `DockerImageRegistry.KEYCLOAK_DEFAULT_IMAGE` to `DEFAULT_KEYCLOAK_IMAGE`; downstream code referencing the old constant name must be updated
 -------
 
 ## Version `v4.0.0` (14.04.2026)
