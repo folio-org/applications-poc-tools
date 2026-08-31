@@ -26,13 +26,13 @@ folio-backend-common (foundation: ApplicationDescriptor, ModuleDescriptor, CqlQu
   │   ├── folio-auth-openid    JWT parsing (JsonWebTokenParser, OpenidJwtParserProvider); pure Java, Jackson 3
   │   ├── folio-secret-store   Secrets: Vault/AWS-SSM/FsspStore/Ephemeral via SecureStoreFactory
   │   └── folio-integration-kafka  Spring Kafka abstraction; @EnableKafka, KafkaAdminService
-  ├── folio-integration-kong   Kong Admin API: KongGatewayService, KongModuleRegistrar, route DSL
+  ├── folio-integration-kong   Kong Admin API: KongGatewayService, ApiGatewayModuleRegistrar, route DSL
   └── folio-permission-utils   Permission parsing (DATA/SETTINGS/PROCEDURAL; VIEW/CREATE/EDIT/DELETE/MANAGE/EXECUTE); pure Java
 ```
 
 ## Conventions
 
-- **Feature activation**: annotations (`@EnableMgrSecurity`, `@EnableKafka`) + properties (`application.kong.enabled`, `application.kong.register-module`).
+- **Feature activation**: annotations (`@EnableMgrSecurity`, `@EnableKafka`) + properties (`application.apigw.enabled`, `application.apigw.register-module`).
 - **Tests**: tag `@UnitTest`/`@IntegrationTest`; surefire runs `groups=unit`, failsafe `groups=integration`. Mockito v5.
 - **Checkstyle**: `folio-java-checkstyle:1.2.0`; config/suppressions under `checkstyle/`.
 - **Jackson 3**: runtime in `tools.jackson.*`; annotations stay on `com.fasterxml.jackson.annotation.*`. ObjectMapper uses `.rebuild()...build()`. Jackson 2 also on classpath (JWT/Resteasy) — no conflict.

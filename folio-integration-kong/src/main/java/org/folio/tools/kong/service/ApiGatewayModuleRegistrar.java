@@ -6,7 +6,7 @@ import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.common.domain.model.ModuleDescriptor;
-import org.folio.tools.kong.configuration.KongConfigurationProperties;
+import org.folio.tools.kong.configuration.ApiGatewayConfigurationProperties;
 import org.folio.tools.kong.model.Service;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -15,14 +15,14 @@ import tools.jackson.databind.ObjectMapper;
 
 @Log4j2
 @RequiredArgsConstructor
-public class KongModuleRegistrar {
+public class ApiGatewayModuleRegistrar {
 
   private static final String DESCRIPTOR_PATH = "classpath:descriptors/ModuleDescriptor.json";
 
   private final ObjectMapper objectMapper;
   private final ResourceLoader resourceLoader;
   private final KongGatewayService kongGatewayService;
-  private final KongConfigurationProperties properties;
+  private final ApiGatewayConfigurationProperties properties;
 
   @EventListener(ApplicationReadyEvent.class)
   public void registerRoutes() {
@@ -30,7 +30,7 @@ public class KongModuleRegistrar {
     var moduleId = moduleDescriptor.getId();
     var moduleUrl = properties.getModuleSelfUrl();
 
-    log.info("Self-registering service in Kong: moduleId = {}, url = {}", moduleId, moduleUrl);
+    log.info("Self-registering service in API Gateway: moduleId = {}, url = {}", moduleId, moduleUrl);
     kongGatewayService.upsertService(
       new Service().name(moduleId).url(moduleUrl)
         .connectTimeout(properties.getConnectTimeout())

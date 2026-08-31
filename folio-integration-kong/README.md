@@ -1,7 +1,7 @@
 # folio-integration-kong
 
-Spring Boot auto-configuration library for integrating FOLIO modules with
-[Kong API Gateway](https://konghq.com/) 3.x. Translates FOLIO module descriptors into Kong
+Spring Boot auto-configuration library for integrating FOLIO modules with the API Gateway, currently
+implemented against [Kong](https://konghq.com/) 3.x. Translates FOLIO module descriptors into Kong
 Services and expression-router Routes, manages per-tenant route access control, and optionally
 self-registers the hosting module on startup.
 
@@ -9,6 +9,7 @@ self-registers the hosting module on startup.
 
 - [Activation](#activation)
 - [Configuration](#configuration)
+- [Deprecated configuration](#deprecated-configuration)
 - [Route Management](#route-management)
 - [Tenant Route Access Control](#tenant-route-access-control)
 - [Module Self-Registration](#module-self-registration)
@@ -20,11 +21,11 @@ self-registers the hosting module on startup.
 ## Activation
 
 The library activates automatically via Spring Boot auto-configuration when
-`application.kong.enabled=true` is set. No annotation is required.
+`application.apigw.enabled=true` is set. No annotation is required.
 
 ```yaml
 application:
-  kong:
+  apigw:
     enabled: true
     url: http://kong-admin:8001
 ```
@@ -33,20 +34,65 @@ application:
 
 ## Configuration
 
-| Property                                    | Type      | Default | Description                                                                 |
-|:--------------------------------------------|:----------|:--------|:----------------------------------------------------------------------------|
-| `application.kong.enabled`                  | `Boolean` | `false` | Master on/off switch                                                        |
-| `application.kong.url`                      | `String`  | —       | Kong Admin API base URL                                                     |
-| `application.kong.module-self-url`          | `String`  | —       | Upstream URL of the current module (used for self-registration)             |
-| `application.kong.register-module`          | `Boolean` | `false` | Self-register on startup from `classpath:descriptors/ModuleDescriptor.json` |
-| `application.kong.retries`                  | `Integer` | —       | Proxy retries on the Kong Service object                                    |
-| `application.kong.connect-timeout`          | `Integer` | —       | Connection timeout in ms from Kong to upstream                              |
-| `application.kong.write-timeout`            | `Integer` | —       | Write timeout in ms                                                         |
-| `application.kong.read-timeout`             | `Integer` | —       | Read timeout in ms                                                          |
-| `application.kong.tls.enabled`              | `boolean` | `false` | Enable TLS for Kong Admin API calls                                         |
-| `application.kong.tls.trust-store-path`     | `String`  | —       | Truststore file path                                                        |
-| `application.kong.tls.trust-store-password` | `String`  | —       | Truststore password                                                         |
-| `application.kong.tls.trust-store-type`     | `String`  | —       | Truststore type (e.g. `JKS`, `PKCS12`)                                      |
+| Property                                     | Type      | Default | Description                                                                 |
+|:---------------------------------------------|:----------|:--------|:----------------------------------------------------------------------------|
+| `application.apigw.enabled`                  | `Boolean` | `false` | Master on/off switch                                                        |
+| `application.apigw.url`                      | `String`  | —       | Kong Admin API base URL                                                     |
+| `application.apigw.module-self-url`          | `String`  | —       | Upstream URL of the current module (used for self-registration)             |
+| `application.apigw.register-module`          | `Boolean` | `false` | Self-register on startup from `classpath:descriptors/ModuleDescriptor.json` |
+| `application.apigw.retries`                  | `Integer` | —       | Proxy retries on the Kong Service object                                    |
+| `application.apigw.connect-timeout`          | `Integer` | —       | Connection timeout in ms from the gateway to upstream                       |
+| `application.apigw.write-timeout`            | `Integer` | —       | Write timeout in ms                                                         |
+| `application.apigw.read-timeout`             | `Integer` | —       | Read timeout in ms                                                          |
+| `application.apigw.tls.enabled`              | `boolean` | `false` | Enable TLS for Kong Admin API calls                                         |
+| `application.apigw.tls.trust-store-path`     | `String`  | —       | Truststore file path                                                        |
+| `application.apigw.tls.trust-store-password` | `String`  | —       | Truststore password                                                         |
+| `application.apigw.tls.trust-store-type`     | `String`  | —       | Truststore type (e.g. `JKS`, `PKCS12`)                                      |
+
+---
+
+## Deprecated configuration
+
+The gateway-specific `application.kong.*` properties and `KONG_*` environment variables still work,
+but they are deprecated. `DeprecatedKongPropertiesPostProcessor` logs one `WARN` line per legacy name
+in use at startup and never changes the resolved values. Removal is planned for the **Vetch** flower
+release.
+
+When a legacy name and its replacement are both set, the replacement wins and the `WARN` line says so.
+
+| Deprecated property                         | Replacement                                  |
+|:--------------------------------------------|:---------------------------------------------|
+| `application.kong.enabled`                  | `application.apigw.enabled`                  |
+| `application.kong.url`                      | `application.apigw.url`                      |
+| `application.kong.module-self-url`          | `application.apigw.module-self-url`          |
+| `application.kong.register-module`          | `application.apigw.register-module`          |
+| `application.kong.retries`                  | `application.apigw.retries`                  |
+| `application.kong.connect-timeout`          | `application.apigw.connect-timeout`          |
+| `application.kong.write-timeout`            | `application.apigw.write-timeout`            |
+| `application.kong.read-timeout`             | `application.apigw.read-timeout`             |
+| `application.kong.tls.enabled`              | `application.apigw.tls.enabled`              |
+| `application.kong.tls.trust-store-path`     | `application.apigw.tls.trust-store-path`     |
+| `application.kong.tls.trust-store-password` | `application.apigw.tls.trust-store-password` |
+| `application.kong.tls.trust-store-type`     | `application.apigw.tls.trust-store-type`     |
+
+| Deprecated environment variable | Replacement                    |
+|:--------------------------------|:-------------------------------|
+| `KONG_INTEGRATION_ENABLED`      | `APIGW_ENABLED`                |
+| `KONG_ADMIN_URL`                | `APIGW_URL`                    |
+| `REGISTER_MODULE_IN_KONG`       | `APIGW_REGISTER_MODULE`        |
+| `KONG_RETRIES`                  | `APIGW_RETRIES`                |
+| `KONG_CONNECT_TIMEOUT`          | `APIGW_CONNECT_TIMEOUT`        |
+| `KONG_READ_TIMEOUT`             | `APIGW_READ_TIMEOUT`           |
+| `KONG_WRITE_TIMEOUT`            | `APIGW_WRITE_TIMEOUT`          |
+| `KONG_TLS_ENABLED`              | `APIGW_TLS_ENABLED`            |
+| `KONG_TLS_TRUSTSTORE_PATH`      | `APIGW_TLS_TRUSTSTORE_PATH`    |
+| `KONG_TLS_TRUSTSTORE_PASSWORD`  | `APIGW_TLS_TRUSTSTORE_PASSWORD`|
+| `KONG_TLS_TRUSTSTORE_TYPE`      | `APIGW_TLS_TRUSTSTORE_TYPE`    |
+| `KONG_TENANT_CHECKS_ENABLED`    | `APIGW_TENANT_CHECKS_ENABLED`  |
+| `APPLICATION_KONG_<suffix>`     | `APPLICATION_APIGW_<suffix>`   |
+
+Kong-the-product container variables such as `KONG_PG_*` and `KONG_PROXY_*`, and `MODULE_URL`, are
+not deprecated and never reported.
 
 ---
 
@@ -133,15 +179,15 @@ the route tenant-less.
 
 ## Module Self-Registration
 
-When `application.kong.register-module=true`, `KongModuleRegistrar` fires on
+When `application.apigw.register-module=true`, `ApiGatewayModuleRegistrar` fires on
 `ApplicationReadyEvent` and:
 
 1. Reads `classpath:descriptors/ModuleDescriptor.json`.
-2. Upserts a Kong Service pointing at `application.kong.module-self-url` with the configured
+2. Upserts a Kong Service pointing at `application.apigw.module-self-url` with the configured
    timeouts and retry settings.
 3. Calls `updateRoutes` to sync the declared routes with Kong.
 
-This is the zero-touch self-registration path for modules that manage their own Kong presence.
+This is the zero-touch self-registration path for modules that manage their own gateway presence.
 
 ---
 
