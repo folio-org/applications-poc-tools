@@ -114,7 +114,7 @@ Spring Kafka abstraction:
 ### folio-integration-kong
 Kong API Gateway integration:
 - `KongGatewayService`: Gateway operations
-- `KongModuleRegistrar`: Application registration lifecycle
+- `ApiGatewayModuleRegistrar`: Application registration lifecycle
 - `KongRouteTenantService`: Multi-tenant route management
 - Route DSL: Type-safe builders (`StringExpressionBuilder`, `IntExpressionBuilder`, `IpAddressOperator`)
 - HTTP clients: Uses Spring HTTP Service Clients for Kong Admin API communication
@@ -144,8 +144,8 @@ Modules use annotations to activate features:
 
 ### Property-Driven Configuration
 Feature toggles via application properties:
-- `application.kong.enabled` → Gates Kong initialization
-- `application.kong.register-module` → Gates module registration
+- `application.apigw.enabled` → Gates Kong initialization
+- `application.apigw.register-module` → Gates module registration
 - Security backend selection (Keycloak vs Okapi) → Runtime configuration
 
 ### Testing Strategy

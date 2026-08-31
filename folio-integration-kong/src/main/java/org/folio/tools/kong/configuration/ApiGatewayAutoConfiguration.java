@@ -3,8 +3,8 @@ package org.folio.tools.kong.configuration;
 import static org.folio.common.utils.tls.HttpClientTlsUtils.buildHttpServiceClient;
 
 import org.folio.tools.kong.client.KongAdminClient;
+import org.folio.tools.kong.service.ApiGatewayModuleRegistrar;
 import org.folio.tools.kong.service.KongGatewayService;
-import org.folio.tools.kong.service.KongModuleRegistrar;
 import org.folio.tools.kong.service.KongRouteTenantService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -18,19 +18,19 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
-@ConditionalOnProperty("application.kong.enabled")
-@EnableConfigurationProperties(KongConfigurationProperties.class)
-public class KongRegistrarAutoConfiguration {
+@ConditionalOnProperty("application.apigw.enabled")
+@EnableConfigurationProperties(ApiGatewayConfigurationProperties.class)
+public class ApiGatewayAutoConfiguration {
 
   /**
    * Creates a {@link KongAdminClient} HTTP Service Client for integration with Kong Admin API.
    *
-   * @param properties - kong configuration properties with required data
+   * @param properties - API Gateway configuration properties with required data
    * @return created {@link KongAdminClient} component
    */
   @Bean(name = "folioKongAdminClient")
   @ConditionalOnMissingBean(KongAdminClient.class)
-  public KongAdminClient folioKongIntegrationClient(KongConfigurationProperties properties,
+  public KongAdminClient folioKongIntegrationClient(ApiGatewayConfigurationProperties properties,
     JsonMapper jsonMapper) {
     var restClientBuilder = RestClient.builder()
       .configureMessageConverters(converters -> converters
@@ -67,17 +67,18 @@ public class KongRegistrarAutoConfiguration {
   }
 
   /**
-   * Creates {@link KongModuleRegistrar} bean.
+   * Creates {@link ApiGatewayModuleRegistrar} bean.
    *
    * @param kongGatewayService - {@link KongGatewayService} bean from spring context
    * @param objectMapper - {@link ObjectMapper} bean from spring context
    * @param resourceLoader - {@link ResourceLoader} bean from spring context
-   * @return created {@link KongModuleRegistrar} bean
+   * @return created {@link ApiGatewayModuleRegistrar} bean
    */
-  @Bean(name = "folioKongModuleRegistrar")
-  @ConditionalOnProperty("application.kong.register-module")
-  public KongModuleRegistrar kongModuleRegistrar(KongGatewayService kongGatewayService, ObjectMapper objectMapper,
-    ResourceLoader resourceLoader, KongConfigurationProperties configurationProperties) {
-    return new KongModuleRegistrar(objectMapper, resourceLoader, kongGatewayService, configurationProperties);
+  @Bean(name = "folioApiGatewayModuleRegistrar")
+  @ConditionalOnProperty("application.apigw.register-module")
+  public ApiGatewayModuleRegistrar apiGatewayModuleRegistrar(KongGatewayService kongGatewayService,
+    ObjectMapper objectMapper, ResourceLoader resourceLoader,
+    ApiGatewayConfigurationProperties configurationProperties) {
+    return new ApiGatewayModuleRegistrar(objectMapper, resourceLoader, kongGatewayService, configurationProperties);
   }
 }

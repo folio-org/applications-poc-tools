@@ -12,7 +12,7 @@ import java.io.InputStream;
 import java.util.List;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.test.types.UnitTest;
-import org.folio.tools.kong.configuration.KongConfigurationProperties;
+import org.folio.tools.kong.configuration.ApiGatewayConfigurationProperties;
 import org.folio.tools.kong.model.Service;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -26,9 +26,9 @@ import tools.jackson.databind.ObjectMapper;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
-class KongModuleRegistrarTest {
+class ApiGatewayModuleRegistrarTest {
 
-  @InjectMocks private KongModuleRegistrar kongModuleRegistrar;
+  @InjectMocks private ApiGatewayModuleRegistrar apiGatewayModuleRegistrar;
   @Mock private Resource resource;
   @Mock private InputStream inputStream;
   @Mock private ModuleDescriptor moduleDescriptor;
@@ -36,7 +36,7 @@ class KongModuleRegistrarTest {
   @Mock private ObjectMapper objectMapper;
   @Mock private ResourceLoader resourceLoader;
   @Mock private KongGatewayService kongGatewayService;
-  @Mock private KongConfigurationProperties kongConfigurationProperties;
+  @Mock private ApiGatewayConfigurationProperties apiGatewayConfigurationProperties;
 
   @AfterEach
   void tearDown() {
@@ -53,18 +53,18 @@ class KongModuleRegistrarTest {
     var writeTimeout = 60000;
     var retries = 5;
 
-    when(kongConfigurationProperties.getModuleSelfUrl()).thenReturn(moduleUrl);
-    when(kongConfigurationProperties.getConnectTimeout()).thenReturn(connectTimeout);
-    when(kongConfigurationProperties.getReadTimeout()).thenReturn(readTimeout);
-    when(kongConfigurationProperties.getWriteTimeout()).thenReturn(writeTimeout);
-    when(kongConfigurationProperties.getRetries()).thenReturn(retries);
+    when(apiGatewayConfigurationProperties.getModuleSelfUrl()).thenReturn(moduleUrl);
+    when(apiGatewayConfigurationProperties.getConnectTimeout()).thenReturn(connectTimeout);
+    when(apiGatewayConfigurationProperties.getReadTimeout()).thenReturn(readTimeout);
+    when(apiGatewayConfigurationProperties.getWriteTimeout()).thenReturn(writeTimeout);
+    when(apiGatewayConfigurationProperties.getRetries()).thenReturn(retries);
 
     when(resourceLoader.getResource(path)).thenReturn(resource);
     when(resource.getInputStream()).thenReturn(inputStream);
     when(objectMapper.readValue(inputStream, ModuleDescriptor.class)).thenReturn(moduleDescriptor);
     when(moduleDescriptor.getId()).thenReturn(serviceName);
 
-    kongModuleRegistrar.registerRoutes();
+    apiGatewayModuleRegistrar.registerRoutes();
 
     var expectedService = new Service().name(serviceName).url(moduleUrl)
       .connectTimeout(connectTimeout)
@@ -82,7 +82,7 @@ class KongModuleRegistrarTest {
     when(resourceLoader.getResource(path)).thenReturn(resource);
     when(resource.getInputStream()).thenThrow(IOException.class);
 
-    assertThatThrownBy(() -> kongModuleRegistrar.registerRoutes())
+    assertThatThrownBy(() -> apiGatewayModuleRegistrar.registerRoutes())
       .isInstanceOf(IllegalStateException.class)
       .hasMessage("Failed to load module descriptor");
 
