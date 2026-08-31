@@ -11,13 +11,8 @@
   `@EnableOkapiSecurity` test annotation are deleted; `application.okapi.*` properties are no longer read. Keycloak is the only authorization backend (APPPOCTOOL-54)
 * Add ResourceResultEvent and ResourceResultStatus Kafka models for async entitlement processing feedback (MGRENTITLE-158)
 * Scope ModuleMetadataConfiguration to tenant-filter activation; makes `spring.application.name` and `spring.application.version` optional in appPropertiesModuleDataProvider (MGRENTITLE-158)
-* Generalize Kong configuration to API Gateway in `folio-integration-kong`. The canonical prefix is
-  now `application.apigw.*`; `application.kong.*` properties and `KONG_*` environment variables are
-  deprecated, keep working, and produce a `WARN` at startup — removal is planned for the Vetch
-  release. Renamed `KongConfigurationProperties` to `ApiGatewayConfigurationProperties`,
-  `KongRegistrarAutoConfiguration` to `ApiGatewayAutoConfiguration`, `KongModuleRegistrar` to
-  `ApiGatewayModuleRegistrar`, and bean `folioKongModuleRegistrar` to
-  `folioApiGatewayModuleRegistrar` (EUREKA-887)
+* Generalize Kong configuration to API Gateway in `folio-integration-kong` (EUREKA-887)
+* Make the verify-dependent-modules workflow accept a configurable folio-keycloak Testcontainers image
 -------
 
 ## Version `v4.0.0` (14.04.2026)
