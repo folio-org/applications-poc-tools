@@ -415,6 +415,7 @@ public class ApisixGatewayService implements ApiGatewayService {
       && Objects.equals(stored.getPlugins(), desired.getPlugins());
   }
 
+  @SuppressWarnings("java:S4790")
   private static String serviceIdOf(String name) {
     return name.length() <= MAX_ID_LENGTH ? name : sha1Hex(name);
   }

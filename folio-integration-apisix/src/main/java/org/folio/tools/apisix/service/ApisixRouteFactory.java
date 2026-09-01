@@ -70,6 +70,7 @@ public class ApisixRouteFactory {
       .toList();
   }
 
+  @SuppressWarnings("java:S4790")
   private static Optional<ApisixRoute> createRoute(String moduleId, String interfaceId, String serviceId,
     RoutingEntry re, boolean isMgrComponent, boolean isMultiple) {
     var staticPath = re.getStaticPath();
