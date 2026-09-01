@@ -2,8 +2,9 @@ package org.folio.tools.kong.configuration;
 
 import static org.folio.common.utils.tls.HttpClientTlsUtils.buildHttpServiceClient;
 
+import org.folio.common.gateway.ApiGatewayModuleRegistrar;
+import org.folio.common.gateway.ModuleRegistrationSettings;
 import org.folio.tools.kong.client.KongAdminClient;
-import org.folio.tools.kong.service.ApiGatewayModuleRegistrar;
 import org.folio.tools.kong.service.KongGatewayService;
 import org.folio.tools.kong.service.KongRouteTenantService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -19,6 +20,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 @ConditionalOnProperty("application.apigw.enabled")
+@ConditionalOnProperty(name = "application.apigw.type", havingValue = "kong", matchIfMissing = true)
 @EnableConfigurationProperties(ApiGatewayConfigurationProperties.class)
 public class ApiGatewayAutoConfiguration {
 
@@ -78,7 +80,9 @@ public class ApiGatewayAutoConfiguration {
   @ConditionalOnProperty("application.apigw.register-module")
   public ApiGatewayModuleRegistrar apiGatewayModuleRegistrar(KongGatewayService kongGatewayService,
     ObjectMapper objectMapper, ResourceLoader resourceLoader,
-    ApiGatewayConfigurationProperties configurationProperties) {
-    return new ApiGatewayModuleRegistrar(objectMapper, resourceLoader, kongGatewayService, configurationProperties);
+    ApiGatewayConfigurationProperties properties) {
+    var settings = new ModuleRegistrationSettings(properties.getModuleSelfUrl(), properties.getRetries(),
+      properties.getConnectTimeout(), properties.getReadTimeout(), properties.getWriteTimeout());
+    return new ApiGatewayModuleRegistrar(objectMapper, resourceLoader, kongGatewayService, settings);
   }
 }

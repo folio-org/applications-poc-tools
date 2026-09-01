@@ -12,6 +12,8 @@
 * Add ResourceResultEvent and ResourceResultStatus Kafka models for async entitlement processing feedback (MGRENTITLE-158)
 * Scope ModuleMetadataConfiguration to tenant-filter activation; makes `spring.application.name` and `spring.application.version` optional in appPropertiesModuleDataProvider (MGRENTITLE-158)
 * Generalize Kong configuration to API Gateway in `folio-integration-kong` (EUREKA-887)
+* Add gateway-agnostic `ApiGatewayService` interface, `GatewayServiceDefinition` model, `ApiGatewayIntegrationException` supertype and generalized `ApiGatewayModuleRegistrar` in `folio-backend-common`; `KongGatewayService` implements the interface and the Kong auto-configuration is gated on `application.apigw.type=kong` (default). **Breaking:** `org.folio.tools.kong.service.ApiGatewayModuleRegistrar` moved to `org.folio.common.gateway.ApiGatewayModuleRegistrar` (MGRENTITLE-173)
+* Add `folio-integration-apisix` module: Apache APISIX implementation of `ApiGatewayService` (Admin API client, module-descriptor route translation, structured tenant `vars` management), active when `application.apigw.type=apisix`; register APISIX and etcd container images in DockerImageRegistry (MGRENTITLE-173)
 * Make the verify-dependent-modules workflow accept a configurable folio-keycloak Testcontainers image
 -------
 

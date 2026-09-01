@@ -21,7 +21,9 @@ self-registers the hosting module on startup.
 ## Activation
 
 The library activates automatically via Spring Boot auto-configuration when
-`application.apigw.enabled=true` is set. No annotation is required.
+`application.apigw.enabled=true` is set and `application.apigw.type` is `kong` or not set.
+No annotation is required. Setting `application.apigw.type=apisix` deactivates this
+library in favor of `folio-integration-apisix`.
 
 ```yaml
 application:
@@ -37,6 +39,7 @@ application:
 | Property                                     | Type      | Default | Description                                                                 |
 |:---------------------------------------------|:----------|:--------|:----------------------------------------------------------------------------|
 | `application.apigw.enabled`                  | `Boolean` | `false` | Master on/off switch                                                        |
+| `application.apigw.type`                     | `String`  | `kong`  | Active gateway implementation (`kong` or `apisix`); this library is active only for `kong` |
 | `application.apigw.url`                      | `String`  | —       | Kong Admin API base URL                                                     |
 | `application.apigw.module-self-url`          | `String`  | —       | Upstream URL of the current module (used for self-registration)             |
 | `application.apigw.register-module`          | `Boolean` | `false` | Self-register on startup from `classpath:descriptors/ModuleDescriptor.json` |

@@ -1,0 +1,25 @@
+{
+  "properties": [
+    {
+      "name": "application.apigw.type",
+      "type": "java.lang.String",
+      "defaultValue": "kong",
+      "description": "Selects the active API Gateway implementation. This auto-configuration is active only for 'apisix'."
+    }
+  ],
+  "hints": [
+    {
+      "name": "application.apigw.type",
+      "values": [
+        {
+          "value": "kong",
+          "description": "Kong Gateway (folio-integration-kong)."
+        },
+        {
+          "value": "apisix",
+          "description": "Apache APISIX (folio-integration-apisix)."
+        }
+      ]
+    }
+  ]
+}

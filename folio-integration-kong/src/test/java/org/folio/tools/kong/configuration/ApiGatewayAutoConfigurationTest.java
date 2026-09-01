@@ -52,6 +52,28 @@ class ApiGatewayAutoConfigurationTest {
   }
 
   @Test
+  void autoConfiguration_positive_typeKong() {
+    contextRunner
+      .withPropertyValues("application.apigw.enabled=true", "application.apigw.url=http://localhost:8001",
+        "application.apigw.type=kong")
+      .run(context -> assertThat(context)
+        .hasBean(ADMIN_CLIENT_BEAN)
+        .hasBean(GATEWAY_SERVICE_BEAN)
+        .hasBean(ROUTE_TENANT_SERVICE_BEAN));
+  }
+
+  @Test
+  void autoConfiguration_negative_typeApisix() {
+    contextRunner
+      .withPropertyValues("application.apigw.enabled=true", "application.apigw.url=http://localhost:8001",
+        "application.apigw.type=apisix")
+      .run(context -> assertThat(context)
+        .doesNotHaveBean(ADMIN_CLIENT_BEAN)
+        .doesNotHaveBean(GATEWAY_SERVICE_BEAN)
+        .doesNotHaveBean(ROUTE_TENANT_SERVICE_BEAN));
+  }
+
+  @Test
   void autoConfiguration_positive_moduleRegistrationDisabledByDefault() {
     contextRunner
       .withPropertyValues("application.apigw.enabled=true", "application.apigw.url=http://localhost:8001")

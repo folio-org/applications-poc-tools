@@ -10,12 +10,16 @@ public class DockerImageRegistry {
   public static final String ENV_KAFKA_IMAGE    = "TESTCONTAINERS_KAFKA_IMAGE";
   public static final String ENV_KEYCLOAK_IMAGE = "TESTCONTAINERS_KEYCLOAK_IMAGE";
   public static final String ENV_KONG_IMAGE     = "TESTCONTAINERS_KONG_IMAGE";
+  public static final String ENV_APISIX_IMAGE   = "TESTCONTAINERS_APISIX_IMAGE";
+  public static final String ENV_ETCD_IMAGE     = "TESTCONTAINERS_ETCD_IMAGE";
 
   public static final String POSTGRES_DEFAULT_IMAGE = "postgres:16-alpine";
   public static final String WIREMOCK_DEFAULT_IMAGE = "wiremock/wiremock:3.13.2-2";
   public static final String KAFKA_DEFAULT_IMAGE    = "apache/kafka-native:4.2.0";
   public static final String KEYCLOAK_DEFAULT_IMAGE = "folioci/folio-keycloak:latest";
   public static final String KONG_DEFAULT_IMAGE     = "folioci/folio-kong:latest";
+  public static final String APISIX_DEFAULT_IMAGE   = "folioci/folio-apisix:latest";
+  public static final String ETCD_DEFAULT_IMAGE     = "quay.io/coreos/etcd:v3.5.21";
 
   public static String getPostgresImageName() {
     return getImageName(ENV_POSTGRES_IMAGE, POSTGRES_DEFAULT_IMAGE);
@@ -35,6 +39,14 @@ public class DockerImageRegistry {
 
   public static String getKongImageName() {
     return getImageName(ENV_KONG_IMAGE, KONG_DEFAULT_IMAGE);
+  }
+
+  public static String getApisixImageName() {
+    return getImageName(ENV_APISIX_IMAGE, APISIX_DEFAULT_IMAGE);
+  }
+
+  public static String getEtcdImageName() {
+    return getImageName(ENV_ETCD_IMAGE, ETCD_DEFAULT_IMAGE);
   }
 
   private static String getImageName(String imageEnvVar, String defaultImageName) {
