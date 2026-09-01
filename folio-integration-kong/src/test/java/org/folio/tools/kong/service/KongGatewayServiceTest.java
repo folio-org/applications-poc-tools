@@ -46,6 +46,8 @@ import org.folio.common.domain.model.InterfaceDescriptor;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
 import org.folio.common.domain.model.error.Parameter;
+import org.folio.common.gateway.ApiGatewayService;
+import org.folio.common.gateway.model.GatewayServiceDefinition;
 import org.folio.test.types.UnitTest;
 import org.folio.tools.kong.client.KongAdminClient;
 import org.folio.tools.kong.client.KongAdminClient.KongResultList;
@@ -416,6 +418,38 @@ class KongGatewayServiceTest {
       kongGatewayService.upsertService(kongService);
 
       verify(kongAdminClient).upsertService(MOD_ID, kongService);
+    }
+  }
+
+  @Nested
+  @DisplayName("upsertServiceDefinition")
+  class UpsertServiceDefinition {
+
+    @Test
+    void positive_isApiGatewayService() {
+      assertThat(kongGatewayService).isInstanceOf(ApiGatewayService.class);
+    }
+
+    @Test
+    void positive() {
+      when(kongAdminClient.getService(MOD_ID)).thenThrow(HttpClientErrorException.NotFound.class);
+
+      var definition = new GatewayServiceDefinition().name(MOD_ID).url(SERVICE_URL)
+        .connectTimeout(1000).readTimeout(2000).writeTimeout(3000).retries(4);
+      kongGatewayService.upsertService(definition);
+
+      var expectedService = new Service().name(MOD_ID).url(SERVICE_URL)
+        .connectTimeout(1000).readTimeout(2000).writeTimeout(3000).retries(4);
+      verify(kongAdminClient).upsertService(MOD_ID, expectedService);
+    }
+
+    @Test
+    void positive_serviceAlreadyExists() {
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+
+      kongGatewayService.upsertService(new GatewayServiceDefinition().name(MOD_ID).url(SERVICE_URL));
+
+      verify(kongAdminClient, never()).upsertService(anyString(), any(Service.class));
     }
   }
 

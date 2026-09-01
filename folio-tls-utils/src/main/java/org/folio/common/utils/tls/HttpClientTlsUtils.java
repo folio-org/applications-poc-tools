@@ -74,7 +74,13 @@ public class HttpClientTlsUtils {
     return factory.createClient(clientClass);
   }
 
-  static ClientHttpRequestFactory getRequestFactory(TlsProperties tls) {
+  /**
+   * Builds a {@link ClientHttpRequestFactory} honoring the given TLS configuration.
+   *
+   * @param tls TLS configuration properties (optional, can be null for no custom TLS)
+   * @return request factory for {@link RestClient} construction
+   */
+  public static ClientHttpRequestFactory getRequestFactory(TlsProperties tls) {
     if (tls != null && tls.isEnabled()) {
       var httpClientBuilder = HttpClient.newBuilder();
       httpClientBuilder.sslContext(buildSslContext(tls));

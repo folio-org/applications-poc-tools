@@ -1,11 +1,12 @@
 package org.folio.tools.kong.exception;
 
 import java.io.Serial;
+import java.util.List;
 
 /**
  * Exception thrown when tenant route update operations fail.
  */
-public class TenantRouteUpdateException extends RuntimeException {
+public class TenantRouteUpdateException extends org.folio.common.gateway.exception.TenantRouteUpdateException {
 
   @Serial private static final long serialVersionUID = 7234567890123456789L;
 
@@ -15,7 +16,7 @@ public class TenantRouteUpdateException extends RuntimeException {
    * @param message - error message as {@link String} object
    */
   public TenantRouteUpdateException(String message) {
-    super(message);
+    super(message, List.of());
   }
 
   /**
@@ -25,6 +26,6 @@ public class TenantRouteUpdateException extends RuntimeException {
    * @param cause - the cause
    */
   public TenantRouteUpdateException(String message, Throwable cause) {
-    super(message, cause);
+    super(message, List.of(), cause);
   }
 }

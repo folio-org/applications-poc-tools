@@ -10,6 +10,9 @@ import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.logging.log4j.util.Strings.isBlank;
+import static org.folio.common.gateway.utils.GatewayRouteUtils.buildRouteName;
+import static org.folio.common.gateway.utils.GatewayRouteUtils.getMethods;
+import static org.folio.common.gateway.utils.GatewayRouteUtils.preparePath;
 import static org.folio.common.utils.CollectionUtils.mapItems;
 import static org.folio.common.utils.CollectionUtils.toStream;
 import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
@@ -18,7 +21,6 @@ import static org.folio.tools.kong.model.expression.RouteExpressions.combineUsin
 import static org.folio.tools.kong.model.expression.RouteExpressions.httpHeader;
 import static org.folio.tools.kong.model.expression.RouteExpressions.httpMethod;
 import static org.folio.tools.kong.model.expression.RouteExpressions.httpPath;
-import static org.folio.tools.kong.utls.RoutingEntryUtils.getMethods;
 import static org.springframework.util.ObjectUtils.nullSafeEquals;
 
 import java.util.ArrayList;
@@ -31,7 +33,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -42,6 +43,8 @@ import org.folio.common.domain.model.InterfaceDescriptor;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
 import org.folio.common.domain.model.error.Parameter;
+import org.folio.common.gateway.ApiGatewayService;
+import org.folio.common.gateway.model.GatewayServiceDefinition;
 import org.folio.tools.kong.client.KongAdminClient;
 import org.folio.tools.kong.client.KongAdminClient.KongResultList;
 import org.folio.tools.kong.exception.KongIntegrationException;
@@ -55,11 +58,9 @@ import org.springframework.web.client.RestClientException;
 
 @Log4j2
 @RequiredArgsConstructor
-public class KongGatewayService {
+public class KongGatewayService implements ApiGatewayService {
 
   public static final String MULTIPLE_INTERFACE_TYPE = "multiple";
-  private static final String KONG_PATH_VARIABLE_REGEX_GROUP = "([^/]+)";
-  private static final Pattern PATH_VARIABLE_REGEX = Pattern.compile("\\{[^}]+}");
 
   private final KongAdminClient kongAdminClient;
   private final KongRouteTenantService kongRouteTenantService;
@@ -188,6 +189,20 @@ public class KongGatewayService {
       }
     }
     return failedRoutes;
+  }
+
+  /**
+   * Creates or updates a Kong service from a gateway-neutral service definition.
+   *
+   * @param service - gateway-neutral service definition
+   */
+  @Override
+  public void upsertService(GatewayServiceDefinition service) {
+    upsertService(new Service().name(service.getName()).url(service.getUrl())
+      .connectTimeout(service.getConnectTimeout())
+      .readTimeout(service.getReadTimeout())
+      .writeTimeout(service.getWriteTimeout())
+      .retries(service.getRetries()));
   }
 
   /**
@@ -402,7 +417,7 @@ public class KongGatewayService {
       return Optional.empty();
     }
 
-    var kongPathPair = updatePathPatternForKongGateway(staticPath);
+    var kongPathPair = preparePath(staticPath);
     var path = kongPathPair.getLeft();
 
     var routeName = buildRouteName(moduleId, interfaceId, path, httpMethods);
@@ -418,31 +433,6 @@ public class KongGatewayService {
       .tags(getNonNullValues(moduleId, interfaceId))
       .stripPath(false)
     );
-  }
-
-  private static String buildRouteName(String moduleId, String interfaceId, String path, List<String> httpMethods) {
-    return Stream.of(path, String.join(",", httpMethods), moduleId, interfaceId)
-      .filter(StringUtils::isNotBlank)
-      .collect(joining("|"));
-  }
-
-  /**
-   * Kong starting from version 3 handles request using expressions, but doing it without an exact match on regex, so
-   * each pattern should start with '^' symbol.
-   *
-   * @param staticPath - request path
-   * @return pair of updated path and its priority
-   */
-  private static Pair<String, Integer> updatePathPatternForKongGateway(String staticPath) {
-    if (StringUtils.containsAny(staticPath, '{', '}', '*')) {
-      var pathRegex = PATH_VARIABLE_REGEX.matcher(staticPath)
-        .replaceAll(KONG_PATH_VARIABLE_REGEX_GROUP)
-        .replace("*", "(.*)")
-        + "$";
-      return Pair.of("^" + pathRegex, 0);
-    }
-
-    return Pair.of(staticPath, 1);
   }
 
   private static String asString(Object re) {
