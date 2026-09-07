@@ -13,6 +13,7 @@
 * Scope ModuleMetadataConfiguration to tenant-filter activation; makes `spring.application.name` and `spring.application.version` optional in appPropertiesModuleDataProvider (MGRENTITLE-158)
 * Generalize Kong configuration to API Gateway in `folio-integration-kong` (EUREKA-887)
 * Make the verify-dependent-modules workflow accept a configurable folio-keycloak Testcontainers image
+* Add event confirmation support for async entitlement processing feedback in folio-kafka-consumer (MODSCHED-60)
 -------
 
 ## Version `v4.0.0` (14.04.2026)

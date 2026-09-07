@@ -6,6 +6,20 @@ import org.folio.integration.kafka.model.ResourceResultEvent;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.kafka.core.KafkaTemplate;
 
+/**
+ * Kafka-backed {@link EventConfirmationSender} that publishes {@link ResourceResultEvent}
+ * messages to a configurable topic.
+ *
+ * <p>Sends are dispatched on a dedicated {@link AsyncTaskExecutor} thread pool so the calling
+ * thread (typically a Kafka consumer thread or a transaction synchronisation callback) is never
+ * blocked by producer I/O. Delivery failures are logged at {@code ERROR} level without
+ * re-throwing; a lost confirmation leaves the originating entitlement stage {@code IN_PROGRESS}
+ * until the receiver's own timeout expires.
+ *
+ * <p>This class is instantiated by
+ * {@link org.folio.integration.kafka.consumer.configuration.EventConfirmationConfiguration}
+ * when no bean named {@code eventConfirmationSender} is already present in the context.
+ */
 @Log4j2
 @RequiredArgsConstructor
 public class KafkaEventConfirmationSender implements EventConfirmationSender {

@@ -11,6 +11,18 @@ import org.folio.integration.kafka.model.ResourceResultEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+/**
+ * Spring component that converts a processed {@link ResourceEvent} outcome into a
+ * {@link ResourceResultEvent} Spring application event.
+ *
+ * <p>The published event is picked up by the listeners registered by
+ * {@link org.folio.integration.kafka.consumer.configuration.EventConfirmationConfiguration},
+ * which forward it to the configured {@link EventConfirmationSender}. Callers are decoupled
+ * from the sender implementation and only interact with this publisher.
+ *
+ * <p>For a success result the {@code details} field is {@code null}. For a failure result it
+ * is populated with {@link org.apache.commons.lang3.exception.ExceptionUtils#getMessage}.
+ */
 @Log4j2
 @Component
 @RequiredArgsConstructor
@@ -18,10 +30,23 @@ public class ResourceResultEventPublisher {
 
   private final ApplicationEventPublisher eventPublisher;
 
+  /**
+   * Publishes a {@code SUCCESS} {@link ResourceResultEvent} for the given resource event.
+   *
+   * @param resourceEvent the originating Kafka event
+   * @param moduleId      the module identifier to include in the confirmation; may be {@code null}
+   */
   public void publishSuccessFor(ResourceEvent<?> resourceEvent, String moduleId) {
     publish(resourceEvent, null, moduleId);
   }
 
+  /**
+   * Publishes a {@code FAILURE} {@link ResourceResultEvent} for the given resource event.
+   *
+   * @param resourceEvent the originating Kafka event
+   * @param exception     the exception that caused processing to fail
+   * @param moduleId      the module identifier to include in the confirmation; may be {@code null}
+   */
   public void publishFailureFor(ResourceEvent<?> resourceEvent, Exception exception, String moduleId) {
     publish(resourceEvent, exception, moduleId);
   }

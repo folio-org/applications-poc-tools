@@ -20,6 +20,28 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.event.TransactionalApplicationListener;
 import org.springframework.transaction.event.TransactionalApplicationListenerAdapter;
 
+/**
+ * Spring auto-configuration for the event-confirmation subsystem.
+ *
+ * <p>This configuration is activated when {@code application.event-confirmation.enabled=true} is
+ * set. It registers:
+ * <ul>
+ *   <li>An {@link AsyncTaskExecutor} bean named {@code asyncEvtTaskExecutor} used by the default
+ *       sender to dispatch Kafka sends off the consumer thread.
+ *   <li>A {@link EventConfirmationSender} bean named {@code defaultEventConfirmationSender} backed
+ *       by {@link KafkaEventConfirmationSender}. Both beans are suppressed when the application
+ *       already defines a bean named {@code eventConfirmationSender}.
+ *   <li>Four {@link org.springframework.context.ApplicationListener} beans that route
+ *       {@link org.springframework.context.PayloadApplicationEvent} payloads to the sender —
+ *       two for {@code SUCCESS} and two for {@code FAILURE}, with non-transactional and
+ *       transactional variants selectable via
+ *       {@code application.event-confirmation.success-listener.transactional} and
+ *       {@code application.event-confirmation.failure-listener.transactional}.
+ * </ul>
+ *
+ * @see EventConfirmationProperties
+ * @see EventConfirmationSender
+ */
 @Log4j2
 @Configuration
 @ConditionalOnBooleanProperty(prefix = "application.event-confirmation", name = "enabled")
