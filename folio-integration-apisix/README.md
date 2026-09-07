@@ -11,7 +11,8 @@ the gateway-agnostic `org.folio.common.gateway.ApiGatewayService` contract from 
 
 The library activates automatically via Spring Boot auto-configuration when `application.apigw.enabled=true`
 **and** `application.apigw.type=apisix` are set. No annotation is required. With `type=kong` (or unset),
-`folio-integration-kong` is active instead — the two libraries are mutually exclusive at runtime.
+`folio-integration-kong` is active instead — the two libraries are mutually exclusive at runtime. Any other value
+fails startup (`ApiGatewayTypeValidationAutoConfiguration` in `folio-backend-common`).
 
 ```yaml
 application:

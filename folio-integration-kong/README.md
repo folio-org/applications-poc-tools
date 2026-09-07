@@ -23,7 +23,8 @@ self-registers the hosting module on startup.
 The library activates automatically via Spring Boot auto-configuration when
 `application.apigw.enabled=true` is set and `application.apigw.type` is `kong` or not set.
 No annotation is required. Setting `application.apigw.type=apisix` deactivates this
-library in favor of `folio-integration-apisix`.
+library in favor of `folio-integration-apisix`; any other value fails startup
+(`ApiGatewayTypeValidationAutoConfiguration` in `folio-backend-common`).
 
 ```yaml
 application:
