@@ -4,8 +4,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.folio.integration.kafka.consumer.configuration.EventConfirmationConfiguration;
 import org.folio.integration.kafka.consumer.configuration.KafkaConsumerFilteringConfiguration;
 import org.folio.integration.kafka.consumer.configuration.KafkaConsumerPropertiesConfiguration;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 
 /**
@@ -30,5 +32,7 @@ import org.springframework.context.annotation.Import;
 @Import({
   KafkaConsumerFilteringConfiguration.class,
   KafkaConsumerPropertiesConfiguration.class,
+  EventConfirmationConfiguration.class
 })
+@ComponentScan(basePackages = "org.folio.integration.kafka.consumer")
 public @interface EnableKafkaConsumer {}
