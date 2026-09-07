@@ -170,8 +170,8 @@ class ApisixGatewayServiceTest {
 
     @Test
     void negative_hostNotResolvable() {
-      assertThatThrownBy(() -> apisixGatewayService.upsertService(
-          new GatewayServiceDefinition().name(MOD_ID).url("http://test_module:8080")))
+      var definition = new GatewayServiceDefinition().name(MOD_ID).url("http://test_module:8080");
+      assertThatThrownBy(() -> apisixGatewayService.upsertService(definition))
         .isInstanceOf(ApisixIntegrationException.class)
         .hasMessageContaining("host");
     }
@@ -318,7 +318,8 @@ class ApisixGatewayServiceTest {
       var descriptor = new ModuleDescriptor().id(MOD_ID);
       when(apisixAdminClient.getService(MOD_ID)).thenThrow(notFound());
 
-      assertThatThrownBy(() -> apisixGatewayService.addRoutes(List.of(descriptor)))
+      var descriptors = List.of(descriptor);
+      assertThatThrownBy(() -> apisixGatewayService.addRoutes(descriptors))
         .isInstanceOf(ApisixIntegrationException.class)
         .hasMessage("Failed to find APISIX service for module: " + MOD_ID);
     }
@@ -329,7 +330,8 @@ class ApisixGatewayServiceTest {
       var cause = serverError("Connection reset");
       when(apisixAdminClient.getService(MOD_ID)).thenThrow(cause);
 
-      assertThatThrownBy(() -> apisixGatewayService.addRoutes(List.of(descriptor)))
+      var descriptors = List.of(descriptor);
+      assertThatThrownBy(() -> apisixGatewayService.addRoutes(descriptors))
         .isInstanceOf(ApisixIntegrationException.class)
         .hasMessage("Failed to find APISIX service for module: " + MOD_ID)
         .hasCause(cause);
@@ -345,7 +347,8 @@ class ApisixGatewayServiceTest {
       when(apisixAdminClient.upsertRoute(ROUTE_ID_1, route1)).thenReturn(routeEntry(route1));
       doThrow(serverError("Create failed")).when(apisixAdminClient).upsertRoute(ROUTE_ID_2, route2);
 
-      assertThatThrownBy(() -> apisixGatewayService.addRoutes(List.of(descriptor)))
+      var descriptors = List.of(descriptor);
+      assertThatThrownBy(() -> apisixGatewayService.addRoutes(descriptors))
         .isInstanceOf(ApisixIntegrationException.class)
         .hasMessage("Failed to create routes")
         .extracting(exception -> ((ApisixIntegrationException) exception).getErrors())
@@ -387,7 +390,8 @@ class ApisixGatewayServiceTest {
       when(apisixRouteFactory.createRoutes(descriptor, MOD_ID)).thenReturn(List.of(desiredNew));
       doThrow(serverError("Create failed")).when(apisixAdminClient).upsertRoute(ROUTE_ID_2, desiredNew);
 
-      assertThatThrownBy(() -> apisixGatewayService.updateRoutes(List.of(descriptor)))
+      var descriptors = List.of(descriptor);
+      assertThatThrownBy(() -> apisixGatewayService.updateRoutes(descriptors))
         .isInstanceOf(ApisixIntegrationException.class)
         .hasMessage("Failed to update routes");
     }

@@ -258,7 +258,8 @@ Route route = new Route()
 partial failures. It carries a `List<Parameter>` of structured error details describing which
 routes or services failed and why.
 
-`TenantRouteUpdateException` is thrown when adding or removing a tenant from module routes fails.
+`TenantRouteUpdateException` (from `folio-backend-common`, `org.folio.common.gateway.exception`) is thrown when
+adding or removing a tenant from module routes fails; it carries a `Parameter` per failed route.
 
 Both exceptions are unchecked (`RuntimeException`) and should be caught by the caller to implement
 retry or rollback logic.

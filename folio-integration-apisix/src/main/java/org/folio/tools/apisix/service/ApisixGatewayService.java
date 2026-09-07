@@ -351,7 +351,8 @@ public class ApisixGatewayService implements ApiGatewayService {
     var uri = URI.create(definition.getUrl());
     validateUpstreamUrl(uri, definition);
     var scheme = uri.getScheme() != null ? uri.getScheme() : "http";
-    var port = uri.getPort() != -1 ? uri.getPort() : ("https".equals(scheme) ? 443 : 80);
+    var defaultPort = "https".equals(scheme) ? 443 : 80;
+    var port = uri.getPort() != -1 ? uri.getPort() : defaultPort;
     var upstream = new ApisixUpstream()
       .type("roundrobin")
       .scheme(scheme)

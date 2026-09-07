@@ -44,11 +44,11 @@ import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
 import org.folio.common.domain.model.error.Parameter;
 import org.folio.common.gateway.ApiGatewayService;
+import org.folio.common.gateway.exception.TenantRouteUpdateException;
 import org.folio.common.gateway.model.GatewayServiceDefinition;
 import org.folio.tools.kong.client.KongAdminClient;
 import org.folio.tools.kong.client.KongAdminClient.KongResultList;
 import org.folio.tools.kong.exception.KongIntegrationException;
-import org.folio.tools.kong.exception.TenantRouteUpdateException;
 import org.folio.tools.kong.model.Route;
 import org.folio.tools.kong.model.Service;
 import org.folio.tools.kong.model.expression.RouteExpression;
@@ -124,7 +124,7 @@ public class KongGatewayService implements ApiGatewayService {
       throw e;
     } catch (Exception e) {
       throw new TenantRouteUpdateException(
-        "Failed to add tenant [" + tenantName + "] to routes for module [" + moduleId + "]", e);
+        "Failed to add tenant [" + tenantName + "] to routes for module [" + moduleId + "]", List.of(), e);
     }
   }
 
@@ -157,7 +157,7 @@ public class KongGatewayService implements ApiGatewayService {
       throw e;
     } catch (Exception e) {
       throw new TenantRouteUpdateException(
-        "Failed to remove tenant [" + tenantName + "] from routes for module [" + moduleId + "]", e);
+        "Failed to remove tenant [" + tenantName + "] from routes for module [" + moduleId + "]", List.of(), e);
     }
   }
 
@@ -461,9 +461,11 @@ public class KongGatewayService implements ApiGatewayService {
   private static void validateTenantChangeOperation(String tenantName, String moduleId, List<String> failedRoutes,
     String operation) {
     if (!failedRoutes.isEmpty()) {
+      var errors = mapItems(failedRoutes,
+        routeId -> new Parameter().key(routeId).value("Failed to " + operation + " tenant"));
       throw new TenantRouteUpdateException(
         "Failed to " + operation + " tenant [" + tenantName + "] to routes for module [" + moduleId + "]. "
-          + "Failed routes: " + String.join(", ", failedRoutes));
+          + "Failed routes: " + String.join(", ", failedRoutes), errors);
     }
   }
 

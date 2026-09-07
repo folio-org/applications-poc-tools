@@ -115,7 +115,7 @@ public class ApisixRouteTenantService {
 
   private static @Nullable List<Object> findTenantVar(List<List<Object>> vars) {
     return vars.stream()
-      .filter(var -> !var.isEmpty() && TENANT_VAR.equals(var.get(0)))
+      .filter(condition -> !condition.isEmpty() && TENANT_VAR.equals(condition.get(0)))
       .findFirst()
       .orElse(null);
   }
