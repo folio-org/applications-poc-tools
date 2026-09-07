@@ -31,7 +31,7 @@ public class ApiGatewayTypeValidationAutoConfiguration {
 
   // Case-insensitive on purpose: @ConditionalOnProperty(havingValue = ...) matches with equalsIgnoreCase,
   // so the check must accept exactly the values that activate a gateway auto-configuration.
-  static void validateGatewayType(String type) {
+  private void validateGatewayType(String type) {
     if (SUPPORTED_GATEWAY_TYPES.stream().noneMatch(type::equalsIgnoreCase)) {
       throw new IllegalStateException("Unsupported API Gateway type: '" + type
         + "'. Supported values: kong, apisix (application.apigw.type / APIGW_TYPE)");
