@@ -16,6 +16,7 @@
 * Add `folio-integration-apisix` module: Apache APISIX implementation of `ApiGatewayService` (Admin API client, module-descriptor route translation, structured tenant `vars` management), active when `application.apigw.type=apisix`; register APISIX and etcd container images in DockerImageRegistry (MGRENTITLE-173)
 * Fail startup with a clear message when `application.apigw.enabled=true` and `application.apigw.type` is neither `kong` nor `apisix`: shared `ApiGatewayTypeValidationAutoConfiguration` in `folio-backend-common`, so every module using a gateway library gets the check instead of silently activating no gateway (MGRENTITLE-173)
 * Make the verify-dependent-modules workflow accept a configurable folio-keycloak Testcontainers image
+* Fix `@EnableKafkaConsumer` breaking consumers that do not use event confirmation: drop the library package component scan (it also registered gated configurations such as `ModuleMetadataConfiguration`), bind and validate `EventConfirmationProperties` only when `application.event-confirmation.enabled=true`, resolve `ModuleIdExtractor` lazily in `ResourceResultEventPublishingRecoverer` (MODSCHED-60)
 * Add event confirmation support for async entitlement processing feedback in folio-kafka-consumer (MODSCHED-60)
 -------
 

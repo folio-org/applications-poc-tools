@@ -36,19 +36,13 @@ This annotation imports three configurations:
 | `ModuleMetadataConfiguration`         | `moduleMetadata` bean resolved from the application's name and version                                          |
 | `KafkaConsumerPropertiesConfiguration`| `kafkaConsumerProperties` bean bound to `application.kafka.consumer.*` with a stable, SpEL-friendly bean name  |
 
-`EventConfirmationConfiguration` is **not** imported by `@EnableKafkaConsumer`. It is activated
-separately when `application.event-confirmation.enabled=true` is set and the consuming application's
-component scan includes the library package:
-
-```java
-@ComponentScan(basePackages = "org.folio.integration.kafka.consumer")
-```
-
-Alternatively, import the configuration class explicitly in a `@Configuration` class:
-
-```java
-@Import(EventConfirmationConfiguration.class)
-```
+`@EnableKafkaConsumer` also imports `EventConfirmationConfiguration`, which activates only when
+`application.event-confirmation.enabled=true`, plus the always-available confirmation components
+`ResourceResultEventPublisher`, `LoggingRecoverer` and `ResourceResultEventPublishingRecoverer`.
+`EventConfirmationProperties` is bound and validated only when the subsystem is enabled, and
+`ResourceResultEventPublishingRecoverer` resolves the `ModuleIdExtractor` bean lazily, so consumers
+that do not use event confirmation need no extra configuration. No component scan of the library
+package is required (and none is performed).
 
 ---
 
@@ -224,8 +218,6 @@ application:
     enabled: true
     topic: folio.<env>.mgr-tenant-entitlements.resource-result
 ```
-
-And ensure the library package is included in the component scan (see [Activation](#activation)).
 
 ### Publishing a success result
 
