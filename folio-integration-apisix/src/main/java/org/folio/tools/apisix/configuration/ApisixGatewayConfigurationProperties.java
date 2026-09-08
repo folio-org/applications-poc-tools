@@ -1,0 +1,57 @@
+package org.folio.tools.apisix.configuration;
+
+import lombok.Data;
+import org.folio.common.configuration.properties.TlsProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+@Data
+@ConfigurationProperties(prefix = "application.apigw")
+public class ApisixGatewayConfigurationProperties {
+
+  /**
+   * Provides API Gateway admin URL.
+   */
+  private String url;
+
+  /**
+   * APISIX Admin API key (sent as the {@code X-API-KEY} header).
+   */
+  private String apiKey;
+
+  /**
+   * Module URL for self-registration.
+   */
+  private String moduleSelfUrl;
+
+  /**
+   * Defines if module must be registered.
+   */
+  private boolean registerModule;
+
+  /**
+   * The number of retries to execute upon failure to proxy.
+   */
+  private Integer retries;
+
+  /**
+   * The timeout in milliseconds for establishing a connection from the API Gateway to upstream service.
+   */
+  private Integer connectTimeout;
+
+  /**
+   * The timeout in milliseconds between two successive write operations for transmitting a request from the
+   * API Gateway to the upstream service.
+   */
+  private Integer writeTimeout;
+
+  /**
+   * The timeout in milliseconds between two successive read operations for transmitting a request from the
+   * API Gateway to the upstream service.
+   */
+  private Integer readTimeout;
+
+  /**
+   * Class that represents TLS connection properties.
+   */
+  private TlsProperties tls;
+}

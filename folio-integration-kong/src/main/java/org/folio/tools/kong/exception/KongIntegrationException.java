@@ -2,14 +2,12 @@ package org.folio.tools.kong.exception;
 
 import java.io.Serial;
 import java.util.List;
-import lombok.Getter;
 import org.folio.common.domain.model.error.Parameter;
+import org.folio.common.gateway.exception.ApiGatewayIntegrationException;
 
-@Getter
-public class KongIntegrationException extends RuntimeException {
+public class KongIntegrationException extends ApiGatewayIntegrationException {
 
   @Serial private static final long serialVersionUID = -2287895699076196457L;
-  private final transient List<Parameter> errors;
 
   /**
    * Creates a new {@link KongIntegrationException} with corresponding error message.
@@ -18,8 +16,7 @@ public class KongIntegrationException extends RuntimeException {
    * @param errors - {@link List} with error {@link Parameter} objects
    */
   public KongIntegrationException(String message, List<Parameter> errors) {
-    super(message);
-    this.errors = errors;
+    super(message, errors);
   }
 
   /**
@@ -30,7 +27,6 @@ public class KongIntegrationException extends RuntimeException {
    * @param cause - the cause
    */
   public KongIntegrationException(String message, List<Parameter> errors, Throwable cause) {
-    super(message, cause);
-    this.errors = errors;
+    super(message, errors, cause);
   }
 }

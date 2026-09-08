@@ -1,3 +1,10 @@
+## Version `4.0.7` (In Progress)
+### Changes:
+* Add Apache APISIX support through the shared `ApiGatewayService` interface (MGRENTITLE-216, MGRENTITLE-173)
+  - Select APISIX with `application.apigw.enabled=true` and `application.apigw.type=apisix`; set the required Admin API `application.apigw.url` and `application.apigw.api-key`. Kong remains the default gateway type.
+  - **Breaking:** replace `org.folio.tools.kong.service.ApiGatewayModuleRegistrar` with `org.folio.common.gateway.ApiGatewayModuleRegistrar` and `org.folio.tools.kong.exception.TenantRouteUpdateException` with `org.folio.common.gateway.exception.TenantRouteUpdateException`.
+  - An unsupported `application.apigw.type` now fails startup when the gateway is enabled.
+
 ## Version `4.0.6` (19.10.2026)
 ### Changes:
 * Generalize Kong configuration to API Gateway in `folio-integration-kong` (EUREKA-887)

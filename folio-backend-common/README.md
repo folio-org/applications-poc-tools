@@ -112,6 +112,16 @@ application:
 String env = FolioEnvironment.getFolioEnvName();
 ```
 
+### `ApiGatewayTypeValidationAutoConfiguration`
+
+Auto-configuration active when `application.apigw.enabled=true`. It fails startup with
+`Unsupported API Gateway type: '<value>'. Supported values: kong, apisix (application.apigw.type / APIGW_TYPE)`
+unless `application.apigw.type` is unset, `kong` or `apisix` (case-insensitive, the same matching
+`@ConditionalOnProperty` applies). Each gateway library (`folio-integration-kong`, `folio-integration-apisix`)
+activates only for its own type, so without this check a mistyped value would activate no gateway at all and a
+module relying on self-registration would start without registering itself. The check does not verify that the
+library matching the selected type is on the classpath.
+
 ---
 
 ## Pagination

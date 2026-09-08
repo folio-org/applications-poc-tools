@@ -35,4 +35,18 @@ class DockerImageRegistryTest {
 
     assertThat(result).isEqualTo(DockerImageRegistry.KAFKA_DEFAULT_IMAGE);
   }
+
+  @Test
+  void getApisixImageName_positive_returnsDefaultImage() {
+    var result = DockerImageRegistry.getApisixImageName();
+
+    assertThat(result).isEqualTo(DockerImageRegistry.APISIX_DEFAULT_IMAGE);
+  }
+
+  @Test
+  void getEtcdImageName_positive_returnsDefaultImage() {
+    var result = DockerImageRegistry.getEtcdImageName();
+
+    assertThat(result).isEqualTo(DockerImageRegistry.ETCD_DEFAULT_IMAGE);
+  }
 }
