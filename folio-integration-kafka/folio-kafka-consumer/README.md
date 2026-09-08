@@ -1,8 +1,10 @@
 # folio-kafka-consumer
 
 Spring Boot consumer library for FOLIO applications. Provides tenant-aware Kafka message filtering,
-per-listener topic and group-ID configuration, and automatic module metadata resolution — so only
-messages intended for entitled tenants are delivered to the listener.
+per-listener topic and group-ID configuration, automatic module metadata resolution, and event
+confirmation support for async entitlement feedback — so only messages intended for entitled
+tenants are delivered to the listener, and callers can receive a result event when processing
+completes or fails.
 
 ## Table of Contents
 
@@ -11,6 +13,7 @@ messages intended for entitled tenants are delivered to the listener.
 - [Tenant-Aware Filtering](#tenant-aware-filtering)
 - [Module Metadata Resolution](#module-metadata-resolution)
 - [Using the Filter in a Listener Container Factory](#using-the-filter-in-a-listener-container-factory)
+- [Event Confirmation](#event-confirmation)
 - [Full Configuration Reference](#full-configuration-reference)
 
 ---
@@ -32,6 +35,20 @@ This annotation imports three configurations:
 | `KafkaConsumerFilteringConfiguration` | `tenantAwareMessageFilter` bean (active filter or no-op pass-through, depending on properties)                  |
 | `ModuleMetadataConfiguration`         | `moduleMetadata` bean resolved from the application's name and version                                          |
 | `KafkaConsumerPropertiesConfiguration`| `kafkaConsumerProperties` bean bound to `application.kafka.consumer.*` with a stable, SpEL-friendly bean name  |
+
+`EventConfirmationConfiguration` is **not** imported by `@EnableKafkaConsumer`. It is activated
+separately when `application.event-confirmation.enabled=true` is set and the consuming application's
+component scan includes the library package:
+
+```java
+@ComponentScan(basePackages = "org.folio.integration.kafka.consumer")
+```
+
+Alternatively, import the configuration class explicitly in a `@Configuration` class:
+
+```java
+@Import(EventConfirmationConfiguration.class)
+```
 
 ---
 
@@ -191,6 +208,105 @@ so a custom `RecordFilterStrategy` bean with that name takes precedence.
 
 ---
 
+## Event Confirmation
+
+The event confirmation subsystem lets a consumer module send a `ResourceResultEvent` back to the
+caller (typically `mgr-tenant-entitlements`) once a `ResourceEvent` has been processed — either
+successfully or after all retries are exhausted.
+
+### Enabling event confirmation
+
+Set the following properties in `application.yml` (or equivalent):
+
+```yaml
+application:
+  event-confirmation:
+    enabled: true
+    topic: folio.<env>.mgr-tenant-entitlements.resource-result
+```
+
+And ensure the library package is included in the component scan (see [Activation](#activation)).
+
+### Publishing a success result
+
+Inject `ResourceResultEventPublisher` into the listener and call `publishSuccessFor` after
+successful processing:
+
+```java
+@Component
+@RequiredArgsConstructor
+public class MyEventListener {
+
+    private final ResourceResultEventPublisher confirmationPublisher;
+    private final ModuleIdExtractor moduleIdExtractor;
+
+    @KafkaListener(...)
+    public void handle(ResourceEvent<MyPayload> event) {
+        // ... process event ...
+        confirmationPublisher.publishSuccessFor(event, moduleIdExtractor.apply(event));
+    }
+}
+```
+
+### Wiring the failure recoverer
+
+To publish a failure confirmation when all retries are exhausted, configure
+`ResourceResultEventPublishingRecoverer` as the dead-letter recoverer in the retry back-off policy:
+
+```java
+@Bean
+public CommonErrorHandler kafkaErrorHandler(ResourceResultEventPublishingRecoverer recoverer) {
+    var backOff = new FixedBackOff(1000L, 3L);
+    return new DefaultErrorHandler(recoverer, backOff);
+}
+```
+
+### Implementing `ModuleIdExtractor`
+
+Provide a bean that extracts the module identifier from an incoming `ResourceEvent`. The string
+is included in the `ResourceResultEvent` sent to the confirmation topic:
+
+```java
+@Bean
+public ModuleIdExtractor moduleIdExtractor(ModuleMetadata moduleMetadata) {
+    return event -> moduleMetadata.getId();
+}
+```
+
+Return `null` when the module identifier is not applicable; the confirmation is still sent with a
+`null` `moduleId` field.
+
+### Transactional mode
+
+By default, event listeners fire immediately on publication (non-transactional). To fire only after
+a database transaction commits, set:
+
+```yaml
+application:
+  event-confirmation:
+    success-listener:
+      transactional: true
+      transaction-phase: AFTER_COMMIT   # default when transactional=true
+    failure-listener:
+      transactional: true
+```
+
+### Custom sender
+
+To replace the default Kafka-backed sender, register a bean named `eventConfirmationSender`:
+
+```java
+@Bean("eventConfirmationSender")
+public EventConfirmationSender myCustomSender() {
+    return new MyCustomEventConfirmationSender();
+}
+```
+
+When this bean is present, `EventConfirmationConfiguration` skips creating the default
+`KafkaEventConfirmationSender` and its thread-pool executor.
+
+---
+
 ## Full Configuration Reference
 
 | Property                                                                          | Type      | Default  | Description                                             |
@@ -203,3 +319,9 @@ so a custom `RecordFilterStrategy` bean with that name takes precedence.
 | `application.kafka.consumer.filtering.tenant-filter.tenant-disabled-strategy`     | `String`  | `SKIP`   | Strategy when a record's tenant is not entitled         |
 | `application.kafka.consumer.filtering.tenant-filter.all-tenants-disabled-strategy`| `String`  | `FAIL`   | Strategy when no tenants at all are entitled            |
 | `spring.application.module-properties.location`                                   | `String`  | `classpath:module.properties` | Override path for `module.properties` |
+| `application.event-confirmation.enabled`                                          | `boolean` | `false`  | Activate the event-confirmation subsystem               |
+| `application.event-confirmation.topic`                                            | `String`  | —        | Kafka topic for `ResourceResultEvent` confirmations; must not be blank when enabled |
+| `application.event-confirmation.success-listener.transactional`                   | `boolean` | `false`  | Fire the success listener inside a transaction synchronisation callback |
+| `application.event-confirmation.success-listener.transaction-phase`               | `String`  | `AFTER_COMMIT` | Transaction phase for the transactional success listener |
+| `application.event-confirmation.failure-listener.transactional`                   | `boolean` | `false`  | Fire the failure listener inside a transaction synchronisation callback |
+| `application.event-confirmation.failure-listener.transaction-phase`               | `String`  | `AFTER_COMMIT` | Transaction phase for the transactional failure listener |
