@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.folio</groupId>
+    <artifactId>applications-poc-tools</artifactId>
+    <version>4.1.0-SNAPSHOT</version>
+  </parent>
+
+  <name>folio-integration-apisix</name>
+  <artifactId>folio-integration-apisix</artifactId>
+
+  <properties>
+    <commons-codec.version>1.22.1</commons-codec.version>
+
+    <sonar.exclusions>
+      src/main/java/**/ApisixAdminClient.java,
+      src/main/java/**/configuration/**/*,
+      src/main/java/**/model/*
+    </sonar.exclusions>
+  </properties>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-backend-common</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-tls-utils</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>${commons-codec.version}</version>
+    </dependency>
+
+    <!-- Test dependencies -->
+
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-backend-testing</artifactId>
+      <version>${project.parent.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+</project>
