@@ -1,32 +1,32 @@
-package org.folio.tools.kong.exception;
+package org.folio.tools.apisix.exception;
 
 import java.io.Serial;
 import java.util.List;
 import org.folio.common.domain.model.error.Parameter;
 import org.folio.common.gateway.exception.ApiGatewayIntegrationException;
 
-public class KongIntegrationException extends ApiGatewayIntegrationException {
+public class ApisixIntegrationException extends ApiGatewayIntegrationException {
 
-  @Serial private static final long serialVersionUID = -2287895699076196457L;
+  @Serial private static final long serialVersionUID = 4265974924523916122L;
 
   /**
-   * Creates a new {@link KongIntegrationException} with corresponding error message.
+   * Creates a new {@link ApisixIntegrationException} with corresponding error message.
    *
    * @param message - error message as {@link String} object
    * @param errors - {@link List} with error {@link Parameter} objects
    */
-  public KongIntegrationException(String message, List<Parameter> errors) {
+  public ApisixIntegrationException(String message, List<Parameter> errors) {
     super(message, errors);
   }
 
   /**
-   * Creates a new {@link KongIntegrationException} with corresponding error message.
+   * Creates a new {@link ApisixIntegrationException} with corresponding error message.
    *
    * @param message - error message as {@link String} object
    * @param errors - {@link List} with error {@link Parameter} objects
    * @param cause - the cause
    */
-  public KongIntegrationException(String message, List<Parameter> errors, Throwable cause) {
+  public ApisixIntegrationException(String message, List<Parameter> errors, Throwable cause) {
     super(message, errors, cause);
   }
 }

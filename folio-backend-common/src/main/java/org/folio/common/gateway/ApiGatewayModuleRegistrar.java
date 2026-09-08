@@ -1,4 +1,4 @@
-package org.folio.tools.kong.service;
+package org.folio.common.gateway;
 
 import static java.util.Collections.singletonList;
 
@@ -6,13 +6,15 @@ import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.common.domain.model.ModuleDescriptor;
-import org.folio.tools.kong.configuration.ApiGatewayConfigurationProperties;
-import org.folio.tools.kong.model.Service;
+import org.folio.common.gateway.model.GatewayServiceDefinition;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ResourceLoader;
 import tools.jackson.databind.ObjectMapper;
 
+/**
+ * Self-registers the hosting module as an API Gateway service with its routes on application startup.
+ */
 @Log4j2
 @RequiredArgsConstructor
 public class ApiGatewayModuleRegistrar {
@@ -21,24 +23,24 @@ public class ApiGatewayModuleRegistrar {
 
   private final ObjectMapper objectMapper;
   private final ResourceLoader resourceLoader;
-  private final KongGatewayService kongGatewayService;
-  private final ApiGatewayConfigurationProperties properties;
+  private final ApiGatewayService apiGatewayService;
+  private final ModuleRegistrationSettings settings;
 
   @EventListener(ApplicationReadyEvent.class)
   public void registerRoutes() {
     var moduleDescriptor = getModuleDescriptor();
     var moduleId = moduleDescriptor.getId();
-    var moduleUrl = properties.getModuleSelfUrl();
+    var moduleUrl = settings.moduleSelfUrl();
 
     log.info("Self-registering service in API Gateway: moduleId = {}, url = {}", moduleId, moduleUrl);
-    kongGatewayService.upsertService(
-      new Service().name(moduleId).url(moduleUrl)
-        .connectTimeout(properties.getConnectTimeout())
-        .readTimeout(properties.getReadTimeout())
-        .writeTimeout(properties.getWriteTimeout())
-        .retries(properties.getRetries())
+    apiGatewayService.upsertService(
+      new GatewayServiceDefinition().name(moduleId).url(moduleUrl)
+        .connectTimeout(settings.connectTimeout())
+        .readTimeout(settings.readTimeout())
+        .writeTimeout(settings.writeTimeout())
+        .retries(settings.retries())
     );
-    kongGatewayService.updateRoutes(singletonList(moduleDescriptor));
+    apiGatewayService.updateRoutes(singletonList(moduleDescriptor));
   }
 
   private ModuleDescriptor getModuleDescriptor() {

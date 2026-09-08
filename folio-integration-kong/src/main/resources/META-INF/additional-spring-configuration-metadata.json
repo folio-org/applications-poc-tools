@@ -107,6 +107,27 @@
         "reason": "Renamed for gateway-agnostic configuration; removal planned for the Vetch release.",
         "level": "warning"
       }
+    },
+    {
+      "name": "application.apigw.type",
+      "type": "java.lang.String",
+      "defaultValue": "kong",
+      "description": "Selects the active API Gateway implementation. This auto-configuration is active only for 'kong' (or when the property is not set)."
+    }
+  ],
+  "hints": [
+    {
+      "name": "application.apigw.type",
+      "values": [
+        {
+          "value": "kong",
+          "description": "Kong Gateway (folio-integration-kong)."
+        },
+        {
+          "value": "apisix",
+          "description": "Apache APISIX (folio-integration-apisix)."
+        }
+      ]
     }
   ]
 }

@@ -12,6 +12,9 @@
 * Add ResourceResultEvent and ResourceResultStatus Kafka models for async entitlement processing feedback (MGRENTITLE-158)
 * Scope ModuleMetadataConfiguration to tenant-filter activation; makes `spring.application.name` and `spring.application.version` optional in appPropertiesModuleDataProvider (MGRENTITLE-158)
 * Generalize Kong configuration to API Gateway in `folio-integration-kong` (EUREKA-887)
+* Add gateway-agnostic `ApiGatewayService` interface, `GatewayServiceDefinition` model, `ApiGatewayIntegrationException` supertype and generalized `ApiGatewayModuleRegistrar` in `folio-backend-common`; `KongGatewayService` implements the interface and the Kong auto-configuration is gated on `application.apigw.type=kong` (default). **Breaking:** `org.folio.tools.kong.service.ApiGatewayModuleRegistrar` moved to `org.folio.common.gateway.ApiGatewayModuleRegistrar`; `org.folio.tools.kong.exception.TenantRouteUpdateException` is removed in favour of `org.folio.common.gateway.exception.TenantRouteUpdateException` (MGRENTITLE-173)
+* Add `folio-integration-apisix` module: Apache APISIX implementation of `ApiGatewayService` (Admin API client, module-descriptor route translation, structured tenant `vars` management), active when `application.apigw.type=apisix`; register APISIX and etcd container images in DockerImageRegistry (MGRENTITLE-173)
+* Fail startup with a clear message when `application.apigw.enabled=true` and `application.apigw.type` is neither `kong` nor `apisix`: shared `ApiGatewayTypeValidationAutoConfiguration` in `folio-backend-common`, so every module using a gateway library gets the check instead of silently activating no gateway (MGRENTITLE-173)
 * Make the verify-dependent-modules workflow accept a configurable folio-keycloak Testcontainers image
 * Add event confirmation support for async entitlement processing feedback in folio-kafka-consumer (MODSCHED-60)
 -------
