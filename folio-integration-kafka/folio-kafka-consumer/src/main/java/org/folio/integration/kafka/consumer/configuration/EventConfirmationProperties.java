@@ -3,7 +3,6 @@ package org.folio.integration.kafka.consumer.configuration;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.validation.annotation.Validated;
 
@@ -16,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
  * {@link EventConfirmationConfiguration} for the full list of beans that are activated.
  */
 @Data
-@Component
 @Validated
 @ConfigurationProperties("application.event-confirmation")
 public class EventConfirmationProperties {

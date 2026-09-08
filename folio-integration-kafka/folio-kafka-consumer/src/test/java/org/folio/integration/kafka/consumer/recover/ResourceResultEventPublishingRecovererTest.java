@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 
 @UnitTest
 @ExtendWith(MockitoExtension.class)
@@ -30,6 +31,7 @@ class ResourceResultEventPublishingRecovererTest {
 
   @Mock private ResourceResultEventPublisher eventPublisher;
   @Mock private ModuleIdExtractor moduleIdExtractor;
+  @Mock private ObjectProvider<ModuleIdExtractor> moduleIdExtractorProvider;
   @InjectMocks private ResourceResultEventPublishingRecoverer recoverer;
 
   @AfterEach
@@ -42,6 +44,7 @@ class ResourceResultEventPublishingRecovererTest {
     var resourceEvent = resourceEvent();
     var rec = new ConsumerRecord<String, Object>(TOPIC, 0, 0L, TENANT_ID, resourceEvent);
     var exception = new RuntimeException("processing failed");
+    when(moduleIdExtractorProvider.getObject()).thenReturn(moduleIdExtractor);
     when(moduleIdExtractor.apply(resourceEvent)).thenReturn(MODULE_ID);
 
     recoverer.accept(rec, exception);
@@ -67,6 +70,7 @@ class ResourceResultEventPublishingRecovererTest {
   void accept_positive_extractorReturnsNull_publishesWithNullModuleId() {
     var resourceEvent = resourceEvent();
     var rec = new ConsumerRecord<String, Object>(TOPIC, 0, 0L, TENANT_ID, resourceEvent);
+    when(moduleIdExtractorProvider.getObject()).thenReturn(moduleIdExtractor);
     when(moduleIdExtractor.apply(resourceEvent)).thenReturn(null);
 
     recoverer.accept(rec, new RuntimeException("error"));
