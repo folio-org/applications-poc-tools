@@ -18,6 +18,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.folio.integration.kafka.consumer.configuration.EventConfirmationConfiguration;
 import org.folio.integration.kafka.consumer.confirmation.ResourceResultEventPublisher;
+import org.folio.integration.kafka.consumer.recover.ModuleIdExtractor;
 import org.folio.integration.kafka.model.ResourceEvent;
 import org.folio.integration.kafka.model.ResourceResultEvent;
 import org.folio.test.TestUtils;
@@ -46,7 +47,6 @@ import tools.jackson.databind.json.JsonMapper;
 @SpringBootTest(
   classes = {
     EventConfirmationConfiguration.class,
-    ResourceResultEventPublisher.class,
     EventConfirmationIT.TestConfig.class
   },
   webEnvironment = WebEnvironment.NONE)
@@ -118,6 +118,11 @@ class EventConfirmationIT {
   @TestConfiguration
   @EnableConfigurationProperties({KafkaProperties.class})
   static class TestConfig {
+
+    @Bean
+    ModuleIdExtractor moduleIdExtractor() {
+      return resourceEvent -> null;
+    }
 
     @Bean
     JsonMapper jsonMapper() {

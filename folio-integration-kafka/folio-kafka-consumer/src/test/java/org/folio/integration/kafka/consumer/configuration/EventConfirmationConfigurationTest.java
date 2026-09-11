@@ -23,11 +23,11 @@ class EventConfirmationConfigurationTest {
 
   @Mock private EventConfirmationSender sender;
 
-  private EventConfirmationConfiguration configuration;
+  private EventConfirmationConfiguration.Enabled configuration;
 
   @BeforeEach
   void setUp() {
-    configuration = new EventConfirmationConfiguration(new EventConfirmationProperties());
+    configuration = new EventConfirmationConfiguration.Enabled();
   }
 
   @AfterEach
