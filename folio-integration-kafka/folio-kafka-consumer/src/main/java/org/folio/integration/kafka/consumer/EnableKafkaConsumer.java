@@ -4,8 +4,12 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.folio.integration.kafka.consumer.configuration.EventConfirmationConfiguration;
 import org.folio.integration.kafka.consumer.configuration.KafkaConsumerFilteringConfiguration;
 import org.folio.integration.kafka.consumer.configuration.KafkaConsumerPropertiesConfiguration;
+import org.folio.integration.kafka.consumer.confirmation.ResourceResultEventPublisher;
+import org.folio.integration.kafka.consumer.recover.LoggingRecoverer;
+import org.folio.integration.kafka.consumer.recover.ResourceResultEventPublishingRecoverer;
 import org.springframework.context.annotation.Import;
 
 /**
@@ -30,5 +34,9 @@ import org.springframework.context.annotation.Import;
 @Import({
   KafkaConsumerFilteringConfiguration.class,
   KafkaConsumerPropertiesConfiguration.class,
+  EventConfirmationConfiguration.class,
+  ResourceResultEventPublisher.class,
+  LoggingRecoverer.class,
+  ResourceResultEventPublishingRecoverer.class
 })
 public @interface EnableKafkaConsumer {}
