@@ -25,6 +25,11 @@
           "methods": [ "DELETE" ],
           "pathPattern": "/foo/{id}",
           "permissionsRequired": [ "foo.item.delete" ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/foo/public",
+          "permissionsRequired": [ "*" ]
         }
       ]
     },
