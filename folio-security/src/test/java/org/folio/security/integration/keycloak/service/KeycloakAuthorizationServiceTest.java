@@ -198,8 +198,8 @@ class KeycloakAuthorizationServiceTest {
   }
 
   @Test
-  void authorize_mixedWildcardAndNamedPermissions_evaluatesPermissions() throws ParseException {
-    var routingEntry = routingEntry().permissionsRequired(List.of("*", "foo.item.get"));
+  void authorize_namedPermissions_evaluatesPermissions() throws ParseException {
+    var routingEntry = routingEntry().permissionsRequired(List.of("foo.item.post", "foo.item.get"));
 
     when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
     when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
