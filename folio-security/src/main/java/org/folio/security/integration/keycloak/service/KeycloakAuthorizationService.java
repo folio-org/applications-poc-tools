@@ -9,6 +9,7 @@ import static org.keycloak.OAuth2Constants.UMA_GRANT_TYPE;
 import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +54,8 @@ public class KeycloakAuthorizationService extends AbstractAuthorizationService {
     } catch (ParseException e) {
       throw new NotAuthorizedException("Not authorized");
     }
-    return isEmpty(routingEntry.getPermissionsRequired())
+    var perms = routingEntry.getPermissionsRequired();
+    return isEmpty(perms) || isWildcardPermissionsRequired(perms)
       ? checkTenantMatching(accessToken, request)
       : evaluatePermissions(routingEntry, method, accessToken, token);
   }
@@ -98,6 +100,10 @@ public class KeycloakAuthorizationService extends AbstractAuthorizationService {
       .tenant(resolveTenant(accessToken.getIssuer()));
 
     return new PreAuthenticatedAuthenticationToken(authUserPrincipal, null, Collections.emptyList());
+  }
+
+  private static boolean isWildcardPermissionsRequired(List<String> permissions) {
+    return permissions.size() == 1 && "*".equals(permissions.get(0));
   }
 
   private static UUID getFolioUserId(JsonWebToken accessToken) {

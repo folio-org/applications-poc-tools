@@ -178,6 +178,47 @@ class KeycloakAuthorizationServiceTest {
   }
 
   @Test
+  void authorize_wildcardPermissionsRequired_checksTenantMatchingOnly() throws ParseException {
+    var routingEntry = routingEntry().permissionsRequired(List.of("*"));
+
+    when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
+    when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
+    when(httpServletRequest.getHeader(TENANT)).thenReturn(TENANT_ID);
+    when(routingEntryMatcher.lookup(HTTP_METHOD, PATH)).thenReturn(Optional.of(routingEntry));
+    when(jsonWebTokenParser.parse(TOKEN)).thenReturn(accessToken);
+    when(accessToken.getSubject()).thenReturn(AUTH_USER_ID.toString());
+    when(accessToken.getIssuer()).thenReturn("https://keycloak/realms/" + TENANT_ID);
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("");
+    when(accessToken.getClaim("user_id")).thenReturn(FOLIO_USER_ID.toString());
+
+    var result = keycloakAuthorizationService.authorize(httpServletRequest, TOKEN);
+
+    assertThat(result).isInstanceOf(PreAuthenticatedAuthenticationToken.class);
+    assertThat(result.getPrincipal()).isEqualTo(authUserPrincipal());
+  }
+
+  @Test
+  void authorize_namedPermissions_evaluatesPermissions() throws ParseException {
+    var routingEntry = routingEntry().permissionsRequired(List.of("foo.item.post", "foo.item.get"));
+
+    when(urlPathHelper.getPathWithinApplication(httpServletRequest)).thenReturn(PATH);
+    when(httpServletRequest.getMethod()).thenReturn(HTTP_METHOD);
+    when(properties.getClient()).thenReturn(keycloakClientProperties());
+    when(routingEntryMatcher.lookup(HTTP_METHOD, PATH)).thenReturn(Optional.of(routingEntry));
+    when(jsonWebTokenParser.parse(TOKEN)).thenReturn(accessToken);
+    when(accessToken.getSubject()).thenReturn(AUTH_USER_ID.toString());
+    when(accessToken.getIssuer()).thenReturn("https://keycloak/realms/" + TENANT_ID);
+    when(environment.getProperty(ROUTER_PREFIX_PROPERTY, "")).thenReturn("");
+    when(accessToken.getClaim("user_id")).thenReturn(FOLIO_USER_ID.toString());
+    when(keycloakClient.evaluatePermissions(authRequestParameters(), "Bearer " + TOKEN)).thenReturn(tokenResponse);
+
+    var result = keycloakAuthorizationService.authorize(httpServletRequest, TOKEN);
+
+    assertThat(result).isInstanceOf(PreAuthenticatedAuthenticationToken.class);
+    assertThat(result.getPrincipal()).isEqualTo(authUserPrincipal());
+  }
+
+  @Test
   void authorize_positive_forbiddenException() throws ParseException {
     var routingEntry = routingEntry();
 
