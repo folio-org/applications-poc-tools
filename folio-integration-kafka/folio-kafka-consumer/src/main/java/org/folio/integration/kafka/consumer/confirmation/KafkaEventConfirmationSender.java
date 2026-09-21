@@ -2,6 +2,8 @@ package org.folio.integration.kafka.consumer.confirmation;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.folio.integration.kafka.consumer.KafkaTenantHeaders;
 import org.folio.integration.kafka.model.ResourceResultEvent;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -39,9 +41,11 @@ public class KafkaEventConfirmationSender implements EventConfirmationSender {
   }
 
   private void send(ResourceResultEvent resultEvent) {
-    var key = resultEvent.getTenant();
+    var tenant = resultEvent.getTenant();
+    var producerRecord = new ProducerRecord<>(confirmationTopic, null, tenant, resultEvent,
+      KafkaTenantHeaders.tenantHeaders(tenant));
 
-    kafkaTemplate.send(confirmationTopic, key, resultEvent).whenComplete((result, exception) -> {
+    kafkaTemplate.send(producerRecord).whenComplete((result, exception) -> {
       if (exception != null) {
         // A lost confirmation leaves the originating entitlement stage IN_PROGRESS until the sender's
         // async-confirmation timeout expires, so the failure must be visible in the log.
