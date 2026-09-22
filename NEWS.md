@@ -18,6 +18,7 @@
 * Make the verify-dependent-modules workflow accept a configurable folio-keycloak Testcontainers image
 * Fix `@EnableKafkaConsumer` breaking consumers that do not use event confirmation: drop the library package component scan (it also registered gated configurations such as `ModuleMetadataConfiguration`), bind and validate `EventConfirmationProperties` only when `application.event-confirmation.enabled=true`, resolve `ModuleIdExtractor` lazily in `ResourceResultEventPublishingRecoverer` (MODSCHED-60)
 * Add event confirmation support for async entitlement processing feedback in folio-kafka-consumer (MODSCHED-60)
+* Add `x-okapi-tenant` and `folio.tenantId` Kafka headers to `resource-result` confirmation events sent by `KafkaEventConfirmationSender` (APPPOCTOOL-108)
 -------
 
 ## Version `v4.0.0` (14.04.2026)
