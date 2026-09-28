@@ -29,6 +29,10 @@ class KeycloakModuleDescriptorMapperTest {
   private static final List<String> FOO_BY_ID_PERMS =
     List.of("GET#foo.item.get", "PUT#foo.item.put", "DELETE#foo.item.delete");
 
+  private static final String FOO_PUBLIC_RESOURCE = "/foo/public";
+  private static final List<String> FOO_PUBLIC_SCOPES = List.of("GET");
+  private static final List<String> FOO_PUBLIC_PERMS = Collections.emptyList();
+
   private static final String TIMER_RESOURCE = "/foo/timer";
   private static final List<String> TIMER_PERMISSIONS = Collections.emptyList();
   private static final List<String> TIMER_SCOPES = List.of("POST");
@@ -50,8 +54,10 @@ class KeycloakModuleDescriptorMapperTest {
 
     var resources = actual.getResourceServer().getResources();
 
+    var fooPublicResource = resource(FOO_PUBLIC_RESOURCE, FOO_PUBLIC_PERMS, FOO_PUBLIC_SCOPES);
+
     assertThat(resources).usingRecursiveFieldByFieldElementComparatorIgnoringFields("id")
-      .containsExactlyInAnyOrder(fooResource, fooByIdResource, timerResource, systemResource);
+      .containsExactlyInAnyOrder(fooResource, fooByIdResource, timerResource, systemResource, fooPublicResource);
   }
 
   @Test
@@ -64,8 +70,25 @@ class KeycloakModuleDescriptorMapperTest {
 
     var resources = actual.getResourceServer().getResources();
 
+    var fooPublicResource = resource(FOO_PUBLIC_RESOURCE, FOO_PUBLIC_PERMS, FOO_PUBLIC_SCOPES);
+
     assertThat(resources).usingRecursiveFieldByFieldElementComparatorIgnoringFields("id")
-      .containsExactlyInAnyOrder(fooResource, fooByIdResource, timerResource);
+      .containsExactlyInAnyOrder(fooResource, fooByIdResource, timerResource, fooPublicResource);
+  }
+
+  @Test
+  void map_wildcardPermissionsRequired_resourceCreatedWithNoPermissionAttributes() {
+    var actual = mapper.map(MD, false);
+
+    var resources = actual.getResourceServer().getResources();
+    var publicResource = resources.stream()
+      .filter(r -> FOO_PUBLIC_RESOURCE.equals(r.getName()))
+      .findFirst();
+
+    assertThat(publicResource).isPresent();
+    assertThat(publicResource.get().getAttributes().get("folio_permissions")).isEmpty();
+    assertThat(actual.getScopePermissions()).noneMatch(
+      p -> p.getResources() != null && p.getResources().contains(FOO_PUBLIC_RESOURCE));
   }
 
   @Test

@@ -2,6 +2,7 @@ package org.folio.integration.kafka.consumer.configuration;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.validation.annotation.Validated;
@@ -17,12 +18,8 @@ import org.springframework.validation.annotation.Validated;
 @Data
 @Validated
 @ConfigurationProperties("application.event-confirmation")
+@ConditionalOnBooleanProperty(prefix = "application.event-confirmation", name = "enabled")
 public class EventConfirmationProperties {
-
-  /**
-   * Flag to enable/disable sending confirmation events.
-   */
-  private boolean enabled;
 
   /**
    * Kafka topic to which {@link org.folio.integration.kafka.model.ResourceResultEvent}

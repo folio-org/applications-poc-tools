@@ -3,7 +3,6 @@ package org.folio.integration.kafka.consumer.recover;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.listener.ConsumerRecordRecoverer;
-import org.springframework.stereotype.Component;
 
 /**
  * Simple {@link ConsumerRecordRecoverer} that logs the failed record at {@code ERROR} level.
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Component;
  * that do require feedback, use {@link ResourceResultEventPublishingRecoverer} instead.
  */
 @Log4j2
-@Component
 public class LoggingRecoverer implements ConsumerRecordRecoverer {
 
   @Override

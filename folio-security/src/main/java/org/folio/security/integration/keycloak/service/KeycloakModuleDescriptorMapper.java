@@ -128,7 +128,9 @@ public class KeycloakModuleDescriptorMapper {
     }
     var methods = emptyIfNull(handler.getMethods());
     return emptyIfNull(handler.getPermissionsRequired())
-      .stream().map(perm -> String.join(SCOPE_PERM_DELIMITER, methods) + SCOPE_PERM_DELIMITER + perm)
+      .stream()
+      .filter(perm -> !"*".equals(perm))
+      .map(perm -> String.join(SCOPE_PERM_DELIMITER, methods) + SCOPE_PERM_DELIMITER + perm)
       .distinct()
       .collect(Collectors.toCollection(ArrayList::new));
   }

@@ -9,7 +9,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.folio.integration.kafka.model.ResourceEvent;
 import org.folio.integration.kafka.model.ResourceResultEvent;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
 /**
  * Spring component that converts a processed {@link ResourceEvent} outcome into a
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Component;
  * is populated with {@link org.apache.commons.lang3.exception.ExceptionUtils#getMessage}.
  */
 @Log4j2
-@Component
 @RequiredArgsConstructor
 public class ResourceResultEventPublisher {
 
