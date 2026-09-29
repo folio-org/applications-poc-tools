@@ -37,7 +37,7 @@ env:
       {"name": "mod-roles-keycloak", "repo": "folio-org/mod-roles-keycloak"},
       {"name": "mod-login-keycloak", "repo": "folio-org/mod-login-keycloak"},
       {"name": "mod-users-keycloak", "repo": "folio-org/mod-users-keycloak"},
-      {"name": "mod-scheduler", "repo": "folio-org/mod-scheduler"},
+      {"name": "mod-scheduler", "repo": "folio-org/mod-scheduler", "branch": "verification-issue-fix"},
       {"name": "mod-consortia-keycloak", "repo": "folio-org/mod-consortia-keycloak"},
       {"name": "folio-module-sidecar", "repo": "folio-org/folio-module-sidecar"}
     ]}
@@ -103,6 +103,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: ${{ matrix.repo }}
+          ref: ${{ matrix.branch || '' }}
           path: module
           fetch-depth: 1
       - name: Set up Temurin JDK 21
