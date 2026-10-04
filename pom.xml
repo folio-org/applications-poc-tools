@@ -43,14 +43,14 @@
     <lombok.version>1.18.48</lombok.version>
     <spring-boot.version>4.1.1</spring-boot.version>
     <apache-commons-collections4.version>4.6.0</apache-commons-collections4.version>
-    <apache-commons-lang3.version>3.20.0</apache-commons-lang3.version>
+    <apache-commons-lang3.version>3.21.0</apache-commons-lang3.version>
     <keycloak-admin-client.version>26.0.11</keycloak-admin-client.version>
     <kafka.version>4.2.0</kafka.version> <!-- can be removed once Spring Boot migrates to this version -->
 
     <!-- Test dependencies versions -->
     <mockito.version>5.24.0</mockito.version>
     <testcontainer.version>2.0.5</testcontainer.version>
-    <instancio.version>6.0.1</instancio.version>
+    <instancio.version>6.1.0</instancio.version>
 
     <!-- Plugins versions -->
     <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
@@ -162,7 +162,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>14.1.0</version>
+              <version>14.3.0</version>
             </dependency>
             <dependency>
               <groupId>org.folio</groupId>
