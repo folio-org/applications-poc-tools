@@ -33,7 +33,7 @@ env:
     {"include": [
       {"name": "mgr-applications", "repo": "folio-org/mgr-applications"},
       {"name": "mgr-tenants", "repo": "folio-org/mgr-tenants"},
-      {"name": "mgr-tenant-entitlements", "repo": "folio-org/mgr-tenant-entitlements"},
+      {"name": "mgr-tenant-entitlements", "repo": "folio-org/mgr-tenant-entitlements", "branch": "verification-issue-fix"},
       {"name": "mod-roles-keycloak", "repo": "folio-org/mod-roles-keycloak"},
       {"name": "mod-login-keycloak", "repo": "folio-org/mod-login-keycloak"},
       {"name": "mod-users-keycloak", "repo": "folio-org/mod-users-keycloak"},
