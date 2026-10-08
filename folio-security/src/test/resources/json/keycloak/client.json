@@ -8,7 +8,7 @@
   "authorizationServicesEnabled": true,
   "publicClient": false,
   "attributes": {
-    "descriptor_hash": "-984792602"
+    "descriptor_hash": "432562024"
   },
   "authorizationSettings": {
     "allowRemoteResourceManagement": true,

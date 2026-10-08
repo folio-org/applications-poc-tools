@@ -3,8 +3,10 @@ package org.folio.common.domain.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.folio.common.utils.InterfaceComparisonUtils;
 
 @Data
@@ -19,6 +21,8 @@ public class InterfaceDescriptor implements WithNameVersion {
   private String interfaceType;
   private List<RoutingEntry> handlers = new ArrayList<>();
   private List<Permission> permissionSets = new ArrayList<>();
+  private List<Capability> capabilities = new ArrayList<>();
+  private List<CapabilitySet> capabilitySets = new ArrayList<>();
   private List<String> scope;
 
   /**
@@ -133,6 +137,82 @@ public class InterfaceDescriptor implements WithNameVersion {
     }
     this.scope.add(scopeItem);
     return this;
+  }
+
+  /**
+   * Sets capabilities field and returns {@link InterfaceDescriptor}.
+   *
+   * @return modified {@link InterfaceDescriptor} value
+   */
+  public InterfaceDescriptor capabilities(List<Capability> capabilities) {
+    this.capabilities = capabilities;
+    return this;
+  }
+
+  /**
+   * Adds capability item to collection and returns {@link InterfaceDescriptor}.
+   *
+   * @return modified {@link InterfaceDescriptor} value
+   */
+  public InterfaceDescriptor addCapabilitiesItem(Capability capabilitiesItem) {
+    if (this.capabilities == null) {
+      this.capabilities = new ArrayList<>();
+    }
+    this.capabilities.add(capabilitiesItem);
+    return this;
+  }
+
+  /**
+   * Sets capabilitySets field and returns {@link InterfaceDescriptor}.
+   *
+   * @return modified {@link InterfaceDescriptor} value
+   */
+  public InterfaceDescriptor capabilitySets(List<CapabilitySet> capabilitySets) {
+    this.capabilitySets = capabilitySets;
+    return this;
+  }
+
+  /**
+   * Adds capabilitySet item to collection and returns {@link InterfaceDescriptor}.
+   *
+   * @return modified {@link InterfaceDescriptor} value
+   */
+  public InterfaceDescriptor addCapabilitySetsItem(CapabilitySet capabilitySetsItem) {
+    if (this.capabilitySets == null) {
+      this.capabilitySets = new ArrayList<>();
+    }
+    this.capabilitySets.add(capabilitySetsItem);
+    return this;
+  }
+
+  /**
+   * Checks if this interface descriptor declares permissions.
+   *
+   * @return true if permissionSets are declared or any handler declares permissions, false otherwise
+   */
+  @JsonIgnore
+  public boolean hasPermissions() {
+    if (CollectionUtils.isNotEmpty(permissionSets)) {
+      return true;
+    }
+    return handlers != null && handlers.stream()
+      .filter(Objects::nonNull)
+      .anyMatch(RoutingEntry::hasPermissions);
+  }
+
+  /**
+   * Checks if this interface descriptor declares capabilities.
+   *
+   * @return true if capabilities/capabilitySets are declared or any handler declares capabilities, false otherwise
+   */
+  @JsonIgnore
+  public boolean hasCapabilities() {
+    if (CollectionUtils.isNotEmpty(capabilities) || CollectionUtils.isNotEmpty(capabilitySets)) {
+      return true;
+    }
+    return handlers != null && handlers.stream()
+      .filter(Objects::nonNull)
+      .anyMatch(RoutingEntry::hasCapabilities);
   }
 
   /**

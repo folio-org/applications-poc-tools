@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import lombok.ToString;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 @Data
@@ -34,6 +35,9 @@ public class RoutingEntry {
   private List<String> permissionsDesired = new ArrayList<>();
   private List<String> modulePermissions = new ArrayList<>();
   private List<String> permissionsRequiredTenant = new ArrayList<>();
+
+  private Capability capability;
+  private List<String> moduleCapabilities = new ArrayList<>();
 
   @JsonProperty("delegateCORS")
   private Boolean delegateCors;
@@ -271,5 +275,61 @@ public class RoutingEntry {
   public RoutingEntry delegateCors(Boolean delegateCors) {
     this.delegateCors = delegateCors;
     return this;
+  }
+
+  /**
+   * Sets capability field and returns {@link RoutingEntry}.
+   *
+   * @return modified {@link RoutingEntry} value
+   */
+  public RoutingEntry capability(Capability capability) {
+    this.capability = capability;
+    return this;
+  }
+
+  /**
+   * Sets moduleCapabilities field and returns {@link RoutingEntry}.
+   *
+   * @return modified {@link RoutingEntry} value
+   */
+  public RoutingEntry moduleCapabilities(List<String> moduleCapabilities) {
+    this.moduleCapabilities = moduleCapabilities;
+    return this;
+  }
+
+  /**
+   * Adds moduleCapabilities item to collection field and returns {@link RoutingEntry}.
+   *
+   * @return modified {@link RoutingEntry} value
+   */
+  public RoutingEntry addModuleCapabilitiesItem(String moduleCapabilitiesItem) {
+    if (this.moduleCapabilities == null) {
+      this.moduleCapabilities = new ArrayList<>();
+    }
+    this.moduleCapabilities.add(moduleCapabilitiesItem);
+    return this;
+  }
+
+  /**
+   * Checks if this routing entry declares permissions.
+   *
+   * @return true if any permissions are declared, false otherwise
+   */
+  @JsonIgnore
+  public boolean hasPermissions() {
+    return CollectionUtils.isNotEmpty(permissionsRequired)
+      || CollectionUtils.isNotEmpty(permissionsDesired)
+      || CollectionUtils.isNotEmpty(modulePermissions)
+      || CollectionUtils.isNotEmpty(permissionsRequiredTenant);
+  }
+
+  /**
+   * Checks if this routing entry declares capabilities.
+   *
+   * @return true if capability or module capabilities are declared, false otherwise
+   */
+  @JsonIgnore
+  public boolean hasCapabilities() {
+    return capability != null || CollectionUtils.isNotEmpty(moduleCapabilities);
   }
 }
