@@ -6,7 +6,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.Data;
+import org.apache.commons.collections4.CollectionUtils;
 import org.folio.common.utils.SemverUtils;
 
 @Data
@@ -22,6 +24,8 @@ public class ModuleDescriptor implements Artifact {
   private List<InterfaceReference> optional = new ArrayList<>();
   private List<RoutingEntry> filters = new ArrayList<>();
   private List<Permission> permissionSets = new ArrayList<>();
+  private List<Capability> capabilities = new ArrayList<>();
+  private List<CapabilitySet> capabilitySets = new ArrayList<>();
   private List<EnvEntry> env = new ArrayList<>();
   private UiModuleDescriptor uiDescriptor;
   private LaunchDescriptor launchDescriptor;
@@ -285,6 +289,98 @@ public class ModuleDescriptor implements Artifact {
   public ModuleDescriptor extensions(AnyDescriptor extensions) {
     this.extensions = extensions;
     return this;
+  }
+
+  /**
+   * Sets capabilities field and returns {@link ModuleDescriptor}.
+   *
+   * @return modified {@link ModuleDescriptor} value
+   */
+  public ModuleDescriptor capabilities(List<Capability> capabilities) {
+    this.capabilities = capabilities;
+    return this;
+  }
+
+  /**
+   * Adds capability item to collection and returns {@link ModuleDescriptor}.
+   *
+   * @return modified {@link ModuleDescriptor} value
+   */
+  public ModuleDescriptor addCapabilitiesItem(Capability capabilitiesItem) {
+    if (this.capabilities == null) {
+      this.capabilities = new ArrayList<>();
+    }
+    this.capabilities.add(capabilitiesItem);
+    return this;
+  }
+
+  /**
+   * Sets capabilitySets field and returns {@link ModuleDescriptor}.
+   *
+   * @return modified {@link ModuleDescriptor} value
+   */
+  public ModuleDescriptor capabilitySets(List<CapabilitySet> capabilitySets) {
+    this.capabilitySets = capabilitySets;
+    return this;
+  }
+
+  /**
+   * Adds capabilitySet item to collection and returns {@link ModuleDescriptor}.
+   *
+   * @return modified {@link ModuleDescriptor} value
+   */
+  public ModuleDescriptor addCapabilitySetsItem(CapabilitySet capabilitySetsItem) {
+    if (this.capabilitySets == null) {
+      this.capabilitySets = new ArrayList<>();
+    }
+    this.capabilitySets.add(capabilitySetsItem);
+    return this;
+  }
+
+  /**
+   * Checks if this module descriptor declares permissions.
+   *
+   * @return true if permissionSets or routing entries with permissions are declared, false otherwise
+   */
+  @JsonIgnore
+  public boolean hasPermissions() {
+    if (CollectionUtils.isNotEmpty(permissionSets)) {
+      return true;
+    }
+    if (filters != null && filters.stream().filter(Objects::nonNull).anyMatch(RoutingEntry::hasPermissions)) {
+      return true;
+    }
+    return provides != null && provides.stream()
+      .filter(Objects::nonNull)
+      .anyMatch(InterfaceDescriptor::hasPermissions);
+  }
+
+  /**
+   * Checks if this module descriptor declares capabilities.
+   *
+   * @return true if capabilities, capabilitySets, or routing entries with capabilities are declared, false otherwise
+   */
+  @JsonIgnore
+  public boolean hasCapabilities() {
+    if (CollectionUtils.isNotEmpty(capabilities) || CollectionUtils.isNotEmpty(capabilitySets)) {
+      return true;
+    }
+    if (filters != null && filters.stream().filter(Objects::nonNull).anyMatch(RoutingEntry::hasCapabilities)) {
+      return true;
+    }
+    return provides != null && provides.stream()
+      .filter(Objects::nonNull)
+      .anyMatch(InterfaceDescriptor::hasCapabilities);
+  }
+
+  /**
+   * Checks if this module descriptor declares both permissions and capabilities.
+   *
+   * @return true if both permissions and capabilities are declared, false otherwise
+   */
+  @JsonIgnore
+  public boolean hasMixedPermissionsAndCapabilities() {
+    return hasPermissions() && hasCapabilities();
   }
 
   @Override
