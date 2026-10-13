@@ -1,3 +1,7 @@
+## Version `4.0.5` (13.10.2026)
+### Changes:
+* Upgrade spring-boot to 4.1.1 version (APPPOCTOOL-109)
+
 ## Version `4.0.4` (28.07.2026)
 ### Changes:
 * Replace upstream Keycloak container with folio-keycloak in integration tests (APPPOCTOOL-37)
