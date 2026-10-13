@@ -2,6 +2,8 @@ package org.folio.tools.apisix.service;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
+import static org.folio.common.domain.model.ApplicationScope.PLATFORM;
+import static org.folio.common.domain.model.ApplicationScope.REGULAR;
 import static org.folio.common.gateway.utils.GatewayRouteUtils.buildRouteName;
 import static org.folio.common.gateway.utils.GatewayRouteUtils.getMethods;
 import static org.folio.common.gateway.utils.GatewayRouteUtils.preparePath;
@@ -20,6 +22,7 @@ import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.common.domain.model.ApplicationScope;
 import org.folio.common.domain.model.InterfaceDescriptor;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
@@ -38,6 +41,8 @@ public class ApisixRouteFactory {
   public static final String MODULE_LABEL = "module";
   public static final String INTERFACE_LABEL = "interface";
 
+  static final String APPLICATION_SCOPE_LABEL = "application-scope";
+
   private static final String MODULE_ID_VAR = "http_x_okapi_module_id";
 
   /**
@@ -48,15 +53,20 @@ public class ApisixRouteFactory {
    * @return list of derived {@link ApisixRoute} objects
    */
   public List<ApisixRoute> createRoutes(ModuleDescriptor descriptor, String serviceId) {
+    return createRoutes(descriptor, serviceId, REGULAR);
+  }
+
+  /** Creates routes using the owning application's scope; null means regular. */
+  public List<ApisixRoute> createRoutes(ModuleDescriptor descriptor, String serviceId, ApplicationScope scope) {
     return toStream(descriptor.getProvides())
-      .map(interfaceDescriptor ->
-        createRoutes(interfaceDescriptor, descriptor.getId(), serviceId, descriptor.isMgrComponent()))
+      .map(iface -> createRoutes(iface, descriptor.getId(), serviceId,
+        descriptor.isMgrComponent() || scope == PLATFORM, scope))
       .flatMap(Collection::stream)
       .toList();
   }
 
   private static List<ApisixRoute> createRoutes(InterfaceDescriptor desc, String moduleId, String serviceId,
-    boolean isMgrComponent) {
+    boolean tenantAgnostic, ApplicationScope scope) {
     var interfaceId = desc.getId() + "-" + desc.getVersion();
     if (desc.isSystem()) {
       log.debug("System interface is ignored: moduleId={}, interfaceId={}", moduleId, interfaceId);
@@ -65,14 +75,14 @@ public class ApisixRouteFactory {
 
     var isMultiple = nullSafeEquals(desc.getInterfaceType(), MULTIPLE_INTERFACE_TYPE);
     return toStream(desc.getHandlers())
-      .map(routingEntry -> createRoute(moduleId, interfaceId, serviceId, routingEntry, isMgrComponent, isMultiple))
+      .map(re -> createRoute(moduleId, interfaceId, serviceId, re, tenantAgnostic, isMultiple, scope))
       .flatMap(Optional::stream)
       .toList();
   }
 
   @SuppressWarnings("java:S4790")
   private static Optional<ApisixRoute> createRoute(String moduleId, String interfaceId, String serviceId,
-    RoutingEntry re, boolean isMgrComponent, boolean isMultiple) {
+    RoutingEntry re, boolean tenantAgnostic, boolean isMultiple, ApplicationScope scope) {
     var staticPath = re.getStaticPath();
     var httpMethods = getMethods(re);
     if (StringUtils.isEmpty(staticPath) || CollectionUtils.isEmpty(httpMethods)) {
@@ -83,7 +93,7 @@ public class ApisixRouteFactory {
     var pathPair = preparePath(staticPath);
     var path = pathPair.getLeft();
     var routeId = sha1Hex(buildRouteName(moduleId, interfaceId, path, httpMethods));
-    var vars = buildVars(path, moduleId, isMgrComponent, isMultiple);
+    var vars = buildVars(path, moduleId, tenantAgnostic, isMultiple);
     return Optional.of(new ApisixRoute()
       .id(routeId).name(routeId)
       .uri(buildUri(staticPath, pathPair.getRight()))
@@ -91,15 +101,21 @@ public class ApisixRouteFactory {
       .status(1)
       .methods(httpMethods)
       .serviceId(serviceId)
-      .labels(Map.of(MODULE_LABEL, moduleId, INTERFACE_LABEL, interfaceId))
+      .labels(buildLabels(moduleId, interfaceId, scope))
       .vars(vars.isEmpty() ? null : vars));
   }
 
-  private static List<List<Object>> buildVars(String path, String moduleId, boolean isMgrComponent,
+  private static Map<String, String> buildLabels(String moduleId, String interfaceId, ApplicationScope scope) {
+    return scope == PLATFORM
+      ? Map.of(MODULE_LABEL, moduleId, INTERFACE_LABEL, interfaceId, APPLICATION_SCOPE_LABEL, PLATFORM.getValue())
+      : Map.of(MODULE_LABEL, moduleId, INTERFACE_LABEL, interfaceId);
+  }
+
+  private static List<List<Object>> buildVars(String path, String moduleId, boolean tenantAgnostic,
     boolean isMultiple) {
     var uriVar = path.endsWith("$") ? List.<Object>of("uri", REGEX_OPERATOR, path) : null;
     var moduleIdVar = isMultiple ? List.<Object>of(MODULE_ID_VAR, "==", moduleId) : null;
-    var tenantVar = isMgrComponent ? null : List.<Object>of(TENANT_VAR, REGEX_OPERATOR, WILDCARD_REGEX);
+    var tenantVar = tenantAgnostic ? null : List.<Object>of(TENANT_VAR, REGEX_OPERATOR, WILDCARD_REGEX);
     return Stream.of(uriVar, moduleIdVar, tenantVar).filter(Objects::nonNull).toList();
   }
 

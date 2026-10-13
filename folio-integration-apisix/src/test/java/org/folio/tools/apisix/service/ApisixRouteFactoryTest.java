@@ -4,16 +4,21 @@ import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.common.domain.model.ApplicationScope.PLATFORM;
 import static org.folio.common.domain.model.InterfaceDescriptor.SYSTEM_INTERFACE_TYPE;
 
 import java.util.List;
 import java.util.Map;
+import org.folio.common.domain.model.ApplicationScope;
 import org.folio.common.domain.model.InterfaceDescriptor;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
 import org.folio.test.types.UnitTest;
 import org.folio.tools.apisix.model.ApisixRoute;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.springframework.http.HttpMethod;
 
 @UnitTest
@@ -31,11 +36,13 @@ class ApisixRouteFactoryTest {
       new InterfaceDescriptor().id("test1").version("2.0").handlers(List.of(handlers))));
   }
 
-  @Test
-  void createRoutes_positive_staticPath() {
+  @ParameterizedTest
+  @NullSource
+  @EnumSource(ApplicationScope.class)
+  void createRoutes_positive_staticPath(ApplicationScope scope) {
     var descriptor = descriptorWith(new RoutingEntry().methods(List.of("GET")).path("/tests/1"));
 
-    var routes = factory.createRoutes(descriptor, SERVICE_ID);
+    var routes = factory.createRoutes(descriptor, SERVICE_ID, scope);
 
     var expectedId = sha1Hex("/tests/1|GET|" + MOD_ID + "|" + INTERFACE_ID);
     assertThat(routes).containsExactly(new ApisixRoute()
@@ -43,15 +50,19 @@ class ApisixRouteFactoryTest {
       .uri("/tests/1").priority(1).status(1)
       .methods(List.of("GET"))
       .serviceId(SERVICE_ID)
-      .labels(Map.of("module", MOD_ID, "interface", INTERFACE_ID))
-      .vars(List.of(WILDCARD_TENANT_VAR)));
+      .labels(scope == PLATFORM
+        ? Map.of("module", MOD_ID, "interface", INTERFACE_ID, "application-scope", "platform")
+        : Map.of("module", MOD_ID, "interface", INTERFACE_ID))
+      .vars(scope == PLATFORM ? null : List.of(WILDCARD_TENANT_VAR)));
   }
 
-  @Test
-  void createRoutes_positive_pathVariablePattern() {
+  @ParameterizedTest
+  @NullSource
+  @EnumSource(ApplicationScope.class)
+  void createRoutes_positive_pathVariablePattern(ApplicationScope scope) {
     var descriptor = descriptorWith(new RoutingEntry().methods(List.of("GET")).pathPattern("/entities/{id}"));
 
-    var routes = factory.createRoutes(descriptor, SERVICE_ID);
+    var routes = factory.createRoutes(descriptor, SERVICE_ID, scope);
 
     var expectedRegex = "^/entities/([^/]+)$";
     var expectedId = sha1Hex(expectedRegex + "|GET|" + MOD_ID + "|" + INTERFACE_ID);
@@ -60,8 +71,11 @@ class ApisixRouteFactoryTest {
       .uri("/entities/*").priority(0).status(1)
       .methods(List.of("GET"))
       .serviceId(SERVICE_ID)
-      .labels(Map.of("module", MOD_ID, "interface", INTERFACE_ID))
-      .vars(List.of(List.of("uri", "~~", expectedRegex), WILDCARD_TENANT_VAR)));
+      .labels(scope == PLATFORM
+        ? Map.of("module", MOD_ID, "interface", INTERFACE_ID, "application-scope", "platform")
+        : Map.of("module", MOD_ID, "interface", INTERFACE_ID))
+      .vars(scope == PLATFORM ? List.of(List.of("uri", "~~", expectedRegex))
+        : List.of(List.of("uri", "~~", expectedRegex), WILDCARD_TENANT_VAR)));
   }
 
   @Test
@@ -80,27 +94,31 @@ class ApisixRouteFactoryTest {
       .containsExactly(List.of("uri", "~~", "^/entities/sub-entities(.*)$"), WILDCARD_TENANT_VAR);
   }
 
-  @Test
-  void createRoutes_positive_multipleInterfaceAddsModuleIdVar() {
+  @ParameterizedTest
+  @NullSource
+  @EnumSource(ApplicationScope.class)
+  void createRoutes_positive_multipleInterfaceAddsModuleIdVar(ApplicationScope scope) {
     var descriptor = new ModuleDescriptor().id(MOD_ID).provides(List.of(
       new InterfaceDescriptor().id("baz-multiple").version("1.0").interfaceType("multiple").addHandlersItem(
         new RoutingEntry().methods(List.of("GET")).pathPattern("/baz/entities"))));
 
-    var routes = factory.createRoutes(descriptor, SERVICE_ID);
+    var routes = factory.createRoutes(descriptor, SERVICE_ID, scope);
 
     assertThat(routes).hasSize(1);
-    assertThat(routes.get(0).getVars()).containsExactly(
-      List.of("http_x_okapi_module_id", "==", MOD_ID),
-      WILDCARD_TENANT_VAR);
+    assertThat(routes.getFirst().getVars()).isEqualTo(scope == PLATFORM
+      ? List.of(List.of("http_x_okapi_module_id", "==", MOD_ID))
+      : List.of(List.of("http_x_okapi_module_id", "==", MOD_ID), WILDCARD_TENANT_VAR));
   }
 
-  @Test
-  void createRoutes_positive_mgrComponentHasNoTenantVar() {
+  @ParameterizedTest
+  @NullSource
+  @EnumSource(ApplicationScope.class)
+  void createRoutes_positive_mgrComponentHasNoTenantVar(ApplicationScope scope) {
     var descriptor = new ModuleDescriptor().id("mgr-foo-1.0.0").provides(List.of(
       new InterfaceDescriptor().id("test1").version("2.0").handlers(List.of(
         new RoutingEntry().methods(List.of("GET")).path("/tests/1")))));
 
-    var routes = factory.createRoutes(descriptor, "mgr-foo-1.0.0");
+    var routes = factory.createRoutes(descriptor, "mgr-foo-1.0.0", scope);
 
     assertThat(routes).hasSize(1);
     assertThat(routes.get(0).getVars()).isNull();

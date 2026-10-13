@@ -10,6 +10,8 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.folio.common.domain.model.ApplicationScope.PLATFORM;
+import static org.folio.common.domain.model.ApplicationScope.REGULAR;
 import static org.folio.common.domain.model.InterfaceDescriptor.SYSTEM_INTERFACE_TYPE;
 import static org.folio.common.domain.model.InterfaceDescriptor.TIMER_INTERFACE;
 import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
@@ -42,6 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.folio.common.domain.model.ApplicationScope;
 import org.folio.common.domain.model.InterfaceDescriptor;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
@@ -62,6 +65,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.platform.commons.util.StringUtils;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -96,17 +103,89 @@ class KongGatewayServiceTest {
     verifyNoMoreInteractions(kongAdminClient, kongRouteTenantService);
   }
 
+  @Test
+  void tenantChanges_positive_skipStoredPlatformRoutes() {
+    var route = new Route().name("platform-route").tags(List.of(MOD_ID, "application-scope:platform"))
+      .expression("(http.path == \"/entities\" && http.method == \"POST\")");
+    when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+    when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, List.of(route)));
+
+    kongGatewayService.addTenantToModuleRoutes(MOD_ID, "tenant-a");
+    kongGatewayService.removeTenantFromModuleRoutes(MOD_ID, "tenant-a");
+
+    assertThat(route.getExpression()).isEqualTo("(http.path == \"/entities\" && http.method == \"POST\")");
+    verify(kongAdminClient, times(2)).getService(MOD_ID);
+    verify(kongAdminClient, times(2)).getRoutesByTag(MOD_ID, null);
+  }
+
   @Nested
   @DisplayName("addRoutes")
   class AddRoutes {
 
-    @Test
-    void positive() {
+    @ParameterizedTest
+    @NullSource
+    @EnumSource(ApplicationScope.class)
+    void negative_scopeChange(ApplicationScope requested) {
+      var stored = route(List.of("POST"), "/entities", 1, "test-interface-1.0", MOD_ID);
+      if (requested != PLATFORM) {
+        stored.tags(List.of(MOD_ID, "test-interface-1.0", "application-scope:platform"));
+      }
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, List.of(stored)));
+
+      assertThatThrownBy(() -> kongGatewayService.addRoutes(List.of(UpdateRoutes.moduleDescriptor()), requested))
+        .isInstanceOf(KongIntegrationException.class).hasMessage("Failed to create routes")
+        .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).containsExactly(
+          new Parameter().key(MOD_ID)
+            .value("Changing application scope requires coordinated removal and recreation of module routes")));
+
+      verify(kongAdminClient, never()).upsertRoute(anyString(), anyString(), any());
+    }
+
+    @ParameterizedTest
+    @EnumSource(ApplicationScope.class)
+    void negative_mixedStoredScopes(ApplicationScope requested) {
+      var regular = route(List.of("POST"), "/entities", 1, "test-interface-1.0", MOD_ID);
+      var platform = route(List.of("GET"), "^/entities/([^/]+)$", 0, "test-interface-1.0", MOD_ID)
+        .tags(List.of(MOD_ID, "test-interface-1.0", "application-scope:platform"));
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(MOD_ID, null))
+        .thenReturn(new KongResultList<>(null, List.of(regular, platform)));
+
+      assertThatThrownBy(() -> kongGatewayService.addRoutes(List.of(UpdateRoutes.moduleDescriptor()), requested))
+        .isInstanceOf(KongIntegrationException.class).hasMessage("Failed to create routes");
+
+      verify(kongAdminClient, never()).upsertRoute(anyString(), anyString(), any());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @EnumSource(ApplicationScope.class)
+    void positive_sameStoredScope(ApplicationScope scope) {
+      var stored = route(List.of("POST"), "/entities", 1, "test-interface-1.0", MOD_ID);
+      if (scope == PLATFORM) {
+        stored.tags(List.of(MOD_ID, "test-interface-1.0", "application-scope:platform"));
+      }
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, List.of(stored)));
+      when(kongAdminClient.upsertRoute(eq(SERVICE_ID), anyString(), routeCaptor.capture()))
+        .then(i -> i.getArgument(2));
+
+      kongGatewayService.addRoutes(List.of(UpdateRoutes.moduleDescriptor()), scope);
+
+      assertThat(routeCaptor.getAllValues()).hasSize(2);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @EnumSource(value = ApplicationScope.class, names = "REGULAR")
+    void positive(ApplicationScope scope) {
       var serviceId = UUID.randomUUID().toString();
       when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
+      when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, List.of()));
       when(kongAdminClient.upsertRoute(eq(serviceId), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
 
-      kongGatewayService.addRoutes(singletonList(moduleDescriptor()));
+      kongGatewayService.addRoutes(singletonList(moduleDescriptor()), scope);
 
       assertThat(routeCaptor.getAllValues()).hasSize(5).isEqualTo(List.of(
         route(List.of("GET"), "^/entities/([^/]+)$", "test1-2.0"),
@@ -117,6 +196,29 @@ class KongGatewayServiceTest {
         route(List.of("GET"), "/test2-entities", 1, "test2-1.0", MOD_ID)));
     }
 
+    @ParameterizedTest
+    @CsvSource({"PLATFORM, mod-test-1.0.0", "REGULAR, mgr-test-1.0.0", "PLATFORM, mgr-test-1.0.0"})
+    void positive_tenantIndependentScope(ApplicationScope scope, String moduleId) {
+      var descriptor = UpdateRoutes.moduleDescriptor().id(moduleId);
+      descriptor.getProvides().getFirst().interfaceType("multiple");
+      when(kongAdminClient.getService(moduleId)).thenReturn(new Service().id(SERVICE_ID));
+      when(kongAdminClient.getRoutesByTag(moduleId, null)).thenReturn(new KongResultList<>(null, List.of()));
+      when(kongAdminClient.upsertRoute(eq(SERVICE_ID), anyString(), routeCaptor.capture()))
+        .then(i -> i.getArgument(2));
+
+      kongGatewayService.addRoutes(List.of(descriptor), scope);
+
+      var tags = scope == PLATFORM ? List.of(moduleId, "test-interface-1.0", "application-scope:platform")
+        : List.of(moduleId, "test-interface-1.0");
+      assertThat(routeCaptor.getAllValues()).containsExactly(
+        route(List.of("POST"), "/entities", 1, "test-interface-1.0", moduleId)
+          .expression("(http.path == \"/entities\" && http.method == \"POST\""
+            + " && http.headers.x_okapi_module_id == \"" + moduleId + "\")").tags(tags),
+        route(List.of("GET"), "^/entities/([^/]+)$", 0, "test-interface-1.0", moduleId)
+          .expression("(http.path ~ \"^/entities/([^/]+)$\" && http.method == \"GET\""
+            + " && http.headers.x_okapi_module_id == \"" + moduleId + "\")").tags(tags));
+    }
+
     @Test
     void positive_interfaceTypeMultiple() {
       var fooModuleId = "mod-foo-1.0.0";
@@ -125,6 +227,8 @@ class KongGatewayServiceTest {
       var barModuleUuid = UUID.randomUUID().toString();
       when(kongAdminClient.getService(fooModuleId)).thenReturn(new Service().id(fooModuleUuid).name(fooModuleId));
       when(kongAdminClient.getService(barModuleId)).thenReturn(new Service().id(barModuleUuid).name(barModuleId));
+      when(kongAdminClient.getRoutesByTag(fooModuleId, null)).thenReturn(new KongResultList<>(null, List.of()));
+      when(kongAdminClient.getRoutesByTag(barModuleId, null)).thenReturn(new KongResultList<>(null, List.of()));
       when(kongAdminClient.upsertRoute(anyString(), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
 
       kongGatewayService.addRoutes(List.of(mdWithMultipleInterface1(), mdWithMultipleInterface2()));
@@ -140,6 +244,7 @@ class KongGatewayServiceTest {
     void positive_timerInterfaceIgnored() {
       var serviceId = UUID.randomUUID().toString();
       when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
+      when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, List.of()));
       when(kongAdminClient.upsertRoute(eq(serviceId), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
 
       kongGatewayService.addRoutes(singletonList(mdWithTimerInterface()));
@@ -162,6 +267,7 @@ class KongGatewayServiceTest {
         "Failed to create route", null, null, null);
 
       when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
+      when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, List.of()));
       when(kongAdminClient.upsertRoute(serviceId, routeName, kongRoute)).thenThrow(internalServerError);
 
       var routingEntry = new RoutingEntry().methods(List.of("GET")).pathPattern("/entities/{id}");
@@ -284,6 +390,43 @@ class KongGatewayServiceTest {
     private static final String INTERFACE_VERSION = "1.0";
     private static final String INTERFACE_ID = INTERFACE_NAME + "-" + INTERFACE_VERSION;
 
+    @ParameterizedTest
+    @EnumSource(ApplicationScope.class)
+    void positive_scopePreservesStoredRoutes(ApplicationScope scope) {
+      var tenantMatch = scope == PLATFORM ? "" : " && http.headers.x_okapi_tenant == \"tenant-a\"";
+      var tags = scope == PLATFORM ? List.of(MOD_ID, INTERFACE_ID, "application-scope:platform")
+        : List.of(MOD_ID, INTERFACE_ID);
+      var existingRoutes = List.of(
+        route(List.of("POST"), "/entities", 1, INTERFACE_ID, MOD_ID)
+          .expression("(http.path == \"/entities\" && http.method == \"POST\"" + tenantMatch + ")").tags(tags),
+        route(List.of("GET"), "^/entities/([^/]+)$", 0, INTERFACE_ID, MOD_ID)
+          .expression("(http.path ~ \"^/entities/([^/]+)$\" && http.method == \"GET\"" + tenantMatch + ")").tags(tags));
+      final var before = existingRoutes.toString();
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, existingRoutes));
+
+      kongGatewayService.updateRoutes(List.of(moduleDescriptor()), scope);
+      kongGatewayService.updateRoutes(List.of(moduleDescriptor()), scope);
+
+      assertThat(existingRoutes.toString()).isEqualTo(before);
+      verify(kongAdminClient, times(2)).getService(MOD_ID);
+      verify(kongAdminClient, times(2)).getRoutesByTag(MOD_ID, null);
+    }
+
+    @ParameterizedTest
+    @EnumSource(ApplicationScope.class)
+    void negative_scopeChange(ApplicationScope requested) {
+      var stored = route(List.of("POST"), "/entities", 1, INTERFACE_ID, MOD_ID);
+      if (requested == REGULAR) {
+        stored.tags(List.of(MOD_ID, INTERFACE_ID, "application-scope:platform"));
+      }
+      when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
+      when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, List.of(stored)));
+
+      assertThatThrownBy(() -> kongGatewayService.updateRoutes(List.of(moduleDescriptor()), requested))
+        .isInstanceOf(KongIntegrationException.class).hasMessage("Failed to update routes");
+    }
+
     @Test
     void positive_allRoutesExists() {
       var existingRoutes = List.of(
@@ -349,6 +492,7 @@ class KongGatewayServiceTest {
       var serviceId = UUID.randomUUID().toString();
       var moduleId = "mgr-component-1.0.0";
       when(kongAdminClient.getService(moduleId)).thenReturn(new Service().id(serviceId).name(moduleId));
+      when(kongAdminClient.getRoutesByTag(moduleId, null)).thenReturn(new KongResultList<>(null, List.of()));
       when(kongAdminClient.upsertRoute(eq(serviceId), anyString(), routeCaptor.capture())).then(i -> i.getArgument(2));
 
       var moduleDescriptor = moduleDescriptor().id(moduleId);

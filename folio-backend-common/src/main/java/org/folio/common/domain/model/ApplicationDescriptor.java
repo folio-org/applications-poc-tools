@@ -21,6 +21,7 @@ public class ApplicationDescriptor implements Artifact {
   @Valid private List<ModuleDescriptor> moduleDescriptors = new ArrayList<>();
   @Valid private List<ModuleDescriptor> uiModuleDescriptors = new ArrayList<>();
   private String platform;
+  private ApplicationScope scope = ApplicationScope.REGULAR;
   @Valid private List<Dependency> dependencies = new ArrayList<>();
   private ApplicationDeployment deployment;
   private AnyDescriptor metadata;
@@ -136,6 +137,16 @@ public class ApplicationDescriptor implements Artifact {
   @Valid
   public List<@Valid ModuleDescriptor> getUiModuleDescriptors() {
     return uiModuleDescriptors;
+  }
+
+  @NotNull
+  public ApplicationScope getScope() {
+    return scope;
+  }
+
+  public ApplicationDescriptor scope(ApplicationScope scope) {
+    this.scope = scope;
+    return this;
   }
 
   public ApplicationDescriptor platform(String platform) {

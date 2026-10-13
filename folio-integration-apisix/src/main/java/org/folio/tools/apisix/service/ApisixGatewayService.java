@@ -7,7 +7,10 @@ import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.logging.log4j.util.Strings.isBlank;
+import static org.folio.common.domain.model.ApplicationScope.PLATFORM;
+import static org.folio.common.domain.model.ApplicationScope.REGULAR;
 import static org.folio.common.utils.CollectionUtils.mapItems;
+import static org.folio.tools.apisix.service.ApisixRouteFactory.APPLICATION_SCOPE_LABEL;
 import static org.folio.tools.apisix.service.ApisixRouteFactory.MODULE_LABEL;
 
 import java.net.URI;
@@ -23,6 +26,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.common.domain.model.ApplicationScope;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.error.Parameter;
 import org.folio.common.gateway.ApiGatewayService;
@@ -122,7 +126,12 @@ public class ApisixGatewayService implements ApiGatewayService {
    */
   @Override
   public void addRoutes(Collection<ModuleDescriptor> moduleDescriptors) {
-    performOperation(moduleDescriptors, "create", this::addRoutesForModule);
+    addRoutes(moduleDescriptors, REGULAR);
+  }
+
+  @Override
+  public void addRoutes(Collection<ModuleDescriptor> moduleDescriptors, ApplicationScope applicationScope) {
+    performOperation(moduleDescriptors, "create", md -> addRoutesForModule(md, applicationScope));
   }
 
   /**
@@ -134,7 +143,12 @@ public class ApisixGatewayService implements ApiGatewayService {
    */
   @Override
   public void updateRoutes(Collection<ModuleDescriptor> moduleDescriptors) {
-    performOperation(moduleDescriptors, "update", this::updateRoutesForModule);
+    updateRoutes(moduleDescriptors, REGULAR);
+  }
+
+  @Override
+  public void updateRoutes(Collection<ModuleDescriptor> moduleDescriptors, ApplicationScope applicationScope) {
+    performOperation(moduleDescriptors, "update", md -> updateRoutesForModule(md, applicationScope));
   }
 
   /**
@@ -180,7 +194,7 @@ public class ApisixGatewayService implements ApiGatewayService {
       validateTenantChangeInput(tenantName, moduleId, operation);
       getExistingServiceId(moduleId);
       var routes = getModuleRoutes(moduleId).stream()
-        .filter(route -> isNotEmpty(route.getVars()))
+        .filter(route -> !hasPlatformScope(route) && isNotEmpty(route.getVars()))
         .toList();
       if (routes.isEmpty()) {
         log.warn("No routes found for module [{}]", moduleId);
@@ -229,22 +243,31 @@ public class ApisixGatewayService implements ApiGatewayService {
     }
   }
 
-  private List<Parameter> addRoutesForModule(ModuleDescriptor moduleDescriptor) {
+  private List<Parameter> addRoutesForModule(ModuleDescriptor moduleDescriptor, ApplicationScope scope) {
     var serviceId = getExistingServiceId(moduleDescriptor.getId());
-    return apisixRouteFactory.createRoutes(moduleDescriptor, serviceId).stream()
+    var scopeErrors = validateApplicationScope(moduleDescriptor, getModuleRoutes(moduleDescriptor.getId()), scope);
+    if (isNotEmpty(scopeErrors)) {
+      return scopeErrors;
+    }
+    return apisixRouteFactory.createRoutes(moduleDescriptor, serviceId, scope).stream()
       .map(this::upsertRouteSafe)
       .flatMap(Optional::stream)
       .toList();
   }
 
-  private List<Parameter> updateRoutesForModule(ModuleDescriptor moduleDescriptor) {
+  private List<Parameter> updateRoutesForModule(ModuleDescriptor moduleDescriptor, ApplicationScope scope) {
     var moduleId = moduleDescriptor.getId();
     var serviceId = getExistingServiceId(moduleId);
-    var existingRouteIds = getModuleRoutes(moduleId).stream()
+    var existingRoutes = getModuleRoutes(moduleId);
+    var scopeErrors = validateApplicationScope(moduleDescriptor, existingRoutes, scope);
+    if (isNotEmpty(scopeErrors)) {
+      return scopeErrors;
+    }
+    var existingRouteIds = existingRoutes.stream()
       .map(ApisixRoute::getId)
       .collect(toCollection(LinkedHashSet::new));
 
-    var desiredRoutes = apisixRouteFactory.createRoutes(moduleDescriptor, serviceId);
+    var desiredRoutes = apisixRouteFactory.createRoutes(moduleDescriptor, serviceId, scope);
     var errors = new ArrayList<>(createMissingRoutes(desiredRoutes, existingRouteIds));
 
     var desiredRouteIds = desiredRoutes.stream().map(ApisixRoute::getId).collect(toSet());
@@ -255,6 +278,20 @@ public class ApisixGatewayService implements ApiGatewayService {
     }
 
     return errors;
+  }
+
+  private static boolean hasPlatformScope(ApisixRoute route) {
+    return route.getLabels() != null && "platform".equals(route.getLabels().get(APPLICATION_SCOPE_LABEL));
+  }
+
+  private static List<Parameter> validateApplicationScope(ModuleDescriptor descriptor, List<ApisixRoute> existingRoutes,
+    ApplicationScope scope) {
+    if (!descriptor.isMgrComponent() && existingRoutes.stream()
+      .anyMatch(route -> hasPlatformScope(route) != (scope == PLATFORM))) {
+      return List.of(new Parameter().key(descriptor.getId())
+        .value("Changing application scope requires coordinated removal and recreation of module routes"));
+    }
+    return List.of();
   }
 
   private List<Parameter> createMissingRoutes(List<ApisixRoute> desiredRoutes, LinkedHashSet<String> existingIds) {
