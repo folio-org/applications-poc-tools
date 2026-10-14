@@ -66,7 +66,7 @@ class ApplicationDescriptorTest {
 
     try (var factory = Validation.buildDefaultValidatorFactory()) {
       assertThat(factory.getValidator().validate(descriptor)).singleElement()
-        .satisfies(violation -> assertThat(violation.getPropertyPath().toString()).isEqualTo("scope"));
+        .satisfies(violation -> assertThat(violation.getPropertyPath()).hasToString("scope"));
     }
   }
 }

@@ -332,7 +332,8 @@ class ApisixGatewayServiceTest {
       when(apisixAdminClient.getRoutes(1, 500)).thenReturn(routePage(List.of(stored), 1));
 
       var descriptor = new ModuleDescriptor().id(MOD_ID);
-      assertThatThrownBy(() -> apisixGatewayService.addRoutes(List.of(descriptor), requested))
+      var moduleDescriptors = List.of(descriptor);
+      assertThatThrownBy(() -> apisixGatewayService.addRoutes(moduleDescriptors, requested))
         .isInstanceOf(ApisixIntegrationException.class).hasMessage("Failed to create routes")
         .satisfies(error -> assertThat(((ApisixIntegrationException) error).getErrors()).containsExactly(
           new Parameter().key(MOD_ID)
@@ -350,7 +351,8 @@ class ApisixGatewayServiceTest {
       when(apisixAdminClient.getService(MOD_ID)).thenReturn(serviceEntry(apisixService()));
       when(apisixAdminClient.getRoutes(1, 500)).thenReturn(routePage(List.of(regular, platform), 2));
 
-      assertThatThrownBy(() -> apisixGatewayService.addRoutes(List.of(descriptor), requested))
+      var moduleDescriptors = List.of(descriptor);
+      assertThatThrownBy(() -> apisixGatewayService.addRoutes(moduleDescriptors, requested))
         .isInstanceOf(ApisixIntegrationException.class).hasMessage("Failed to create routes");
 
       verify(apisixAdminClient, never()).upsertRoute(anyString(), any());
@@ -459,7 +461,7 @@ class ApisixGatewayServiceTest {
       apisixGatewayService.updateRoutes(List.of(descriptor), scope);
       apisixGatewayService.updateRoutes(List.of(descriptor), scope);
 
-      assertThat(stored.toString()).isEqualTo(before);
+      assertThat(stored).hasToString(before);
       verify(apisixAdminClient, times(2)).getService(MOD_ID);
       verify(apisixAdminClient, times(2)).getRoutes(1, 500);
       verify(apisixRouteFactory, times(2)).createRoutes(descriptor, MOD_ID, scope);
@@ -476,7 +478,8 @@ class ApisixGatewayServiceTest {
       when(apisixAdminClient.getService(MOD_ID)).thenReturn(serviceEntry(apisixService()));
       when(apisixAdminClient.getRoutes(1, 500)).thenReturn(routePage(List.of(stored), 1));
 
-      assertThatThrownBy(() -> apisixGatewayService.updateRoutes(List.of(descriptor), requested))
+      var moduleDescriptors = List.of(descriptor);
+      assertThatThrownBy(() -> apisixGatewayService.updateRoutes(moduleDescriptors, requested))
         .isInstanceOf(ApisixIntegrationException.class).hasMessage("Failed to update routes");
     }
 

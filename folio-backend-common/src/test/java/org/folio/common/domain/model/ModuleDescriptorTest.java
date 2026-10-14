@@ -59,11 +59,11 @@ class ModuleDescriptorTest {
 
     try (var factory = Validation.buildDefaultValidatorFactory()) {
       assertThat(factory.getValidator().validate(descriptor)).singleElement()
-        .satisfies(violation -> assertThat(violation.getPropertyPath().toString()).isEqualTo(field + "[0].event"));
+        .satisfies(violation -> assertThat(violation.getPropertyPath()).hasToString(field + "[0].event"));
       var application = new ApplicationDescriptor("app-test", "1.0.0").moduleDescriptors(List.of(descriptor));
       assertThat(factory.getValidator().validate(application)).singleElement()
-        .satisfies(violation -> assertThat(violation.getPropertyPath().toString())
-          .isEqualTo("moduleDescriptors[0]." + field + "[0].event"));
+        .satisfies(violation -> assertThat(violation.getPropertyPath())
+          .hasToString("moduleDescriptors[0]." + field + "[0].event"));
     }
   }
 
@@ -75,8 +75,8 @@ class ModuleDescriptorTest {
 
     try (var factory = Validation.buildDefaultValidatorFactory()) {
       assertThat(factory.getValidator().validate(descriptor)).singleElement()
-        .satisfies(violation -> assertThat(violation.getPropertyPath().toString())
-          .isEqualTo("consumesEvents[0].optional"));
+        .satisfies(violation -> assertThat(violation.getPropertyPath())
+          .hasToString("consumesEvents[0].optional"));
     }
   }
 

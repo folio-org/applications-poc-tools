@@ -133,7 +133,8 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, List.of(stored)));
 
-      assertThatThrownBy(() -> kongGatewayService.addRoutes(List.of(UpdateRoutes.moduleDescriptor()), requested))
+      var moduleDescriptors = List.of(UpdateRoutes.moduleDescriptor());
+      assertThatThrownBy(() -> kongGatewayService.addRoutes(moduleDescriptors, requested))
         .isInstanceOf(KongIntegrationException.class).hasMessage("Failed to create routes")
         .satisfies(error -> assertThat(((KongIntegrationException) error).getErrors()).containsExactly(
           new Parameter().key(MOD_ID)
@@ -152,7 +153,8 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getRoutesByTag(MOD_ID, null))
         .thenReturn(new KongResultList<>(null, List.of(regular, platform)));
 
-      assertThatThrownBy(() -> kongGatewayService.addRoutes(List.of(UpdateRoutes.moduleDescriptor()), requested))
+      var moduleDescriptors = List.of(UpdateRoutes.moduleDescriptor());
+      assertThatThrownBy(() -> kongGatewayService.addRoutes(moduleDescriptors, requested))
         .isInstanceOf(KongIntegrationException.class).hasMessage("Failed to create routes");
 
       verify(kongAdminClient, never()).upsertRoute(anyString(), anyString(), any());
@@ -408,7 +410,7 @@ class KongGatewayServiceTest {
       kongGatewayService.updateRoutes(List.of(moduleDescriptor()), scope);
       kongGatewayService.updateRoutes(List.of(moduleDescriptor()), scope);
 
-      assertThat(existingRoutes.toString()).isEqualTo(before);
+      assertThat(existingRoutes).hasToString(before);
       verify(kongAdminClient, times(2)).getService(MOD_ID);
       verify(kongAdminClient, times(2)).getRoutesByTag(MOD_ID, null);
     }
@@ -423,7 +425,8 @@ class KongGatewayServiceTest {
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(MOD_ID, null)).thenReturn(new KongResultList<>(null, List.of(stored)));
 
-      assertThatThrownBy(() -> kongGatewayService.updateRoutes(List.of(moduleDescriptor()), requested))
+      var moduleDescriptors = List.of(moduleDescriptor());
+      assertThatThrownBy(() -> kongGatewayService.updateRoutes(moduleDescriptors, requested))
         .isInstanceOf(KongIntegrationException.class).hasMessage("Failed to update routes");
     }
 
