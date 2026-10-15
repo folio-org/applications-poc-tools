@@ -114,9 +114,8 @@ class CapabilitySetTest {
       .capabilities(List.of("foo_item.create"));
 
     var json = objectMapper.writeValueAsString(original);
-    assertThat(json).contains("\"permission\":\"foo.items.set\"");
-    assertThat(json).doesNotContain("\"permissions\":");
-    assertThat(json).doesNotContain("\"permissionName\":");
+    assertThat(json).contains("\"permission\":\"foo.items.set\"")
+      .doesNotContain("\"permissions\":", "\"permissionName\":");
 
     var deserialized = objectMapper.readValue(json, CapabilitySet.class);
 

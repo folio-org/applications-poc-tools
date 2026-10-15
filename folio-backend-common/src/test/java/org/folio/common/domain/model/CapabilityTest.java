@@ -101,8 +101,8 @@ class CapabilityTest {
       .permissionName("roles.item.get");
 
     var json = objectMapper.writeValueAsString(original);
-    assertThat(json).contains("\"permissionName\":\"roles.item.get\"");
-    assertThat(json).doesNotContain("\"permission\":");
+    assertThat(json).contains("\"permissionName\":\"roles.item.get\"")
+      .doesNotContain("\"permission\":");
 
     var deserialized = objectMapper.readValue(json, Capability.class);
 
