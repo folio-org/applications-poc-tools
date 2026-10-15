@@ -4,6 +4,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
@@ -23,6 +25,8 @@ public class ModuleDescriptor implements Artifact {
   private List<RoutingEntry> filters = new ArrayList<>();
   private List<Permission> permissionSets = new ArrayList<>();
   private List<EnvEntry> env = new ArrayList<>();
+  private List<ProducesEvent> producesEvents = new ArrayList<>();
+  private List<ConsumesEvent> consumesEvents = new ArrayList<>();
   private UiModuleDescriptor uiDescriptor;
   private LaunchDescriptor launchDescriptor;
 
@@ -233,6 +237,42 @@ public class ModuleDescriptor implements Artifact {
       this.env = new ArrayList<>();
     }
     this.env.add(envItem);
+    return this;
+  }
+
+  @Valid
+  public List<@NotNull ProducesEvent> getProducesEvents() {
+    return producesEvents;
+  }
+
+  public ModuleDescriptor producesEvents(List<ProducesEvent> producesEvents) {
+    this.producesEvents = producesEvents;
+    return this;
+  }
+
+  public ModuleDescriptor addProducesEventsItem(ProducesEvent event) {
+    if (this.producesEvents == null) {
+      this.producesEvents = new ArrayList<>();
+    }
+    this.producesEvents.add(event);
+    return this;
+  }
+
+  @Valid
+  public List<@NotNull ConsumesEvent> getConsumesEvents() {
+    return consumesEvents;
+  }
+
+  public ModuleDescriptor consumesEvents(List<ConsumesEvent> consumesEvents) {
+    this.consumesEvents = consumesEvents;
+    return this;
+  }
+
+  public ModuleDescriptor addConsumesEventsItem(ConsumesEvent event) {
+    if (this.consumesEvents == null) {
+      this.consumesEvents = new ArrayList<>();
+    }
+    this.consumesEvents.add(event);
     return this;
   }
 

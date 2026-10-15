@@ -20,6 +20,7 @@
 * Add event confirmation support for async entitlement processing feedback in folio-kafka-consumer (MODSCHED-60)
 * Add `x-okapi-tenant` and `folio.tenantId` Kafka headers to `resource-result` confirmation events sent by `KafkaEventConfirmationSender` (APPPOCTOOL-108)
 * Update keycloak admin client to 26.0.12 (KEYCLOAK-136)
+* Add event declarations to module descriptors and tenant-independent routing for platform applications (APPPOCTOOL-110)
 -------
 
 ## Version `v4.0.0` (14.04.2026)

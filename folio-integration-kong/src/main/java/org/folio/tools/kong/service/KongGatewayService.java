@@ -10,6 +10,8 @@ import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.logging.log4j.util.Strings.isBlank;
+import static org.folio.common.domain.model.ApplicationScope.PLATFORM;
+import static org.folio.common.domain.model.ApplicationScope.REGULAR;
 import static org.folio.common.gateway.utils.GatewayRouteUtils.buildRouteName;
 import static org.folio.common.gateway.utils.GatewayRouteUtils.getMethods;
 import static org.folio.common.gateway.utils.GatewayRouteUtils.preparePath;
@@ -39,6 +41,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.folio.common.domain.model.ApplicationScope;
 import org.folio.common.domain.model.InterfaceDescriptor;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.domain.model.RoutingEntry;
@@ -62,6 +65,8 @@ public class KongGatewayService implements ApiGatewayService {
 
   public static final String MULTIPLE_INTERFACE_TYPE = "multiple";
 
+  private static final String PLATFORM_SCOPE_TAG = "application-scope:platform";
+
   private final KongAdminClient kongAdminClient;
   private final KongRouteTenantService kongRouteTenantService;
 
@@ -72,7 +77,12 @@ public class KongGatewayService implements ApiGatewayService {
    * @throws KongIntegrationException if any of route create requests failed
    */
   public void addRoutes(Collection<ModuleDescriptor> moduleDescriptors) {
-    performOperation(moduleDescriptors, "create", this::addRoutesForModule);
+    addRoutes(moduleDescriptors, REGULAR);
+  }
+
+  @Override
+  public void addRoutes(Collection<ModuleDescriptor> moduleDescriptors, ApplicationScope applicationScope) {
+    performOperation(moduleDescriptors, "create", md -> addRoutesForModule(md, applicationScope));
   }
 
   /**
@@ -82,7 +92,12 @@ public class KongGatewayService implements ApiGatewayService {
    * @throws KongIntegrationException if any of route update requests failed
    */
   public void updateRoutes(Collection<ModuleDescriptor> moduleDescriptors) {
-    performOperation(moduleDescriptors, "update", this::updateRoutesForModule);
+    updateRoutes(moduleDescriptors, REGULAR);
+  }
+
+  @Override
+  public void updateRoutes(Collection<ModuleDescriptor> moduleDescriptors, ApplicationScope applicationScope) {
+    performOperation(moduleDescriptors, "update", md -> updateRoutesForModule(md, applicationScope));
   }
 
   /**
@@ -109,7 +124,7 @@ public class KongGatewayService implements ApiGatewayService {
       var serviceId = getExistingServiceId(moduleId);
       var routes = toStream(getKongRoutes(moduleId))
         .filter(Objects::nonNull)
-        .filter(route -> isNotBlank(route.getExpression()))
+        .filter(route -> isNotBlank(route.getExpression()) && !hasPlatformScope(route))
         .toList();
       if (routes.isEmpty()) {
         log.warn("No routes found for module [{}]", moduleId);
@@ -142,7 +157,7 @@ public class KongGatewayService implements ApiGatewayService {
       var serviceId = getExistingServiceId(moduleId);
       var routes = toStream(getKongRoutes(moduleId))
         .filter(Objects::nonNull)
-        .filter(route -> isNotBlank(route.getExpression()))
+        .filter(route -> isNotBlank(route.getExpression()) && !hasPlatformScope(route))
         .toList();
       if (routes.isEmpty()) {
         log.warn("No routes found for module [{}]", moduleId);
@@ -276,14 +291,33 @@ public class KongGatewayService implements ApiGatewayService {
     }
   }
 
-  private List<Parameter> updateRoutesForModule(ModuleDescriptor moduleDescriptor) {
+  private static boolean hasPlatformScope(Route route) {
+    return emptyIfNull(route.getTags()).contains(PLATFORM_SCOPE_TAG);
+  }
+
+  private static List<Parameter> validateApplicationScope(ModuleDescriptor descriptor, List<Route> existingRoutes,
+    ApplicationScope scope) {
+    if (!descriptor.isMgrComponent() && existingRoutes.stream()
+      .anyMatch(route -> hasPlatformScope(route) != (scope == PLATFORM))) {
+      return List.of(new Parameter().key(descriptor.getId())
+        .value("Changing application scope requires coordinated removal and recreation of module routes"));
+    }
+    return List.of();
+  }
+
+  private List<Parameter> updateRoutesForModule(ModuleDescriptor moduleDescriptor, ApplicationScope scope) {
     var moduleId = moduleDescriptor.getId();
     var serviceId = getExistingServiceId(moduleId);
-    var existingRouteNames = getKongRoutes(moduleId).stream()
+    var existingRoutes = getKongRoutes(moduleId);
+    var scopeErrors = validateApplicationScope(moduleDescriptor, existingRoutes, scope);
+    if (isNotEmpty(scopeErrors)) {
+      return scopeErrors;
+    }
+    var existingRouteNames = existingRoutes.stream()
       .map(Route::getName)
       .collect(toCollection(LinkedHashSet::new));
 
-    var routes = prepareRoutes(moduleDescriptor, moduleId);
+    var routes = prepareRoutes(moduleDescriptor, moduleId, scope);
     var newRoutesCreationErrors = createNewKongRoutes(routes, existingRouteNames, serviceId);
 
     var routeNames = routes.stream()
@@ -316,24 +350,29 @@ public class KongGatewayService implements ApiGatewayService {
       .toList();
   }
 
-  private List<Parameter> addRoutesForModule(ModuleDescriptor moduleDescriptor) {
+  private List<Parameter> addRoutesForModule(ModuleDescriptor moduleDescriptor, ApplicationScope scope) {
     var moduleId = moduleDescriptor.getId();
     var serviceId = getExistingServiceId(moduleId);
-    return prepareRoutes(moduleDescriptor, moduleId).stream()
+    var scopeErrors = validateApplicationScope(moduleDescriptor, getKongRoutes(moduleId), scope);
+    if (isNotEmpty(scopeErrors)) {
+      return scopeErrors;
+    }
+    return prepareRoutes(moduleDescriptor, moduleId, scope).stream()
       .map(kongRoutePair -> createKongRoute(serviceId, kongRoutePair.getLeft(), kongRoutePair.getRight()))
       .flatMap(Optional::stream)
       .toList();
   }
 
-  private List<Pair<Route, RoutingEntry>> prepareRoutes(ModuleDescriptor desc, String moduleId) {
+  private List<Pair<Route, RoutingEntry>> prepareRoutes(ModuleDescriptor desc, String moduleId,
+    ApplicationScope scope) {
     return toStream(desc.getProvides())
-      .map(interfaceDescriptor -> prepareRoutes(interfaceDescriptor, moduleId, desc.isMgrComponent()))
+      .map(iface -> prepareRoutes(iface, moduleId, desc.isMgrComponent() || scope == PLATFORM, scope))
       .flatMap(Collection::stream)
       .toList();
   }
 
   private List<Pair<Route, RoutingEntry>> prepareRoutes(InterfaceDescriptor desc, String moduleId,
-    boolean isMgrComponent) {
+    boolean tenantAgnostic, ApplicationScope scope) {
     var interfaceId = desc.getId() + "-" + desc.getVersion();
     if (desc.isSystem()) {
       log.debug("System interface is ignored: moduleId={}, interfaceId={}]", moduleId, interfaceId);
@@ -342,7 +381,7 @@ public class KongGatewayService implements ApiGatewayService {
 
     var isMultiple = nullSafeEquals(desc.getInterfaceType(), MULTIPLE_INTERFACE_TYPE);
     return toStream(desc.getHandlers())
-      .map(routingEntry -> getRoute(moduleId, interfaceId, routingEntry, isMgrComponent, isMultiple)
+      .map(routingEntry -> getRoute(moduleId, interfaceId, routingEntry, tenantAgnostic, isMultiple, scope)
         .map(route -> Pair.of(route, routingEntry)))
       .flatMap(Optional::stream)
       .toList();
@@ -407,7 +446,7 @@ public class KongGatewayService implements ApiGatewayService {
 
   @SuppressWarnings("java:S4790")
   private static Optional<Route> getRoute(String moduleId, String interfaceId, RoutingEntry re,
-    boolean isMgrComponent, boolean isMultiple) {
+    boolean tenantAgnostic, boolean isMultiple, ApplicationScope scope) {
 
     var staticPath = re.getStaticPath();
     var httpMethods = getMethods(re);
@@ -425,12 +464,12 @@ public class KongGatewayService implements ApiGatewayService {
     var pathExpression = path.endsWith("$") ? httpPath().regexMatching(path) : httpPath().equalsTo(path);
     var methodsExpression = combineUsingOr(mapItems(httpMethods, method -> httpMethod().equalsTo(method)));
     var moduleIdExp = buildModuleIdHeaderExpression(moduleId, isMultiple);
-    var tenantExp = buildTenantHeaderExpression(isMgrComponent);
+    var tenantExp = buildTenantHeaderExpression(tenantAgnostic);
     return Optional.of(new Route()
       .priority(kongPathPair.getRight())
       .name(sha1Hex(routeName))
       .expression(combineUsingAnd(getNonNullValues(pathExpression, methodsExpression, moduleIdExp, tenantExp)))
-      .tags(getNonNullValues(moduleId, interfaceId))
+      .tags(getNonNullValues(moduleId, interfaceId, scope == PLATFORM ? PLATFORM_SCOPE_TAG : null))
       .stripPath(false)
     );
   }
@@ -454,8 +493,8 @@ public class KongGatewayService implements ApiGatewayService {
     return isMultiple ? httpHeader(MODULE_ID).equalsTo(moduleId) : null;
   }
 
-  private static @Nullable RouteExpression buildTenantHeaderExpression(boolean isMgrComponent) {
-    return isMgrComponent ? null : httpHeader("x-okapi-tenant").headerRegexMatching("\".*\"");
+  private static @Nullable RouteExpression buildTenantHeaderExpression(boolean tenantAgnostic) {
+    return tenantAgnostic ? null : httpHeader("x-okapi-tenant").headerRegexMatching("\".*\"");
   }
 
   private static void validateTenantChangeOperation(String tenantName, String moduleId, List<String> failedRoutes,

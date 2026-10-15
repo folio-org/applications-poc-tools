@@ -1,6 +1,9 @@
 package org.folio.common.gateway;
 
+import static org.folio.common.domain.model.ApplicationScope.PLATFORM;
+
 import java.util.Collection;
+import org.folio.common.domain.model.ApplicationScope;
 import org.folio.common.domain.model.ModuleDescriptor;
 import org.folio.common.gateway.model.GatewayServiceDefinition;
 
@@ -48,6 +51,25 @@ public interface ApiGatewayService {
   void addRoutes(Collection<ModuleDescriptor> moduleDescriptors);
 
   /**
+   * Creates routes for modules belonging to applications with the supplied scope.
+   *
+   * <p>All modules in a batch must have the same application scope. Null means regular.
+   * Platform routes ignore tenant changes. Changing the scope of existing routes requires an
+   * explicit remove/recreate operation coordinated by the caller; addRoutes and updateRoutes reject
+   * that change for non-manager modules.</p>
+   *
+   * @param moduleDescriptors - module descriptors to process
+   * @param applicationScope - owning application scope: regular or platform
+   * @throws UnsupportedOperationException if this provider does not support platform routes
+   */
+  default void addRoutes(Collection<ModuleDescriptor> moduleDescriptors, ApplicationScope applicationScope) {
+    if (applicationScope == PLATFORM) {
+      throw new UnsupportedOperationException("Platform routes are not supported by this gateway provider");
+    }
+    addRoutes(moduleDescriptors);
+  }
+
+  /**
    * Updates routes for the given module descriptors by diffing desired against existing routes:
    * missing routes are created, stale routes are deleted, and unchanged existing routes are never
    * re-submitted (preserving per-tenant route state).
@@ -58,6 +80,25 @@ public interface ApiGatewayService {
   void updateRoutes(Collection<ModuleDescriptor> moduleDescriptors);
 
   /**
+   * Updates routes within the supplied scope, preserving existing per-tenant state.
+   *
+   * <p>All modules in a batch must have the same application scope. Null means regular.
+   * Platform routes ignore tenant changes. Changing the scope of existing routes requires an
+   * explicit remove/recreate operation coordinated by the caller; addRoutes and updateRoutes reject
+   * that change for non-manager modules.</p>
+   *
+   * @param moduleDescriptors - module descriptors to process
+   * @param applicationScope - owning application scope: regular or platform
+   * @throws UnsupportedOperationException if this provider does not support platform routes
+   */
+  default void updateRoutes(Collection<ModuleDescriptor> moduleDescriptors, ApplicationScope applicationScope) {
+    if (applicationScope == PLATFORM) {
+      throw new UnsupportedOperationException("Platform routes are not supported by this gateway provider");
+    }
+    updateRoutes(moduleDescriptors);
+  }
+
+  /**
    * Removes all routes of the given module descriptors.
    *
    * @param moduleDescriptors - module descriptors to process
@@ -66,7 +107,7 @@ public interface ApiGatewayService {
   void removeRoutes(Collection<ModuleDescriptor> moduleDescriptors);
 
   /**
-   * Adds a tenant to all routes of a module. Idempotent: adding an already-present tenant is a no-op;
+   * Adds a tenant to a module's routes, skipping platform routes. Adding an already-present tenant is a no-op;
    * a module without routes results in a warning, not an error.
    *
    * @param moduleId - the module identifier
@@ -76,7 +117,7 @@ public interface ApiGatewayService {
   void addTenantToModuleRoutes(String moduleId, String tenantName);
 
   /**
-   * Removes a tenant from all routes of a module. Idempotent: removing an absent tenant is a no-op;
+   * Removes a tenant from a module's routes, skipping platform routes. Removing an absent tenant is a no-op;
    * a module without routes results in a warning, not an error.
    *
    * @param moduleId - the module identifier
