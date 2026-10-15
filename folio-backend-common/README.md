@@ -25,20 +25,21 @@ Jackson annotations for seamless JSON serialization.
 | Class                   | Description                                                                                                                                                                                          |
 |:------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `ApplicationDescriptor` | Top-level descriptor for a FOLIO application. Contains module references, full module descriptors, cross-application dependencies, deployment configuration, and arbitrary metadata.                 |
-| `ModuleDescriptor`      | Full Okapi-compatible module descriptor with provided/required interfaces, routing entries, permission sets, environment declarations, and launch/UI descriptor sections.                            |
+| `ModuleDescriptor`      | Full Okapi-compatible module descriptor with provided/required interfaces, routing entries, permission sets, capabilities, capability sets, environment declarations, and launch/UI descriptor sections.                            |
 | `Module`                | Lightweight module reference by `name` and `version`, with optional `id` and `url`.                                                                                                                  |
-| `InterfaceDescriptor`   | Describes a single Okapi interface provided by a module. Includes `id`, `version`, `interfaceType`, handler routing entries, and permission sets. Provides `isCompatible()` and `compare()` methods. |
+| `InterfaceDescriptor`   | Describes a single Okapi interface provided by a module. Includes `id`, `version`, `interfaceType`, handler routing entries, permission sets, capabilities, and capability sets. Provides `isCompatible()` and `compare()` methods. |
 | `InterfaceReference`    | Lightweight reference to a required/optional interface by `id` and `version`.                                                                                                                        |
 | `Dependency`            | Cross-application dependency with semver range validation via `@SemVersionOrRange`.                                                                                                                  |
 
 ### Routing and Permissions
 
-| Class                  | Description                                                                                                |
-|:-----------------------|:-----------------------------------------------------------------------------------------------------------|
-| `RoutingEntry`         | HTTP routing rule: HTTP methods, path pattern, phase, level, required/desired permissions, timer schedule. |
-| `RoutingEntrySchedule` | Cron-based schedule for timer routing entries: `cron` expression and `zone`.                               |
-| `Permission`           | FOLIO permission definition: name, sub-permissions, display name, and visibility flag.                     |
-| `Capability`           | Authorization capability with resource, action, type, and scope-to-capability mapping.                     |
+| Class                  | Description                                                                                                                              |
+|:-----------------------|:-----------------------------------------------------------------------------------------------------------------------------------------|
+| `RoutingEntry`         | HTTP routing rule: HTTP methods, path pattern, phase, level, required/desired permissions, capability, module capabilities, timer schedule. |
+| `RoutingEntrySchedule` | Cron-based schedule for timer routing entries: `cron` expression and `zone`.                                                             |
+| `Permission`           | FOLIO permission definition: name, sub-permissions, display name, and visibility flag.                                                   |
+| `Capability`           | Authorization capability: name, description, resource, action, type, permission mapping, and replaces list.                             |
+| `CapabilitySet`        | Authorization capability set: name, description, resource, action, type, permission mapping, child capabilities, and replaces list.      |
 
 ### Deployment and Metadata
 
