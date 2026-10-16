@@ -46,6 +46,7 @@
     <apache-commons-lang3.version>3.21.0</apache-commons-lang3.version>
     <keycloak-admin-client.version>26.0.12</keycloak-admin-client.version>
     <kafka.version>4.2.0</kafka.version> <!-- can be removed once Spring Boot migrates to this version -->
+    <folio-spring-support.version>10.1.0-SNAPSHOT</folio-spring-support.version>
 
     <!-- Test dependencies versions -->
     <mockito.version>5.24.0</mockito.version>

@@ -1,18 +1,14 @@
 # folio-kafka-consumer
 
-Spring Boot consumer library for FOLIO applications. Provides tenant-aware Kafka message filtering,
-per-listener topic and group-ID configuration, automatic module metadata resolution, and event
-confirmation support for async entitlement feedback — so only messages intended for entitled
-tenants are delivered to the listener, and callers can receive a result event when processing
-completes or fails.
+Spring Boot consumer library for FOLIO applications. Provides per-listener topic and group-ID
+configuration, marker-table filtering support, and event confirmation support for async
+entitlement feedback.
 
 ## Table of Contents
 
 - [Activation](#activation)
 - [Listener Configuration](#listener-configuration)
-- [Tenant-Aware Filtering](#tenant-aware-filtering)
-- [Module Metadata Resolution](#module-metadata-resolution)
-- [Using the Filter in a Listener Container Factory](#using-the-filter-in-a-listener-container-factory)
+- [Marker-Table Tenant Filtering](#marker-table-tenant-filtering)
 - [Event Confirmation](#event-confirmation)
 - [Full Configuration Reference](#full-configuration-reference)
 
@@ -28,13 +24,11 @@ Add `@EnableKafkaConsumer` to a Spring `@Configuration` class:
 public class KafkaConfiguration { }
 ```
 
-This annotation imports three configurations:
+This annotation imports Kafka consumer properties and event-confirmation support:
 
-| Imported configuration               | Registers                                                                                                        |
-|:-------------------------------------|:-----------------------------------------------------------------------------------------------------------------|
-| `KafkaConsumerFilteringConfiguration` | `tenantAwareMessageFilter` bean (active filter or no-op pass-through, depending on properties)                  |
-| `ModuleMetadataConfiguration`         | `moduleMetadata` bean resolved from the application's name and version                                          |
-| `KafkaConsumerPropertiesConfiguration`| `kafkaConsumerProperties` bean bound to `application.kafka.consumer.*` with a stable, SpEL-friendly bean name  |
+| Imported configuration                 | Registers                                                                                                      |
+|:---------------------------------------|:---------------------------------------------------------------------------------------------------------------|
+| `KafkaConsumerPropertiesConfiguration` | `kafkaConsumerProperties` bean bound to `application.kafka.consumer.*` with a stable, SpEL-friendly bean name |
 
 `@EnableKafkaConsumer` also imports `EventConfirmationConfiguration`, which activates only when
 `application.event-confirmation.enabled=true`, plus the always-available confirmation components
@@ -81,124 +75,79 @@ component-scan path — this is the reason `@EnableKafkaConsumer` uses
 
 ---
 
-## Tenant-Aware Filtering
+## Marker-Table Tenant Filtering
 
-By default, the `tenantAwareMessageFilter` bean is a no-op pass-through that accepts all records.
-Set `application.kafka.consumer.filtering.tenant-filter.enabled=true` to activate real filtering.
+Eureka platform modules that consume entitlement-time Kafka events can use
+`MarkerTableBasedTenantAwareMessageFilter` to ensure that each module version processes events only
+for tenants initialized by that version. This avoids relying on asynchronously refreshed entitlement
+state while a tenant is being upgraded.
 
-### How filtering works
+### Marker table
 
-When enabled, `EnabledTenantMessageFilter` intercepts every incoming record:
+Each tenant schema must contain a single-row `tenant_module_version` table with these columns:
 
-1. Calls `getTenant()` on the `TenantAwareEvent` payload. If the value is blank or `null`, the
-   record is accepted immediately and a warning is logged — no entitlement check is performed.
-2. Calls the tenant-entitlement service to fetch the set of tenants currently entitled for this
-   module (result is cached per poll cycle).
-3. If the entitled set is **non-empty** but does not contain the record's tenant, the
-   `tenantDisabledStrategy` is applied.
-4. If the entitled set is **empty** (no tenant is entitled at all), the
-   `allTenantsDisabledStrategy` is applied.
+| Column         | Purpose                                                           |
+|:---------------|:------------------------------------------------------------------|
+| `id`           | Fixed row identifier; the only supported value is `1`             |
+| `module_id`    | Full identifier of the module version that initialized the tenant |
+| `updated_date` | Time at which the marker was last updated                         |
 
-### Strategies
+Create this table through the module's normal database migration mechanism.
 
-| Value    | Effect when a tenant is not entitled                                                         |
-|:---------|:---------------------------------------------------------------------------------------------|
-| `ACCEPT` | Accept the record and deliver it to the listener                                             |
-| `SKIP`   | Silently discard the record (default for `tenantDisabledStrategy`)                           |
-| `FAIL`   | Throw `TenantIsDisabledException` or `TenantsAreDisabledException` (default for `allTenantsDisabledStrategy`) |
+### Configuration
 
-### Tenant entitlement service
-
-When `tenant-filter.enabled=true`, the library creates and configures the `TenantEntitlementClient`
-automatically. The consuming application only needs to supply the base URL via the `okapi.url`
-property — no manually created beans are required.
+Expose the common deployment flag in the module's `application.yml`:
 
 ```yaml
-okapi:
-  url: http://mgr-tenant-entitlements:8080
-```
-
-If the `loggingInterceptor` bean from `folio-spring-support` is present on the classpath, it is
-picked up automatically and applied to every request made by the entitlement client.
-
-### Filtering configuration
-
-```yaml
-application:
+folio:
   kafka:
-    consumer:
-      filtering:
-        tenant-filter:
-          enabled: true
-          ignore-empty-batch: true          # default: true
-          tenant-disabled-strategy: SKIP    # default: SKIP
-          all-tenants-disabled-strategy: FAIL  # default: FAIL
+    tenant-filter:
+      enabled: ${KAFKA_TENANT_FILTER_ENABLED:false}
 ```
 
----
+Import `TenantModuleVersionConfiguration`. It registers `TenantModuleVersionRepository`,
+`TenantModuleVersionService`, and the `markerTableBasedTenantAwareMessageFilter` bean.
 
-## Module Metadata Resolution
-
-`ModuleMetadataConfiguration` resolves the current module's name and version through an ordered
-chain of providers. The first provider that succeeds determines the result.
-
-| Priority | Provider                             | Source                                                                              | Condition                              |
-|:---------|:-------------------------------------|:------------------------------------------------------------------------------------|:---------------------------------------|
-| 1        | `AppPropertiesModuleDataProvider`    | `spring.application.name` and `spring.application.version` properties              | Always registered                      |
-| 10       | `BuildPropertiesModuleDataProvider`  | `build.artifact` / `build.version` from `META-INF/build-info.properties`           | Only when `BuildProperties` bean exists |
-| 20       | `ManifestModuleDataProvider`         | `Implementation-Title` / `Implementation-Version` in `META-INF/MANIFEST.MF`        | Always registered                      |
-| 30       | `PomModuleDataProvider`              | `artifactId` / `version` in `META-INF/maven/<groupId>/<artifactId>/pom.properties` | Always registered                      |
-| 40       | `ModulePropertiesModuleDataProvider` | `module.name` / `module.version` in `classpath:module.properties`                  | Always registered                      |
-
-The location of `module.properties` can be overridden:
-
-```yaml
-spring:
-  application:
-    module-properties:
-      location: classpath:custom/module.properties
-```
-
-To supply the module name and version explicitly (recommended), set the Spring properties:
-
-```yaml
-spring:
-  application:
-    name: mod-my-service
-    version: 1.2.3
-```
-
-### Custom provider
-
-Register a bean named `moduleDataProvider` to replace the default `CompositeModuleDataProvider`:
+The module must provide a `TenantInitializationDetector` that checks a stable, module-specific table
+that exists after the tenant schema has been initialized:
 
 ```java
-@Bean("moduleDataProvider")
-public ModuleDataProvider moduleDataProvider() {
-    return () -> new ModuleData("mod-my-service", "1.2.3");
+@Configuration
+@Import(TenantModuleVersionConfiguration.class)
+class KafkaConfiguration {
+
+    @Bean
+    TenantInitializationDetector tenantInitializationDetector(
+        TenantModuleVersionRepository repository) {
+        return () -> repository.tableExists("module_data_table");
+    }
 }
 ```
 
----
-
-## Using the Filter in a Listener Container Factory
-
-Wire the `tenantAwareMessageFilter` bean into the Kafka listener container factory:
+Record the current module version after tenant initialization succeeds and clear the marker during
+tenant deletion:
 
 ```java
-@Bean
-public ConcurrentKafkaListenerContainerFactory<String, ResourceEvent<?>> kafkaListenerContainerFactory(
-        ConsumerFactory<String, ResourceEvent<?>> consumerFactory,
-        RecordFilterStrategy<String, ResourceEvent<?>> tenantAwareMessageFilter) {
-    var factory = new ConcurrentKafkaListenerContainerFactory<String, ResourceEvent<?>>();
-    factory.setConsumerFactory(consumerFactory);
-    factory.setRecordFilterStrategy(tenantAwareMessageFilter);
-    return factory;
+tenantModuleVersionService.markCurrentVersion();
+tenantModuleVersionService.clear();
+```
+
+Apply the filter explicitly to each affected listener:
+
+```java
+@KafkaListener(
+    topicPattern = "...",
+    groupId = "...",
+    filter = "markerTableBasedTenantAwareMessageFilter")
+public void handleEvent(ConsumerRecord<String, Object> event) {
+    // Process the event.
 }
 ```
 
-The `tenantAwareMessageFilter` bean is `@ConditionalOnMissingBean(name = "tenantAwareMessageFilter")`,
-so a custom `RecordFilterStrategy` bean with that name takes precedence.
+The filter reads the tenant from `x-okapi-tenant`, falling back to `folio.tenantId`. It filters a
+record when the tenant schema records a different module version or predates the marker table.
+It accepts records for the current version, uninitialized tenants, empty marker tables, and records
+without a tenant header. Filtering is disabled by default.
 
 ---
 
@@ -258,15 +207,8 @@ public CommonErrorHandler kafkaErrorHandler(ResourceResultEventPublishingRecover
 Provide a bean that extracts the module identifier from an incoming `ResourceEvent`. The string
 is included in the `ResourceResultEvent` sent to the confirmation topic:
 
-```java
-@Bean
-public ModuleIdExtractor moduleIdExtractor(ModuleMetadata moduleMetadata) {
-    return event -> moduleMetadata.getId();
-}
-```
-
-Return `null` when the module identifier is not applicable; the confirmation is still sent with a
-`null` `moduleId` field.
+The extraction logic is event-specific. Return `null` when the module identifier is not applicable;
+the confirmation is still sent with a `null` `moduleId` field.
 
 ### Transactional mode
 
@@ -306,11 +248,6 @@ When this bean is present, `EventConfirmationConfiguration` skips creating the d
 | `application.kafka.consumer.listener.<name>.topic-pattern`                        | `String`  | —        | Regex topic-name pattern for the named listener         |
 | `application.kafka.consumer.listener.<name>.group-id`                             | `String`  | —        | Consumer group ID for the named listener                |
 | `application.kafka.consumer.listener.<name>.concurrency`                          | `Integer` | `1`      | Number of concurrent consumer threads for the listener  |
-| `application.kafka.consumer.filtering.tenant-filter.enabled`                      | `boolean` | `false`  | Activate real tenant-entitlement filtering              |
-| `application.kafka.consumer.filtering.tenant-filter.ignore-empty-batch`           | `boolean` | `true`   | Signal Kafka to skip delivery on empty poll batches     |
-| `application.kafka.consumer.filtering.tenant-filter.tenant-disabled-strategy`     | `String`  | `SKIP`   | Strategy when a record's tenant is not entitled         |
-| `application.kafka.consumer.filtering.tenant-filter.all-tenants-disabled-strategy`| `String`  | `FAIL`   | Strategy when no tenants at all are entitled            |
-| `spring.application.module-properties.location`                                   | `String`  | `classpath:module.properties` | Override path for `module.properties` |
 | `application.event-confirmation.enabled`                                          | `boolean` | `false`  | Activate the event-confirmation subsystem               |
 | `application.event-confirmation.topic`                                            | `String`  | —        | Kafka topic for `ResourceResultEvent` confirmations; must not be blank when enabled |
 | `application.event-confirmation.success-listener.transactional`                   | `boolean` | `false`  | Fire the success listener inside a transaction synchronisation callback |

@@ -4,7 +4,7 @@
  * <p>Contains the following public types, shared between Kafka producers and consumers:
  * <ul>
  *   <li>{@link org.folio.integration.kafka.model.TenantAwareEvent} — contract for event payloads
- *       that carry a tenant identifier; used as the type bound by the consumer filter;</li>
+ *       that carry a tenant identifier;</li>
  *   <li>{@link org.folio.integration.kafka.model.ResourceEvent} — generic event envelope
  *       implementing {@code TenantAwareEvent} and carrying metadata and an optional resource
  *       payload;</li>
