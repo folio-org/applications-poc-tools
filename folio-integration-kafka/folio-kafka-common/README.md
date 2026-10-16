@@ -47,8 +47,8 @@ ResourceEvent<Item> event = ResourceEvent.<Item>builder()
 
 ### `TenantAwareEvent`
 
-A lightweight interface for event payloads that carry a tenant identifier. Implement it to make a
-custom event type work with the consumer-side tenant filter without depending on `ResourceEvent`.
+A lightweight interface for event payloads that carry a tenant identifier without depending on
+`ResourceEvent`.
 
 ```java
 public interface TenantAwareEvent {
@@ -56,8 +56,7 @@ public interface TenantAwareEvent {
 }
 ```
 
-`ResourceEvent<T>` implements this interface out of the box, so no change is required for existing
-listeners that already use `ResourceEvent`.
+`ResourceEvent<T>` implements this interface out of the box.
 
 ---
 
@@ -79,8 +78,7 @@ listeners that already use `ResourceEvent`.
 ### `ResourceResultEvent`
 
 A Kafka event reporting the terminal outcome of a resource operation stage sent back to the
-entitlement orchestrator. Implements `TenantAwareEvent` so it passes through the shared
-consumer-side tenant filter without additional configuration.
+entitlement orchestrator. It implements `TenantAwareEvent`.
 
 | Field          | JSON key       | Nullable | Description                                                       |
 |:---------------|:---------------|:---------|:------------------------------------------------------------------|
