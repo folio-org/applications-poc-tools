@@ -186,10 +186,7 @@ class MarkerTableBasedKafkaConsumerFilteringIT {
   void markerLifecycle_positive_upsertsAndDeletesModuleVersion() {
     recreateInitializedTenant(LIFECYCLE_TENANT, true);
     var previousVersionService = new TenantModuleVersionService(
-      tenantModuleVersionRepository,
-      () -> tenantModuleVersionRepository.tableExists("test_entity"),
-      folioExecutionContext,
-      DIFFERENT_MODULE_ID);
+      tenantModuleVersionRepository, folioExecutionContext, DIFFERENT_MODULE_ID);
 
     withTenant(LIFECYCLE_TENANT, previousVersionService::markCurrentVersion);
     assertThat(findModuleVersion(LIFECYCLE_TENANT))
@@ -325,8 +322,7 @@ class MarkerTableBasedKafkaConsumerFilteringIT {
     @Bean
     TenantModuleVersionService tenantModuleVersionService(TenantModuleVersionRepository repository,
       FolioExecutionContext folioExecutionContext) {
-      return new TenantModuleVersionService(repository, () -> repository.tableExists("test_entity"),
-        folioExecutionContext, CURRENT_MODULE_ID);
+      return new TenantModuleVersionService(repository, folioExecutionContext, CURRENT_MODULE_ID);
     }
 
     @Bean("markerTableBasedTenantAwareMessageFilter")

@@ -4,7 +4,6 @@ import static org.apache.commons.lang3.Validate.validState;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.integration.kafka.consumer.filter.MarkerTableBasedTenantAwareMessageFilter;
-import org.folio.integration.kafka.consumer.filter.TenantInitializationDetector;
 import org.folio.integration.kafka.consumer.filter.TenantModuleVersionRepository;
 import org.folio.integration.kafka.consumer.filter.TenantModuleVersionService;
 import org.folio.spring.FolioExecutionContext;
@@ -28,10 +27,8 @@ public class TenantModuleVersionConfiguration {
 
   @Bean
   public TenantModuleVersionService tenantModuleVersionService(TenantModuleVersionRepository repository,
-    TenantInitializationDetector initializationDetector,
     FolioExecutionContext context, FolioModuleMetadata folioModuleMetadata) {
-    return new TenantModuleVersionService(repository, initializationDetector, context,
-      folioModuleMetadata.getModuleId());
+    return new TenantModuleVersionService(repository, context, folioModuleMetadata.getModuleId());
   }
 
   @Bean("markerTableBasedTenantAwareMessageFilter")

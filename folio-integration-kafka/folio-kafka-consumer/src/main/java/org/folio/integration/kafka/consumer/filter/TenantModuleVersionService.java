@@ -16,7 +16,6 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 public class TenantModuleVersionService {
 
   private final TenantModuleVersionRepository repository;
-  private final TenantInitializationDetector initializationDetector;
   private final FolioExecutionContext folioExecutionContext;
   private final String moduleId;
   private final Set<String> tenantsWithMarkerTable = ConcurrentHashMap.newKeySet();
@@ -25,15 +24,12 @@ public class TenantModuleVersionService {
    * Creates a tenant module-version service.
    *
    * @param repository stores and retrieves module-version markers
-   * @param initializationDetector determines whether a tenant schema is initialized
    * @param folioExecutionContext provides the current tenant context
    * @param moduleId identifier of the running module version
    */
   public TenantModuleVersionService(TenantModuleVersionRepository repository,
-    TenantInitializationDetector initializationDetector, FolioExecutionContext folioExecutionContext,
-    String moduleId) {
+    FolioExecutionContext folioExecutionContext, String moduleId) {
     this.repository = repository;
-    this.initializationDetector = initializationDetector;
     this.folioExecutionContext = folioExecutionContext;
     this.moduleId = notBlank(moduleId, "moduleId must not be blank");
   }
@@ -83,13 +79,8 @@ public class TenantModuleVersionService {
   }
 
   private boolean isDifferentModuleVersionForUncachedTenant(String tenant) {
-    if (!initializationDetector.isInitialized()) {
-      log.debug("Tenant is not initialized, treating it as owned by another module version: tenant = {}", tenant);
-      return true;
-    }
-
     if (!repository.markerTableExists()) {
-      log.debug("Tenant schema predates the module-version marker: tenant = {}", tenant);
+      log.debug("Tenant module-version table does not exist: tenant = {}", tenant);
       return true;
     }
 

@@ -5,7 +5,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-import org.folio.integration.kafka.consumer.filter.TenantInitializationDetector;
 import org.folio.integration.kafka.consumer.filter.TenantModuleVersionRepository;
 import org.folio.integration.kafka.consumer.filter.TenantModuleVersionService;
 import org.folio.spring.FolioExecutionContext;
@@ -60,11 +59,6 @@ class TenantModuleVersionConfigurationTest {
     @Bean
     JdbcOperations jdbcOperations() {
       return mock(JdbcOperations.class);
-    }
-
-    @Bean
-    TenantInitializationDetector tenantInitializationDetector() {
-      return () -> false;
     }
 
     @Bean

@@ -6,7 +6,6 @@ import org.springframework.jdbc.core.JdbcOperations;
 /** JDBC repository that stores and retrieves the module version recorded for a tenant schema. */
 public class TenantModuleVersionRepository {
 
-  private static final String MARKER_TABLE = "tenant_module_version";
   private static final String SAVE_MODULE_VERSION_SQL = """
     INSERT INTO tenant_module_version (id, module_id)
     VALUES (1, ?)
@@ -16,12 +15,12 @@ public class TenantModuleVersionRepository {
     """;
   private static final String FIND_MODULE_VERSION_SQL = "SELECT module_id FROM tenant_module_version WHERE id = 1";
   private static final String DELETE_MODULE_VERSION_SQL = "DELETE FROM tenant_module_version";
-  private static final String TABLE_EXISTS_SQL = """
+  private static final String MARKER_TABLE_EXISTS_SQL = """
     SELECT EXISTS (
       SELECT 1
       FROM information_schema.tables
       WHERE table_schema = current_schema()
-        AND table_name = ?
+        AND table_name = 'tenant_module_version'
     )
     """;
 
@@ -45,10 +44,6 @@ public class TenantModuleVersionRepository {
   }
 
   public boolean markerTableExists() {
-    return tableExists(MARKER_TABLE);
-  }
-
-  public boolean tableExists(String table) {
-    return Boolean.TRUE.equals(jdbcOperations.queryForObject(TABLE_EXISTS_SQL.strip(), Boolean.class, table));
+    return Boolean.TRUE.equals(jdbcOperations.queryForObject(MARKER_TABLE_EXISTS_SQL.strip(), Boolean.class));
   }
 }

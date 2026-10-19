@@ -25,7 +25,6 @@ class TenantModuleVersionServiceTest {
   private static final String OLD_MODULE_ID = "mod-foo-1.0.0";
 
   @Mock private TenantModuleVersionRepository repository;
-  @Mock private TenantInitializationDetector initializationDetector;
   @Mock private FolioExecutionContext folioExecutionContext;
 
   private TenantModuleVersionService service;
@@ -33,7 +32,7 @@ class TenantModuleVersionServiceTest {
   @BeforeEach
   void setUp() {
     when(folioExecutionContext.getTenantId()).thenReturn(TENANT);
-    service = new TenantModuleVersionService(repository, initializationDetector, folioExecutionContext, MODULE_ID);
+    service = new TenantModuleVersionService(repository, folioExecutionContext, MODULE_ID);
   }
 
   @Test
@@ -74,17 +73,7 @@ class TenantModuleVersionServiceTest {
 
   @Test
   void isDifferentModuleVersion_schemaPredatesMarker_returnsTrue() {
-    when(initializationDetector.isInitialized()).thenReturn(true);
     when(repository.markerTableExists()).thenReturn(false);
-
-    var result = service.isDifferentModuleVersion();
-
-    assertThat(result).isTrue();
-  }
-
-  @Test
-  void isDifferentModuleVersion_tenantNotInitialized_returnsTrue() {
-    when(initializationDetector.isInitialized()).thenReturn(false);
 
     var result = service.isDifferentModuleVersion();
 
@@ -109,7 +98,6 @@ class TenantModuleVersionServiceTest {
     assertThat(service.isDifferentModuleVersion()).isFalse();
     assertThat(service.isDifferentModuleVersion()).isTrue();
 
-    verify(initializationDetector).isInitialized();
     verify(repository).markerTableExists();
     verify(repository, times(2)).findModuleVersion();
   }
@@ -120,14 +108,13 @@ class TenantModuleVersionServiceTest {
     when(repository.findModuleVersion())
       .thenReturn(Optional.of(MODULE_ID))
       .thenThrow(new BadSqlGrammarException("query", "SELECT", new SQLException("missing table")));
-    when(initializationDetector.isInitialized()).thenReturn(true, false);
+    when(repository.markerTableExists()).thenReturn(true, false);
 
     assertThat(service.isDifferentModuleVersion()).isFalse();
     assertThat(service.isDifferentModuleVersion()).isTrue();
   }
 
   private void mockInitializedTenant() {
-    when(initializationDetector.isInitialized()).thenReturn(true);
     when(repository.markerTableExists()).thenReturn(true);
   }
 }

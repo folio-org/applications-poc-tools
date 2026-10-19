@@ -111,22 +111,6 @@ when the module version is missing.
 Import `TenantModuleVersionConfiguration`. It registers `TenantModuleVersionRepository`,
 `TenantModuleVersionService`, and the `markerTableBasedTenantAwareMessageFilter` bean.
 
-The module must provide a `TenantInitializationDetector` that checks a stable, module-specific table
-that exists after the tenant schema has been initialized:
-
-```java
-@Configuration
-@Import(TenantModuleVersionConfiguration.class)
-class KafkaConfiguration {
-
-    @Bean
-    TenantInitializationDetector tenantInitializationDetector(
-        TenantModuleVersionRepository repository) {
-        return () -> repository.tableExists("module_data_table");
-    }
-}
-```
-
 Record the current module version after tenant initialization succeeds and clear the marker during
 tenant deletion:
 
