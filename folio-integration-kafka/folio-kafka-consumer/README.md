@@ -105,6 +105,9 @@ folio:
       enabled: ${KAFKA_TENANT_FILTER_ENABLED:false}
 ```
 
+When filtering is enabled, `spring.application.version` must be non-blank. Application startup fails
+when the module version is missing.
+
 Import `TenantModuleVersionConfiguration`. It registers `TenantModuleVersionRepository`,
 `TenantModuleVersionService`, and the `markerTableBasedTenantAwareMessageFilter` bean.
 

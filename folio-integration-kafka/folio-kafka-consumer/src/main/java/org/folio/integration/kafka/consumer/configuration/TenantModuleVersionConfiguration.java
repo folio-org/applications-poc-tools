@@ -1,5 +1,8 @@
 package org.folio.integration.kafka.consumer.configuration;
 
+import static org.apache.commons.lang3.Validate.validState;
+
+import org.apache.commons.lang3.StringUtils;
 import org.folio.integration.kafka.consumer.filter.MarkerTableBasedTenantAwareMessageFilter;
 import org.folio.integration.kafka.consumer.filter.TenantInitializationDetector;
 import org.folio.integration.kafka.consumer.filter.TenantModuleVersionRepository;
@@ -35,6 +38,10 @@ public class TenantModuleVersionConfiguration {
   public RecordFilterStrategy<String, Object> markerTableBasedTenantAwareMessageFilter(
     TenantModuleVersionService tenantModuleVersionService, FolioModuleMetadata folioModuleMetadata,
     @Value("${folio.kafka.tenant-filter.enabled:false}") boolean enabled) {
+    if (enabled) {
+      validState(folioModuleMetadata.getModuleVersion().filter(StringUtils::isNotBlank).isPresent(),
+        "Kafka tenant filtering requires a non-blank spring.application.version");
+    }
     return new MarkerTableBasedTenantAwareMessageFilter<>(tenantModuleVersionService, folioModuleMetadata, enabled);
   }
 }
