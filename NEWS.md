@@ -1,3 +1,7 @@
+## Version `4.0.6` (19.10.2026)
+### Changes:
+* Generalize Kong configuration to API Gateway in `folio-integration-kong` (EUREKA-887)
+
 ## Version `4.0.5` (13.10.2026)
 ### Changes:
 * Upgrade spring-boot to 4.1.1 version (APPPOCTOOL-109)
