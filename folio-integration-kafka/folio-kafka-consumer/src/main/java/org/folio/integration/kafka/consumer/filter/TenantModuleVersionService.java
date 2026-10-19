@@ -62,9 +62,9 @@ public class TenantModuleVersionService {
   /**
    * Returns whether the tenant schema records a different version of this module.
    *
-   * <p>An uninitialized tenant, or an initialized tenant whose marker record has not been written
-   * yet, is not considered a different version. An initialized schema without the marker table
-   * predates marker-based filtering and is considered to use an older version.</p>
+   * <p>An uninitialized tenant, or an initialized schema without the marker table, is considered
+   * to use another version. An initialized tenant whose marker record has not been written yet is
+   * not considered a different version.</p>
    *
    * @return {@code true} when the recorded module version differs from the running version
    */
@@ -79,13 +79,13 @@ public class TenantModuleVersionService {
       }
     }
 
-    return isModuleVersionDifferentForUncachedTenant(tenant);
+    return isDifferentModuleVersionForUncachedTenant(tenant);
   }
 
-  private boolean isModuleVersionDifferentForUncachedTenant(String tenant) {
+  private boolean isDifferentModuleVersionForUncachedTenant(String tenant) {
     if (!initializationDetector.isInitialized()) {
-      log.debug("Tenant is not initialized yet, no module version is recorded: tenant = {}", tenant);
-      return false;
+      log.debug("Tenant is not initialized, treating it as owned by another module version: tenant = {}", tenant);
+      return true;
     }
 
     if (!repository.markerTableExists()) {

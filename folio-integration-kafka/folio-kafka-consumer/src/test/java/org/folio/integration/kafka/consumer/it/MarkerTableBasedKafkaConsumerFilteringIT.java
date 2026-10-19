@@ -70,6 +70,7 @@ class MarkerTableBasedKafkaConsumerFilteringIT {
   private static final String DIFFERENT_VERSION_TENANT = "different_version_tenant";
   private static final String PRE_MARKER_TENANT = "pre_marker_tenant";
   private static final String UNINITIALIZED_TENANT = "uninitialized_tenant";
+  private static final String UNINITIALIZED_CONTROL_TENANT = "uninitialized_control_tenant";
   private static final String EMPTY_MARKER_TENANT = "empty_marker_tenant";
   private static final String FOLIO_HEADER_TENANT = "folio_header_tenant";
   private static final String CACHE_INVALIDATION_TENANT = "cache_invalidation_tenant";
@@ -127,12 +128,14 @@ class MarkerTableBasedKafkaConsumerFilteringIT {
   }
 
   @Test
-  void filter_positive_uninitializedTenant_messageAccepted() throws Exception {
+  void filter_positive_uninitializedTenant_messageFiltered() throws Exception {
     dropTenantSchema(UNINITIALIZED_TENANT);
+    prepareControlTenant(UNINITIALIZED_CONTROL_TENANT);
 
     sendEvent(OkapiHeaders.TENANT, UNINITIALIZED_TENANT, "uninitialized-event");
+    sendEvent(OkapiHeaders.TENANT, UNINITIALIZED_CONTROL_TENANT, "control-event");
 
-    awaitEvents("uninitialized-event");
+    awaitEvents("control-event");
   }
 
   @Test

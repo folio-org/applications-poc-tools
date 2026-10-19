@@ -83,12 +83,12 @@ class TenantModuleVersionServiceTest {
   }
 
   @Test
-  void isDifferentModuleVersion_tenantNotInitialized_returnsFalse() {
+  void isDifferentModuleVersion_tenantNotInitialized_returnsTrue() {
     when(initializationDetector.isInitialized()).thenReturn(false);
 
     var result = service.isDifferentModuleVersion();
 
-    assertThat(result).isFalse();
+    assertThat(result).isTrue();
   }
 
   @Test
@@ -123,7 +123,7 @@ class TenantModuleVersionServiceTest {
     when(initializationDetector.isInitialized()).thenReturn(true, false);
 
     assertThat(service.isDifferentModuleVersion()).isFalse();
-    assertThat(service.isDifferentModuleVersion()).isFalse();
+    assertThat(service.isDifferentModuleVersion()).isTrue();
   }
 
   private void mockInitializedTenant() {

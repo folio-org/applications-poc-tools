@@ -148,9 +148,9 @@ public void handleEvent(ConsumerRecord<String, Object> event) {
 ```
 
 The filter reads the tenant from `x-okapi-tenant`, falling back to `folio.tenantId`. It filters a
-record when the tenant schema records a different module version or predates the marker table.
-It accepts records for the current version, uninitialized tenants, empty marker tables, and records
-without a tenant header. Filtering is disabled by default.
+record when the tenant is not initialized, the tenant schema records a different module version,
+or the schema predates the marker table. It accepts records for the current version, empty marker
+tables, and records without a tenant header. Filtering is disabled by default.
 
 ---
 
