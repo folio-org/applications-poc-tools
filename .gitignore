@@ -42,3 +42,4 @@ temp/
 ### Agents ###
 .claude/
 .codemie/
+/.tasks/
