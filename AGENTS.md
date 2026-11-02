@@ -1,6 +1,6 @@
 # applications-poc-tools
 
-Multi-module Maven library of shared classes for FOLIO backend development and testing.
+Multi-module Maven library of shared classes for FOLIO backend development and testing. Java, Spring Boot, Log4j2; modules for Keycloak security, Kafka, secret stores, Kong and APISIX gateways, and Testcontainers-based testing.
 
 ## Build & Test
 
