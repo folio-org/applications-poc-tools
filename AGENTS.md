@@ -8,13 +8,27 @@ Multi-module Maven library of shared classes for FOLIO backend development and t
 mvn clean install              # full build
 mvn clean install -DskipTests  # skip tests
 mvn test                       # unit tests (groups=unit, surefire)
-mvn verify                     # integration tests (groups=integration, failsafe); needs Docker
+mvn verify                     # unit and integration tests (failsafe runs groups=integration); needs Docker
 mvn test -pl folio-security    # single module
 mvn test -pl folio-auth-openid -Dtest=JsonWebTokenParserTest  # single class
 mvn checkstyle:check           # runs at process-classes; violations fail build
 ```
 
 After API/dependency changes, run the "Verify Dependent Modules" GitHub Actions workflow. Dependents: mgr-applications, mgr-tenants, mgr-tenant-entitlements, mod-roles-keycloak, mod-login-keycloak, mod-users-keycloak, mod-scheduler, mod-consortia-keycloak, folio-module-sidecar.
+
+## Modules
+
+Flat list; each is a top-level directory with its own `README.md` (`folio-integration-kafka` and `folio-secret-store` are aggregators of the sub-modules in brackets).
+
+- `folio-backend-common` — shared domain model (`ApplicationDescriptor`, `ModuleDescriptor`), errors, validation, CQL/pagination helpers.
+- `folio-backend-testing` — JUnit extensions and Testcontainers wrappers (`@EnablePostgres`, `@EnableKafka`, `@EnableKeycloakSecurity`, `@EnableWireMock`), `TestJwtGenerator`.
+- `folio-auth-openid` — JWT parsing and validation against Keycloak JWKS (`JsonWebTokenParser`); no Spring dependency.
+- `folio-security` — Spring Security filter chain with Keycloak authorization (`@EnableMgrSecurity`).
+- `folio-integration-kafka` [`folio-kafka-common`, `folio-kafka-producer`, `folio-kafka-consumer`] — topic management, tenant-aware consumers, `@EnableKafkaProducer`/`@EnableKafkaConsumer`.
+- `folio-secret-store` [`folio-secret-store-common`, `folio-secret-store-starter`] — `AwsStore`, `VaultStore`, `FsspStore`, `EphemeralStore`.
+- `folio-integration-kong`, `folio-integration-apisix` — API gateway route management and module self-registration.
+- `folio-tls-utils` — truststore-backed `SSLContext` and HTTP client factory.
+- `folio-permission-utils` — FOLIO permission name parser; no Spring dependency.
 
 ## Conventions
 
@@ -27,3 +41,7 @@ After API/dependency changes, run the "Verify Dependent Modules" GitHub Actions 
 - **Secret store env var**: use `SECURE_STORE_ENV` (not `ENV`) → `application.secret-store.environment=${SECURE_STORE_ENV:folio}`.
 - **Security plugin**: `KeycloakSecurityConfiguration` imported by `SecurityConfiguration`; activated by `application.yaml` (no code change). With no `AuthorizationService` bean, a permit-all chain is registered.
 - **Lombok**: configured via root `lombok.config`; processor declared in maven-compiler-plugin.
+
+## Repo
+
+Published to Nexus: https://repository.folio.org/repository/maven-folio · Apache-2.0.
