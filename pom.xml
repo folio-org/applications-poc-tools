@@ -51,7 +51,7 @@
     <!-- Test dependencies versions -->
     <mockito.version>5.24.0</mockito.version>
     <testcontainer.version>2.0.5</testcontainer.version>
-    <instancio.version>6.1.0</instancio.version>
+    <instancio.version>6.2.1</instancio.version>
 
     <!-- Plugins versions -->
     <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
@@ -163,7 +163,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>14.3.0</version>
+              <version>14.4.0</version>
             </dependency>
             <dependency>
               <groupId>org.folio</groupId>
