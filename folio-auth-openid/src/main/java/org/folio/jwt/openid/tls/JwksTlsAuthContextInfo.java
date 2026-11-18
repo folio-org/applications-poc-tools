@@ -12,7 +12,7 @@ import javax.net.ssl.SSLSocketFactory;
  */
 public class JwksTlsAuthContextInfo extends JWTAuthContextInfo {
 
-  private final transient SSLSocketFactory sslSocketFactory;
+  private final SSLSocketFactory sslSocketFactory;
 
   /**
    * Creates context info for the JWKS location.

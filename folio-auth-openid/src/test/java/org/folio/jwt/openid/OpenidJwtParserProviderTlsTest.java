@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.security.KeyStore;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.net.ssl.HttpsURLConnection;
@@ -162,10 +161,8 @@ class OpenidJwtParserProviderTlsTest {
         out.write(headers.getBytes(UTF_8));
         out.write(jwks);
         out.flush();
-      } catch (SocketException e) {
-        // server socket is closed
       } catch (IOException e) {
-        // TLS handshake rejected by the client, no request is served
+        // server socket is closed | TLS handshake rejected by the client, no request is served
       }
     }
   }

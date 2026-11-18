@@ -12,6 +12,11 @@ import org.jose4j.lang.UnresolvableKeyException;
  */
 public class JwksTlsTokenParser extends DefaultJWTTokenParser {
 
+  /**
+   * The reference is published once under a lock, and the resolver is thread-safe.
+   * This keeps the lock-free fast path on every token parse.
+   */
+  @SuppressWarnings("java:S3077")
   private volatile VerificationKeyResolver keyResolver;
 
   @Override
