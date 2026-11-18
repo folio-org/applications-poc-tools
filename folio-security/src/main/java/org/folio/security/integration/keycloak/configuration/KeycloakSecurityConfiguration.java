@@ -1,7 +1,10 @@
 package org.folio.security.integration.keycloak.configuration;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.common.utils.tls.HttpClientTlsUtils.buildHttpServiceClient;
+import static org.folio.common.utils.tls.Utils.buildSslContext;
 
+import javax.net.ssl.SSLContext;
 import lombok.RequiredArgsConstructor;
 import org.folio.jwt.openid.JsonWebTokenParser;
 import org.folio.jwt.openid.OpenidJwtParserProvider;
@@ -68,7 +71,21 @@ public class KeycloakSecurityConfiguration {
     return new OpenidJwtParserProvider(
       jwtCacheConfiguration.getJwksRefreshInterval(),
       jwtCacheConfiguration.getForcedJwksRefreshInterval(),
-      properties.getJwksBaseUrl());
+      properties.getJwksBaseUrl(),
+      jwksSslContext());
+  }
+
+  /**
+   * Builds SSL context for the JWKS client from the same TLS properties as the Keycloak REST/admin client.
+   *
+   * @return SSL context with the configured truststore or {@code null} if the JVM default trust must be used
+   */
+  private SSLContext jwksSslContext() {
+    var tls = properties.getTls();
+    if (tls == null || !tls.isEnabled() || isBlank(tls.getTrustStorePath())) {
+      return null;
+    }
+    return buildSslContext(tls);
   }
 
   @Bean
