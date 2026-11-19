@@ -6,7 +6,10 @@ import io.smallrye.jwt.auth.principal.JWTParser;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.net.ssl.SSLContext;
 import lombok.extern.log4j.Log4j2;
+import org.folio.jwt.openid.tls.JwksTlsAuthContextInfo;
+import org.folio.jwt.openid.tls.JwksTlsCallerPrincipalFactory;
 
 @Log4j2
 public class OpenidJwtParserProvider {
@@ -15,6 +18,7 @@ public class OpenidJwtParserProvider {
   private final int jwksRefreshInterval;
   private final int forcedJwksRefreshInterval;
   private final String jwksKeycloakBaseUrl;
+  private final SSLContext sslContext;
 
   /**
    * Constructor with all parameters.
@@ -22,12 +26,26 @@ public class OpenidJwtParserProvider {
    * @param jwksRefreshInterval - JWKS refresh interval
    * @param forcedJwksRefreshInterval - forced JWKS refresh interval
    * @param jwksKeycloakBaseUrl - custom Keycloak base URL for JWKS endpoint
+   * @param sslContext - SSL context used by the JWKS HTTP client, or {@code null} to use the JVM default trust
    */
   public OpenidJwtParserProvider(int jwksRefreshInterval, int forcedJwksRefreshInterval,
-    String jwksKeycloakBaseUrl) {
+    String jwksKeycloakBaseUrl, SSLContext sslContext) {
     this.jwksRefreshInterval = jwksRefreshInterval;
     this.forcedJwksRefreshInterval = forcedJwksRefreshInterval;
     this.jwksKeycloakBaseUrl = jwksKeycloakBaseUrl;
+    this.sslContext = sslContext;
+  }
+
+  /**
+   * Constructor without custom SSL context, the JVM default trust is used by the JWKS HTTP client.
+   *
+   * @param jwksRefreshInterval - JWKS refresh interval
+   * @param forcedJwksRefreshInterval - forced JWKS refresh interval
+   * @param jwksKeycloakBaseUrl - custom Keycloak base URL for JWKS endpoint
+   */
+  public OpenidJwtParserProvider(int jwksRefreshInterval, int forcedJwksRefreshInterval,
+    String jwksKeycloakBaseUrl) {
+    this(jwksRefreshInterval, forcedJwksRefreshInterval, jwksKeycloakBaseUrl, null);
   }
 
   /**
@@ -55,12 +73,25 @@ public class OpenidJwtParserProvider {
     var jwksUrl = buildJwksUrl(issuerUri);
     log.debug("Creating JWT parser for issuer: {}, JWKS URL: {}", issuerUri, jwksUrl);
 
-    var jwtAuthContextInfo = new JWTAuthContextInfo(jwksUrl, issuerUri);
+    var jwtAuthContextInfo = createAuthContextInfo(jwksUrl, issuerUri);
     jwtAuthContextInfo.setJwksRefreshInterval(jwksRefreshInterval);
     jwtAuthContextInfo.setForcedJwksRefreshInterval(forcedJwksRefreshInterval);
-    var jwtParser = new DefaultJWTParser(jwtAuthContextInfo);
+    var jwtParser = createParser(jwtAuthContextInfo);
     tokenParsers.put(issuerUri, jwtParser);
     return jwtParser;
+  }
+
+  private JWTAuthContextInfo createAuthContextInfo(String jwksUrl, String issuerUri) {
+    return sslContext == null
+      ? new JWTAuthContextInfo(jwksUrl, issuerUri)
+      : new JwksTlsAuthContextInfo(jwksUrl, issuerUri, sslContext);
+  }
+
+  private JWTParser createParser(JWTAuthContextInfo jwtAuthContextInfo) {
+    // a parser has its own key resolver, therefore the factory must not be shared between parsers
+    return sslContext == null
+      ? new DefaultJWTParser(jwtAuthContextInfo)
+      : new DefaultJWTParser(jwtAuthContextInfo, new JwksTlsCallerPrincipalFactory());
   }
 
   /**

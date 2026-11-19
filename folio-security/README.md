@@ -59,8 +59,8 @@ permits all requests (useful for local development).
 | `application.keycloak.admin.connect-timeout`                                | `Duration`| Admin client connect timeout (default: `10s`)            |
 | `application.keycloak.admin.read-timeout`                                   | `Duration`| Admin client read/socket timeout (default: `60s`)        |
 | `application.keycloak.client.client-id`                                     | `String`  | Backend service client ID                                |
-| `application.keycloak.tls.enabled`                                          | `boolean` | Enable TLS for Keycloak HTTP client                      |
-| `application.keycloak.tls.trust-store-path`                                 | `String`  | Truststore file path                                     |
+| `application.keycloak.tls.enabled`                                          | `boolean` | Enable custom TLS trust for Keycloak REST/admin and JWKS clients |
+| `application.keycloak.tls.trust-store-path`                                 | `String`  | Truststore file path (also used for JWKS retrieval)      |
 | `application.keycloak.tls.trust-store-password`                             | `String`  | Truststore password                                      |
 | `application.keycloak.tls.trust-store-type`                                 | `String`  | Truststore type (e.g. `JKS`, `PKCS12`)                   |
 | `application.keycloak.jwt-cache-configuration.validate-uri`                 | `boolean` | Validate token issuer against `keycloak.url`             |

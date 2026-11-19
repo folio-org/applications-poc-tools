@@ -13,6 +13,7 @@ URL to differ from the public issuer URL (for in-cluster deployments).
 - [Multi-Tenant Support](#multi-tenant-support)
 - [Key Rotation](#key-rotation)
 - [Internal JWKS URL Override](#internal-jwks-url-override)
+- [Custom Truststore for JWKS](#custom-truststore-for-jwks)
 - [API Reference](#api-reference)
 
 ---
@@ -174,6 +175,30 @@ new OpenidJwtParserProvider(
 
 The library will validate the token `iss` against `issuerRootUri` (public URL) while fetching the
 JWKS from the internal URL.
+
+---
+
+## Custom Truststore for JWKS
+
+When the JWKS URL uses HTTPS and the Keycloak certificate is not signed by a CA of the JVM default
+truststore (`cacerts`), pass an `SSLContext` built from the required truststore as the fourth
+constructor argument:
+
+```java
+new OpenidJwtParserProvider(
+    60,                               // jwksRefreshInterval
+    60,                               // forcedJwksRefreshInterval
+    "https://keycloak-headless:8443", // internal JWKS base URL
+    sslContext                        // truststore used for JWKS requests only
+);
+```
+
+The `SSLContext` is applied to the JWKS HTTP client only. The JVM default `SSLContext` and
+`HttpsURLConnection` defaults are not modified, so other HTTPS clients keep their trust behavior.
+When the argument is `null` (or a constructor without it is used), the JVM default trust is used.
+
+`folio-security` builds this `SSLContext` from `application.keycloak.tls.*`, the same settings that
+configure the Keycloak REST/admin client.
 
 ---
 
