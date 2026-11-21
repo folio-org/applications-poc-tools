@@ -4,7 +4,7 @@ import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.folio.common.domain.model.ApplicationScope.PLATFORM;
-import static org.folio.common.domain.model.ApplicationScope.REGULAR;
+import static org.folio.common.domain.model.ApplicationScope.TENANT;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -346,10 +346,10 @@ class ApisixGatewayServiceTest {
     @EnumSource(ApplicationScope.class)
     void negative_mixedStoredScopes(ApplicationScope requested) {
       var descriptor = new ModuleDescriptor().id(MOD_ID);
-      var regular = moduleRoute(ROUTE_ID_1);
+      var tenant = moduleRoute(ROUTE_ID_1);
       var platform = moduleRoute(ROUTE_ID_2).labels(Map.of("module", MOD_ID, "application-scope", "platform"));
       when(apisixAdminClient.getService(MOD_ID)).thenReturn(serviceEntry(apisixService()));
-      when(apisixAdminClient.getRoutes(1, 500)).thenReturn(routePage(List.of(regular, platform), 2));
+      when(apisixAdminClient.getRoutes(1, 500)).thenReturn(routePage(List.of(tenant, platform), 2));
 
       var moduleDescriptors = List.of(descriptor);
       assertThatThrownBy(() -> apisixGatewayService.addRoutes(moduleDescriptors, requested))
@@ -424,7 +424,7 @@ class ApisixGatewayServiceTest {
       var route2 = moduleRoute(ROUTE_ID_2);
       when(apisixAdminClient.getService(MOD_ID)).thenReturn(serviceEntry(apisixService()));
       when(apisixAdminClient.getRoutes(1, 500)).thenReturn(routePage(List.of(), 0));
-      when(apisixRouteFactory.createRoutes(descriptor, MOD_ID, REGULAR)).thenReturn(List.of(route1, route2));
+      when(apisixRouteFactory.createRoutes(descriptor, MOD_ID, TENANT)).thenReturn(List.of(route1, route2));
       when(apisixAdminClient.upsertRoute(ROUTE_ID_1, route1)).thenReturn(routeEntry(route1));
       doThrow(serverError("Create failed")).when(apisixAdminClient).upsertRoute(ROUTE_ID_2, route2);
 
@@ -472,7 +472,7 @@ class ApisixGatewayServiceTest {
     void negative_scopeChange(ApplicationScope requested) {
       final var descriptor = new ModuleDescriptor().id(MOD_ID);
       var stored = moduleRoute(ROUTE_ID_1);
-      if (requested == REGULAR) {
+      if (requested == TENANT) {
         stored.labels(Map.of("module", MOD_ID, "application-scope", "platform"));
       }
       when(apisixAdminClient.getService(MOD_ID)).thenReturn(serviceEntry(apisixService()));
@@ -492,7 +492,7 @@ class ApisixGatewayServiceTest {
       var desiredNew = moduleRoute(ROUTE_ID_2);
       when(apisixAdminClient.getService(MOD_ID)).thenReturn(serviceEntry(apisixService()));
       when(apisixAdminClient.getRoutes(1, 500)).thenReturn(routePage(List.of(existingKept, existingStale), 2));
-      when(apisixRouteFactory.createRoutes(descriptor, MOD_ID, REGULAR)).thenReturn(List.of(desiredKept, desiredNew));
+      when(apisixRouteFactory.createRoutes(descriptor, MOD_ID, TENANT)).thenReturn(List.of(desiredKept, desiredNew));
 
       apisixGatewayService.updateRoutes(List.of(descriptor));
 
@@ -507,7 +507,7 @@ class ApisixGatewayServiceTest {
       var desiredNew = moduleRoute(ROUTE_ID_2);
       when(apisixAdminClient.getService(MOD_ID)).thenReturn(serviceEntry(apisixService()));
       when(apisixAdminClient.getRoutes(1, 500)).thenReturn(routePage(List.of(), 0));
-      when(apisixRouteFactory.createRoutes(descriptor, MOD_ID, REGULAR)).thenReturn(List.of(desiredNew));
+      when(apisixRouteFactory.createRoutes(descriptor, MOD_ID, TENANT)).thenReturn(List.of(desiredNew));
       doThrow(serverError("Create failed")).when(apisixAdminClient).upsertRoute(ROUTE_ID_2, desiredNew);
 
       var descriptors = List.of(descriptor);
