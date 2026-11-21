@@ -36,8 +36,8 @@ Jackson annotations for seamless JSON serialization.
 `ModuleDescriptor` supports `producesEvents: [{"event": "inventory.instance.created.v1"}]` and
 `consumesEvents: [{"event": "inventory.instance.created.v1", "optional": false}]`. Each entry requires an
 `event` string; `optional` defaults to `false`. Jakarta validation checks nested declarations.
-`ApplicationDescriptor.scope` is `ApplicationScope.REGULAR` (default) or `PLATFORM`, serialized as
-`"regular"` or `"platform"`. Unknown scope values fail deserialization; explicit null fails validation.
+`ApplicationDescriptor.scope` is `ApplicationScope.TENANT` (default) or `PLATFORM`, serialized as
+`"tenant"` or `"platform"`. Unknown scope values fail deserialization; explicit null fails validation.
 Default scope and empty event lists use the mapper's normal inclusion settings.
 
 Pass the owning application's scope to either gateway:
@@ -47,13 +47,13 @@ apiGatewayService.addRoutes(application.getModuleDescriptors(), application.getS
 apiGatewayService.updateRoutes(application.getModuleDescriptors(), application.getScope());
 ```
 
-Each batch must have one scope. Existing overloads and null scope use regular routing; managers remain
-tenant-independent. Old providers delegate regular calls and reject platform calls until supported.
+Each batch must have one scope. Existing overloads and null scope use tenant routing; managers remain
+tenant-independent. Old providers delegate tenant calls and reject platform calls until supported.
 Platform routes omit tenant matching and carry metadata that tenant operations must preserve.
 `updateRoutes` preserves route IDs and tenant lists. Both `addRoutes` and `updateRoutes` reject scope changes
 for existing non-manager routes. Callers must coordinate removal/recreation for scope changes and validate
 application ownership. For non-manager modules in platform applications, keep
-`application.apigw.register-module=false`: the startup registrar uses the regular-scope overload.
+`application.apigw.register-module=false`: the startup registrar uses the tenant-scope overload.
 Topic resolution, producer availability and application lifecycle enforcement belong to consumers.
 
 ### Routing and Permissions

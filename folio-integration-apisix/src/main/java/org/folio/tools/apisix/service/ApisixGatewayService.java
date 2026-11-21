@@ -8,7 +8,7 @@ import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.logging.log4j.util.Strings.isBlank;
 import static org.folio.common.domain.model.ApplicationScope.PLATFORM;
-import static org.folio.common.domain.model.ApplicationScope.REGULAR;
+import static org.folio.common.domain.model.ApplicationScope.TENANT;
 import static org.folio.common.utils.CollectionUtils.mapItems;
 import static org.folio.tools.apisix.service.ApisixRouteFactory.APPLICATION_SCOPE_LABEL;
 import static org.folio.tools.apisix.service.ApisixRouteFactory.MODULE_LABEL;
@@ -126,7 +126,7 @@ public class ApisixGatewayService implements ApiGatewayService {
    */
   @Override
   public void addRoutes(Collection<ModuleDescriptor> moduleDescriptors) {
-    addRoutes(moduleDescriptors, REGULAR);
+    addRoutes(moduleDescriptors, TENANT);
   }
 
   @Override
@@ -143,7 +143,7 @@ public class ApisixGatewayService implements ApiGatewayService {
    */
   @Override
   public void updateRoutes(Collection<ModuleDescriptor> moduleDescriptors) {
-    updateRoutes(moduleDescriptors, REGULAR);
+    updateRoutes(moduleDescriptors, TENANT);
   }
 
   @Override

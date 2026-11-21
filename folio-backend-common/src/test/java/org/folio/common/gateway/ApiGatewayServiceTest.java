@@ -23,8 +23,8 @@ class ApiGatewayServiceTest {
 
   @ParameterizedTest
   @NullSource
-  @EnumSource(value = ApplicationScope.class, names = "REGULAR")
-  void scope_positive_legacyProviderAcceptsRegular(ApplicationScope scope) {
+  @EnumSource(value = ApplicationScope.class, names = "TENANT")
+  void scope_positive_legacyProviderAcceptsTenant(ApplicationScope scope) {
     gateway.addRoutes(descriptors, scope);
     gateway.updateRoutes(descriptors, scope);
 

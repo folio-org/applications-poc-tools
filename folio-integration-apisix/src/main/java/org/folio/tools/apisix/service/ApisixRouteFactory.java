@@ -3,7 +3,7 @@ package org.folio.tools.apisix.service;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.folio.common.domain.model.ApplicationScope.PLATFORM;
-import static org.folio.common.domain.model.ApplicationScope.REGULAR;
+import static org.folio.common.domain.model.ApplicationScope.TENANT;
 import static org.folio.common.gateway.utils.GatewayRouteUtils.buildRouteName;
 import static org.folio.common.gateway.utils.GatewayRouteUtils.getMethods;
 import static org.folio.common.gateway.utils.GatewayRouteUtils.preparePath;
@@ -53,10 +53,10 @@ public class ApisixRouteFactory {
    * @return list of derived {@link ApisixRoute} objects
    */
   public List<ApisixRoute> createRoutes(ModuleDescriptor descriptor, String serviceId) {
-    return createRoutes(descriptor, serviceId, REGULAR);
+    return createRoutes(descriptor, serviceId, TENANT);
   }
 
-  /** Creates routes using the owning application's scope; null means regular. */
+  /** Creates routes using the owning application's scope; null means tenant. */
   public List<ApisixRoute> createRoutes(ModuleDescriptor descriptor, String serviceId, ApplicationScope scope) {
     return toStream(descriptor.getProvides())
       .map(iface -> createRoutes(iface, descriptor.getId(), serviceId,
