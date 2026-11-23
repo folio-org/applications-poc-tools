@@ -21,7 +21,7 @@ public class ApplicationDescriptor implements Artifact {
   @Valid private List<ModuleDescriptor> moduleDescriptors = new ArrayList<>();
   @Valid private List<ModuleDescriptor> uiModuleDescriptors = new ArrayList<>();
   private String platform;
-  private ApplicationScope scope = ApplicationScope.REGULAR;
+  private ApplicationScope scope = ApplicationScope.TENANT;
   @Valid private List<Dependency> dependencies = new ArrayList<>();
   private ApplicationDeployment deployment;
   private AnyDescriptor metadata;

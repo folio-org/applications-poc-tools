@@ -53,13 +53,13 @@ public interface ApiGatewayService {
   /**
    * Creates routes for modules belonging to applications with the supplied scope.
    *
-   * <p>All modules in a batch must have the same application scope. Null means regular.
+   * <p>All modules in a batch must have the same application scope. Null means tenant.
    * Platform routes ignore tenant changes. Changing the scope of existing routes requires an
    * explicit remove/recreate operation coordinated by the caller; addRoutes and updateRoutes reject
    * that change for non-manager modules.</p>
    *
    * @param moduleDescriptors - module descriptors to process
-   * @param applicationScope - owning application scope: regular or platform
+   * @param applicationScope - owning application scope: tenant or platform
    * @throws UnsupportedOperationException if this provider does not support platform routes
    */
   default void addRoutes(Collection<ModuleDescriptor> moduleDescriptors, ApplicationScope applicationScope) {
@@ -82,13 +82,13 @@ public interface ApiGatewayService {
   /**
    * Updates routes within the supplied scope, preserving existing per-tenant state.
    *
-   * <p>All modules in a batch must have the same application scope. Null means regular.
+   * <p>All modules in a batch must have the same application scope. Null means tenant.
    * Platform routes ignore tenant changes. Changing the scope of existing routes requires an
    * explicit remove/recreate operation coordinated by the caller; addRoutes and updateRoutes reject
    * that change for non-manager modules.</p>
    *
    * @param moduleDescriptors - module descriptors to process
-   * @param applicationScope - owning application scope: regular or platform
+   * @param applicationScope - owning application scope: tenant or platform
    * @throws UnsupportedOperationException if this provider does not support platform routes
    */
   default void updateRoutes(Collection<ModuleDescriptor> moduleDescriptors, ApplicationScope applicationScope) {

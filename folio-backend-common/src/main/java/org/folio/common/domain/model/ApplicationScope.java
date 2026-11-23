@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ApplicationScope {
-  REGULAR("regular"),
+  TENANT("tenant"),
   PLATFORM("platform");
 
   private final String value;

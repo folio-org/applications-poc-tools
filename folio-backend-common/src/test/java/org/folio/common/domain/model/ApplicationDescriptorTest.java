@@ -2,7 +2,7 @@ package org.folio.common.domain.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.folio.common.domain.model.ApplicationScope.REGULAR;
+import static org.folio.common.domain.model.ApplicationScope.TENANT;
 
 import jakarta.validation.Validation;
 import org.folio.test.types.UnitTest;
@@ -34,14 +34,14 @@ class ApplicationDescriptorTest {
   }
 
   @Test
-  void scope_positive_existingDescriptorDefaultsToRegular() {
+  void scope_positive_existingDescriptorDefaultsToTenant() {
     var descriptor = mapper.readValue("""
       {"id": "app-test-1.0.0", "name": "app-test", "version": "1.0.0",
        "modules": [{"id": "mod-test-1.0.0", "name": "mod-test", "version": "1.0.0"}]}
       """, ApplicationDescriptor.class);
 
-    assertThat(descriptor.getScope()).isEqualTo(REGULAR);
-    assertThat(mapper.valueToTree(descriptor).get("scope").asString()).isEqualTo("regular");
+    assertThat(descriptor.getScope()).isEqualTo(TENANT);
+    assertThat(mapper.valueToTree(descriptor).get("scope").asString()).isEqualTo("tenant");
     assertThat(descriptor.getModules()).singleElement()
       .satisfies(module -> assertThat(module.getId()).isEqualTo("mod-test-1.0.0"));
     assertThat(mapper.readValue(mapper.writeValueAsString(descriptor), ApplicationDescriptor.class))
@@ -53,7 +53,7 @@ class ApplicationDescriptorTest {
 
   @ParameterizedTest
   @EmptySource
-  @ValueSource(strings = {"tenant", "PLATFORM", "Regular", " platform "})
+  @ValueSource(strings = {"regular", "PLATFORM", "Tenant", " platform "})
   void scope_negative_invalidValue(String scope) {
     assertThatThrownBy(() -> mapper.readValue("{\"scope\":\"" + scope + "\"}", ApplicationDescriptor.class))
       .hasRootCauseInstanceOf(IllegalArgumentException.class);

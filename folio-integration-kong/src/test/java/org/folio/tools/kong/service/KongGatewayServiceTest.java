@@ -11,7 +11,6 @@ import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.folio.common.domain.model.ApplicationScope.PLATFORM;
-import static org.folio.common.domain.model.ApplicationScope.REGULAR;
 import static org.folio.common.domain.model.InterfaceDescriptor.SYSTEM_INTERFACE_TYPE;
 import static org.folio.common.domain.model.InterfaceDescriptor.TIMER_INTERFACE;
 import static org.folio.common.utils.OkapiHeaders.MODULE_ID;
@@ -146,12 +145,12 @@ class KongGatewayServiceTest {
     @ParameterizedTest
     @EnumSource(ApplicationScope.class)
     void negative_mixedStoredScopes(ApplicationScope requested) {
-      var regular = route(List.of("POST"), "/entities", 1, "test-interface-1.0", MOD_ID);
+      var tenant = route(List.of("POST"), "/entities", 1, "test-interface-1.0", MOD_ID);
       var platform = route(List.of("GET"), "^/entities/([^/]+)$", 0, "test-interface-1.0", MOD_ID)
         .tags(List.of(MOD_ID, "test-interface-1.0", "application-scope:platform"));
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());
       when(kongAdminClient.getRoutesByTag(MOD_ID, null))
-        .thenReturn(new KongResultList<>(null, List.of(regular, platform)));
+        .thenReturn(new KongResultList<>(null, List.of(tenant, platform)));
 
       var moduleDescriptors = List.of(UpdateRoutes.moduleDescriptor());
       assertThatThrownBy(() -> kongGatewayService.addRoutes(moduleDescriptors, requested))
@@ -180,7 +179,7 @@ class KongGatewayServiceTest {
 
     @ParameterizedTest
     @NullSource
-    @EnumSource(value = ApplicationScope.class, names = "REGULAR")
+    @EnumSource(value = ApplicationScope.class, names = "TENANT")
     void positive(ApplicationScope scope) {
       var serviceId = UUID.randomUUID().toString();
       when(kongAdminClient.getService(MOD_ID)).thenReturn(new Service().id(serviceId).name(MOD_ID));
@@ -199,7 +198,7 @@ class KongGatewayServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"PLATFORM, mod-test-1.0.0", "REGULAR, mgr-test-1.0.0", "PLATFORM, mgr-test-1.0.0"})
+    @CsvSource({"PLATFORM, mod-test-1.0.0", "TENANT, mgr-test-1.0.0", "PLATFORM, mgr-test-1.0.0"})
     void positive_tenantIndependentScope(ApplicationScope scope, String moduleId) {
       var descriptor = UpdateRoutes.moduleDescriptor().id(moduleId);
       descriptor.getProvides().getFirst().interfaceType("multiple");
@@ -419,7 +418,7 @@ class KongGatewayServiceTest {
     @EnumSource(ApplicationScope.class)
     void negative_scopeChange(ApplicationScope requested) {
       var stored = route(List.of("POST"), "/entities", 1, INTERFACE_ID, MOD_ID);
-      if (requested == REGULAR) {
+      if (requested == ApplicationScope.TENANT) {
         stored.tags(List.of(MOD_ID, INTERFACE_ID, "application-scope:platform"));
       }
       when(kongAdminClient.getService(MOD_ID)).thenReturn(kongService());

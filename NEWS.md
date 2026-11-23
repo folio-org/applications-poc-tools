@@ -23,6 +23,7 @@
 * Add marker-table-based Kafka tenant filtering for mixed-version Eureka modules (APPPOCTOOL-112)
 * Update keycloak admin client to 26.0.13 (KEYCLOAK-137)
 * Use KC_CLIENT_TLS_* environment variables in the JWKS client (APPPOCTOOL-104)
+* Remove references to usage regular keyword using tenant keyword for applications scope (EUREKA-938)
 -------
 
 ## Version `v4.0.0` (14.04.2026)
